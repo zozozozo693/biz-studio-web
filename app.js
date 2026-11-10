@@ -40,6 +40,7 @@ const ICONS = {
   chevron: '<path d="m9 6 6 6-6 6"/>',
   back: '<path d="m15 6-6 6 6 6"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
+  list: '<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/>',
   trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
   camera2: '<path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
   star: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
@@ -439,6 +440,7 @@ const profile = {
   goals: [],         // ids from GOALS
   customGoal: '',    // their own reason, if they typed one
   photo: '',         // profile picture, saved as a small image
+  details: [],       // extra details asked on every order, like "Cake flavor"
 };
 
 // True once the owner changes one of the custom words themselves,
@@ -607,6 +609,7 @@ function editProfile(step) {
 
 // Draws the edit page in the main area
 function showEditPage(page) {
+  if (editStep === 4) return showDetailsPage(page);
   page.innerHTML = `
     <button class="back-link" id="edit-back">${icon('back')}<span>Back to Settings</span></button>
     <div class="setup-form edit-form" id="edit-form"></div>
@@ -631,6 +634,61 @@ function showEditPage(page) {
   document.querySelector('#edit-form .form-actions').appendChild(cancel);
 
   document.getElementById('edit-back').addEventListener('click', cancelEdit);
+}
+
+// Settings page for the extra details: see them, remove them, add more.
+// Changes save right away.
+function showDetailsPage(page) {
+  const w = words();
+  page.innerHTML = `
+    <button class="back-link" id="edit-back">${icon('back')}<span>Back to Settings</span></button>
+    <div class="setup-form edit-form">
+      <h1>Extra details</h1>
+      <p class="help"></p>
+      <div class="settings-list" id="detail-list"></div>
+      <div id="detail-add"></div>
+      <div class="form-actions"><button class="btn" id="details-done">Done</button></div>
+    </div>
+  `;
+  page.querySelector('.help').textContent =
+    'These questions show up on every ' + oneOrder() + ', so you always remember to ask them.';
+
+  const list = page.querySelector('#detail-list');
+  if (!profile.details.length) {
+    list.innerHTML = '<p class="list-empty detail-none">None yet. Tap an idea below to add one.</p>';
+  }
+  profile.details.forEach(function (d, index) {
+    const row = document.createElement('div');
+    row.className = 'detail-row';
+    const kind = DETAIL_KINDS.find(function (k) { return k.id === d.kind; });
+    row.innerHTML = '<span class="row-text"><strong></strong><span class="row-value"></span></span>' +
+      '<button class="row-delete" title="Remove">' + icon('trash') + '</button>';
+    row.querySelector('strong').textContent = d.name;
+    row.querySelector('.row-value').textContent = kind.label + (d.kind === 'list' ? ': ' + d.choices.join(', ') : '');
+    row.querySelector('.row-delete').setAttribute('aria-label', 'Remove ' + d.name);
+    row.querySelector('.row-delete').addEventListener('click', function () {
+      profile.details.splice(index, 1);
+      saveProfile();
+      showPage();
+      showUndo(d.name + ' removed', function () {
+        profile.details.splice(index, 0, d);
+        saveProfile();
+        showPage();
+      });
+    });
+    list.appendChild(row);
+  });
+
+  const add = page.querySelector('#detail-add');
+  add.innerHTML = '<p class="extra-ask">Add more:</p>';
+  add.appendChild(detailIdeaButtons(showPage));
+
+  function done() {
+    stopEditing();
+    openApp();
+  }
+  page.querySelector('#details-done').addEventListener('click', done);
+  page.querySelector('#edit-back').addEventListener('click', done);
 }
 
 // Undo any changes and go back to Settings
@@ -1317,6 +1375,289 @@ function showPage() {
 }
 
 // =========================================
+// EXTRA DETAILS (custom fields)
+// Questions the owner adds to every order, like "Cake flavor".
+// Each one: { id, name, kind, choices }
+// kind: 'text', 'number', 'date', 'yesno' or 'list' (pick from a list)
+// =========================================
+const DETAIL_KINDS = [
+  { id: 'text', label: 'Type it', example: 'Happy Birthday Ava!' },
+  { id: 'number', label: 'A number', example: '24' },
+  { id: 'date', label: 'A date', example: '' },
+  { id: 'yesno', label: 'Yes or no', example: '' },
+  { id: 'list', label: 'Pick from a list', example: '' },
+];
+
+// Ideas that fit each kind of business, shown as one-click buttons
+const DETAIL_IDEAS = {
+  bakery: [
+    { name: 'Cake flavor', kind: 'list', choices: ['Vanilla', 'Chocolate', 'Red velvet'] },
+    { name: 'Message on the cake', kind: 'text' },
+    { name: 'Allergies', kind: 'text' },
+    { name: 'Pickup or delivery', kind: 'list', choices: ['Pickup', 'Delivery'] },
+  ],
+  catering: [
+    { name: 'Number of people', kind: 'number' },
+    { name: 'Allergies', kind: 'text' },
+    { name: 'Pickup or delivery', kind: 'list', choices: ['Pickup', 'Delivery'] },
+  ],
+  craft: [
+    { name: 'Scent', kind: 'list', choices: ['Lavender', 'Vanilla', 'Unscented'] },
+    { name: 'Gift wrap', kind: 'yesno' },
+    { name: 'Personalized text', kind: 'text' },
+  ],
+  art: [
+    { name: 'Size', kind: 'list', choices: ['5x7', '8x10', '11x14'] },
+    { name: 'Reference photo sent', kind: 'yesno' },
+    { name: 'Style notes', kind: 'text' },
+  ],
+  clothing: [
+    { name: 'Size', kind: 'list', choices: ['XS', 'S', 'M', 'L', 'XL'] },
+    { name: 'Color', kind: 'text' },
+    { name: 'Gift wrap', kind: 'yesno' },
+  ],
+  nails: [
+    { name: 'Nail shape', kind: 'list', choices: ['Square', 'Round', 'Almond', 'Coffin'] },
+    { name: 'Color', kind: 'text' },
+    { name: 'First visit', kind: 'yesno' },
+  ],
+  hair: [
+    { name: 'Hair length', kind: 'list', choices: ['Short', 'Medium', 'Long'] },
+    { name: 'Products used', kind: 'text' },
+    { name: 'First visit', kind: 'yesno' },
+  ],
+  beauty: [
+    { name: 'Lash style', kind: 'list', choices: ['Classic', 'Hybrid', 'Volume'] },
+    { name: 'Allergies', kind: 'text' },
+    { name: 'First visit', kind: 'yesno' },
+  ],
+  tutoring: [
+    { name: 'Subject', kind: 'text' },
+    { name: 'Grade', kind: 'number' },
+    { name: 'Online or in person', kind: 'list', choices: ['Online', 'In person'] },
+  ],
+  music: [
+    { name: 'Instrument', kind: 'text' },
+    { name: 'Level', kind: 'list', choices: ['Beginner', 'Intermediate', 'Advanced'] },
+  ],
+  fitness: [
+    { name: 'Goal', kind: 'text' },
+    { name: 'Session length', kind: 'list', choices: ['30 min', '45 min', '60 min'] },
+  ],
+  photo: [
+    { name: 'Location', kind: 'text' },
+    { name: 'Number of people', kind: 'number' },
+    { name: 'Deposit paid', kind: 'yesno' },
+  ],
+  pets: [
+    { name: 'Pet name', kind: 'text' },
+    { name: 'Pet size', kind: 'list', choices: ['Small', 'Medium', 'Large'] },
+    { name: 'Special care', kind: 'text' },
+  ],
+  cleaning: [
+    { name: 'Number of rooms', kind: 'number' },
+    { name: 'Pets in home', kind: 'yesno' },
+    { name: 'Entry instructions', kind: 'text' },
+  ],
+  yard: [
+    { name: 'Yard size', kind: 'list', choices: ['Small', 'Medium', 'Large'] },
+    { name: 'Gate code', kind: 'text' },
+  ],
+  events: [
+    { name: 'Theme', kind: 'text' },
+    { name: 'Number of guests', kind: 'number' },
+    { name: 'Colors', kind: 'text' },
+  ],
+  other: [
+    { name: 'Pickup or delivery', kind: 'list', choices: ['Pickup', 'Delivery'] },
+    { name: 'Gift wrap', kind: 'yesno' },
+    { name: 'Special requests', kind: 'text' },
+  ],
+};
+
+// The ideas that fit this business and haven't been added yet
+function detailIdeas() {
+  const key = profile.businessType === 'other' && guessType(profile.otherType)
+    ? guessType(profile.otherType).id
+    : profile.businessType;
+  const ideas = DETAIL_IDEAS[key] || DETAIL_IDEAS.other;
+  return ideas.filter(function (idea) {
+    return !profile.details.some(function (d) { return d.name.toLowerCase() === idea.name.toLowerCase(); });
+  });
+}
+
+function addDetail(detail) {
+  profile.details.push({
+    id: 'd' + Date.now(),
+    name: detail.name,
+    kind: detail.kind,
+    choices: detail.choices ? detail.choices.slice() : [],
+  });
+  saveProfile();
+}
+
+// One question box in the order form, for one extra detail
+function detailInput(detail, value) {
+  const wrap = document.createElement('div');
+  const id = 'x-' + detail.id;
+
+  if (detail.kind === 'yesno') {
+    wrap.className = 'yesno';
+    wrap.innerHTML = '<label class="check-row"><input type="checkbox"><span></span></label>';
+    wrap.querySelector('input').id = id;
+    wrap.querySelector('input').checked = value === true;
+    wrap.querySelector('span').textContent = detail.name;
+    return wrap;
+  }
+
+  wrap.innerHTML = '<label class="label"></label>';
+  wrap.querySelector('label').textContent = detail.name;
+  wrap.querySelector('label').htmlFor = id;
+
+  let input;
+  if (detail.kind === 'list') {
+    input = document.createElement('select');
+    input.innerHTML = '<option value="">Pick one</option>';
+    detail.choices.forEach(function (choice) {
+      const option = document.createElement('option');
+      option.value = choice;
+      option.textContent = choice;
+      input.appendChild(option);
+    });
+  } else {
+    input = document.createElement('input');
+    input.type = detail.kind === 'number' ? 'number' : detail.kind === 'date' ? 'date' : 'text';
+    input.autocomplete = 'off';
+  }
+  input.id = id;
+  input.className = 'input';
+  input.value = value === undefined || value === null ? '' : value;
+  wrap.appendChild(input);
+  return wrap;
+}
+
+// Reads the answer from a question box
+function readDetail(detail, page) {
+  const input = page.querySelector('#x-' + detail.id);
+  if (!input) return undefined;
+  if (detail.kind === 'yesno') return input.checked;
+  return input.value.trim();
+}
+
+// The short text shown on an order in the list, like "Cake flavor: Chocolate"
+function detailChips(order) {
+  const chips = [];
+  profile.details.forEach(function (d) {
+    const v = order.extra ? order.extra[d.id] : undefined;
+    if (v === true) chips.push(d.name);
+    else if (v && v !== false) chips.push(d.name + ': ' + (d.kind === 'date' ? niceDate(v) : v));
+  });
+  return chips;
+}
+
+// The "Add something else" mini form, asked as plain questions.
+// When saved, it calls done(newDetail).
+function detailBuilder(done, cancel) {
+  const box = document.createElement('div');
+  box.className = 'detail-builder';
+  box.innerHTML = `
+    <label class="label" for="db-name">What do you want to ask?</label>
+    <input id="db-name" class="input" autocomplete="off" placeholder="Favorite color">
+
+    <p class="label">How will you answer?</p>
+    <div class="kind-buttons" id="db-kinds" role="radiogroup" aria-label="How will you answer?"></div>
+
+    <div id="db-choices-box" hidden>
+      <label class="label" for="db-choices">What are the choices? Put a comma between each one.</label>
+      <input id="db-choices" class="input" autocomplete="off" placeholder="Red, Blue, Green">
+    </div>
+
+    <p class="error" id="db-error" role="alert"></p>
+    <div class="form-actions">
+      <button type="button" class="btn small" id="db-save">Add it</button>
+      <button type="button" class="btn secondary small" id="db-cancel">Never mind</button>
+    </div>
+  `;
+
+  let kind = 'text';
+  const kinds = box.querySelector('#db-kinds');
+  function drawKinds() {
+    kinds.innerHTML = '';
+    DETAIL_KINDS.forEach(function (k) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'kind-btn';
+      b.setAttribute('role', 'radio');
+      b.setAttribute('aria-checked', k.id === kind ? 'true' : 'false');
+      b.textContent = k.label;
+      b.addEventListener('click', function () {
+        kind = k.id;
+        drawKinds();
+        box.querySelector('#db-choices-box').hidden = kind !== 'list';
+      });
+      kinds.appendChild(b);
+    });
+  }
+  drawKinds();
+
+  box.querySelector('#db-cancel').addEventListener('click', cancel);
+  box.querySelector('#db-save').addEventListener('click', function () {
+    const name = box.querySelector('#db-name').value.trim();
+    const choices = box.querySelector('#db-choices').value.split(',')
+      .map(function (c) { return c.trim(); })
+      .filter(Boolean);
+    const error = box.querySelector('#db-error');
+
+    if (!name) { error.textContent = 'Type what you want to ask.'; return; }
+    if (kind === 'list' && choices.length < 2) { error.textContent = 'Add at least two choices.'; return; }
+    done({ name: name, kind: kind, choices: choices });
+  });
+
+  setTimeout(function () { box.querySelector('#db-name').focus(); }, 0);
+  return box;
+}
+
+// The row of idea buttons plus "Something else"
+// onAdded runs after a detail is added.
+function detailIdeaButtons(onAdded) {
+  const wrap = document.createElement('div');
+  wrap.className = 'idea-area';
+
+  const row = document.createElement('div');
+  row.className = 'idea-row';
+  detailIdeas().forEach(function (idea) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'idea-btn';
+    b.innerHTML = icon('plus') + '<span></span>';
+    b.querySelector('span').textContent = idea.name;
+    b.addEventListener('click', function () {
+      addDetail(idea);
+      onAdded();
+    });
+    row.appendChild(b);
+  });
+
+  const other = document.createElement('button');
+  other.type = 'button';
+  other.className = 'idea-btn other';
+  other.innerHTML = icon('plus') + '<span>Something else</span>';
+  other.addEventListener('click', function () {
+    row.hidden = true;
+    wrap.appendChild(detailBuilder(function (detail) {
+      addDetail(detail);
+      onAdded();
+    }, function () {
+      onAdded(); // just redraw
+    }));
+  });
+  row.appendChild(other);
+
+  wrap.appendChild(row);
+  return wrap;
+}
+
+// =========================================
 // ORDERS
 // Each order: { id, customer, contact, item, due, time, price, status, notes, created }
 // "due" is a date like "2026-11-14". Orders are saved in the browser like the profile.
@@ -1575,6 +1916,7 @@ function orderRow(order) {
       <span class="order-text">
         <strong class="order-item"></strong>
         <span class="order-who"></span>
+        <span class="order-chips"></span>
       </span>
     </button>
     <span class="order-price"></span>
@@ -1585,6 +1927,16 @@ function orderRow(order) {
   row.querySelector('.order-who').textContent =
     order.customer + ', ' + dueText(order).charAt(0).toLowerCase() + dueText(order).slice(1) + (order.time ? ' at ' + niceTime(order.time) : '');
   row.querySelector('.order-price').textContent = order.price ? money(order.price) : '';
+
+  // Extra details, like "Cake flavor: Chocolate"
+  const chipBox = row.querySelector('.order-chips');
+  detailChips(order).slice(0, 4).forEach(function (text) {
+    const chip = document.createElement('span');
+    chip.className = 'mini-chip';
+    chip.textContent = text;
+    chipBox.appendChild(chip);
+  });
+  if (!chipBox.children.length) chipBox.remove();
 
   // Change the status right from the list
   const pick = row.querySelector('.status-pick');
@@ -1675,6 +2027,8 @@ function showOrderForm(page) {
           <div class="status-buttons" id="o-status" role="radiogroup" aria-label="Status"></div>
         </div>
 
+        <section class="span-2 extra-details" id="extra-details"></section>
+
         <div class="span-2">
           <label class="label" for="o-notes">Notes (optional)</label>
           <textarea id="o-notes" class="input" rows="3" placeholder="Anything else to remember"></textarea>
@@ -1706,6 +2060,30 @@ function showOrderForm(page) {
     page.querySelector('#o-' + name).value = order[name] || '';
   });
   if (isNew) page.querySelector('#o-due').value = todayText();
+
+  // Extra details: the owner's own questions, plus ideas to add more
+  const extra = Object.assign({}, order.extra || {});
+  function drawExtraDetails() {
+    // keep anything already typed before redrawing
+    profile.details.forEach(function (d) {
+      const v = readDetail(d, page);
+      if (v !== undefined) extra[d.id] = v;
+    });
+
+    const box = page.querySelector('#extra-details');
+    box.innerHTML = '<h2 class="extra-title">Extra details</h2><div class="extra-grid"></div><p class="extra-ask"></p>';
+    const grid = box.querySelector('.extra-grid');
+    profile.details.forEach(function (d) {
+      grid.appendChild(detailInput(d, extra[d.id]));
+    });
+    if (!profile.details.length) grid.remove();
+
+    box.querySelector('.extra-ask').textContent = profile.details.length
+      ? 'Want to ask something else on every ' + oneOrder() + '?'
+      : 'Anything else you want to remember for every ' + oneOrder() + '? Tap one to add it.';
+    box.appendChild(detailIdeaButtons(drawExtraDetails));
+  }
+  drawExtraDetails();
 
   // Status buttons
   let status = order.status;
@@ -1753,6 +2131,13 @@ function showOrderForm(page) {
 
     values.price = values.price === '' ? '' : Math.max(0, Number(values.price));
     values.status = status;
+
+    // Answers to the extra details
+    values.extra = Object.assign({}, extra);
+    profile.details.forEach(function (d) {
+      const v = readDetail(d, page);
+      values.extra[d.id] = d.kind === 'number' && v !== '' ? Number(v) : v;
+    });
 
     if (isNew) {
       values.id = 'o' + Date.now();
@@ -1852,6 +2237,15 @@ function showSettings(page) {
       </button>
     </div>
 
+    <h2 class="settings-group" id="details-group"></h2>
+    <div class="settings-list">
+      <button class="settings-row peach" data-step="4">
+        <span class="nav-icon">${icon('list')}</span>
+        <span class="row-text"><strong>Extra details</strong><span class="row-value" id="row-details"></span></span>
+        <span class="row-arrow">${icon('chevron')}</span>
+      </button>
+    </div>
+
     <h2 class="settings-group">Goals</h2>
     <div class="settings-list">
       <button class="settings-row mint" data-step="3">
@@ -1876,6 +2270,11 @@ function showSettings(page) {
   const goalNames = profile.goals.map(function (id) { return say(findGoal(id).label); });
   if (profile.customGoal) goalNames.push(profile.customGoal);
   box.querySelector('#row-goals').textContent = goalNames.length > 0 ? goalNames.join(', ') : 'None picked yet';
+
+  box.querySelector('#details-group').textContent = w.orders;
+  box.querySelector('#row-details').textContent = profile.details.length
+    ? profile.details.map(function (d) { return d.name; }).join(', ')
+    : 'None yet. Add things like ' + (DETAIL_IDEAS[profile.businessType] || DETAIL_IDEAS.other)[0].name.toLowerCase() + '.';
 
   // The big picture: click the camera to change it
   box.querySelector('#hero-photo').prepend(avatar('lg'));

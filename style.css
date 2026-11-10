@@ -1004,6 +1004,106 @@ h1, h2, h3 {
   cursor: pointer;
 }
 
+/* Extra details on each order in the list */
+.order-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.mini-chip {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--peach-soft);
+  color: var(--peach);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Extra details in the order form */
+.extra-details {
+  padding: 16px 18px 18px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--peach-soft) 45%, white);
+  border: 1.5px dashed color-mix(in srgb, var(--peach) 35%, white);
+}
+.extra-title { font-size: 17px; margin-bottom: 10px; }
+.extra-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 18px;
+  margin-bottom: 14px;
+}
+.extra-ask { margin: 0 0 10px; color: var(--muted); font-size: 14px; }
+
+.yesno { display: flex; align-items: flex-end; }
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  font-weight: 600;
+  cursor: pointer;
+}
+.check-row input { width: 20px; height: 20px; accent-color: var(--ink); }
+select.input { cursor: pointer; }
+
+/* One-click ideas */
+.idea-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.idea-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px 7px 9px;
+  border: 1.5px solid color-mix(in srgb, var(--peach) 40%, white);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--peach);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.idea-btn svg { width: 16px; height: 16px; }
+.idea-btn:hover { background: var(--peach); border-color: var(--peach); color: #fff; }
+.idea-btn.other { border-style: dashed; color: var(--muted); border-color: var(--line); }
+.idea-btn.other:hover { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+/* "Something else" mini form */
+.detail-builder {
+  margin-top: 4px;
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+}
+.detail-builder .input { max-width: none; margin-bottom: 14px; }
+.detail-builder .form-actions { margin-top: 4px; }
+.kind-buttons { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.kind-btn {
+  padding: 8px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.kind-btn[aria-checked="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+/* Extra details page in Settings */
+.detail-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 12px 12px 16px;
+  border-top: 1px solid var(--line);
+}
+.detail-row:first-child { border-top: none; }
+.detail-none { padding: 14px 16px; margin: 0; }
+#detail-add { margin-top: 18px; }
+
 /* Trash button on each row */
 .row-delete {
   display: grid;
@@ -1220,6 +1320,7 @@ p.label { margin-top: 0; }
   .word-grid { grid-template-columns: 1fr; }
   .goal-grid { grid-template-columns: 1fr; }
   .form-grid { grid-template-columns: 1fr; }
+  .extra-grid { grid-template-columns: 1fr; }
   .form-grid .span-2 { grid-column: auto; }
   .order-price { display: none; }
   .theme-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
