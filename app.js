@@ -1914,7 +1914,8 @@ function orderRow(order) {
         <span>${date.toLocaleDateString('en-US', { month: 'short' })}</span>
       </span>
       <span class="order-text">
-        <strong class="order-item"></strong>
+        <strong class="order-name"></strong>
+        <span class="order-item"></span>
         <span class="order-who"></span>
         <span class="order-chips"></span>
       </span>
@@ -1923,9 +1924,11 @@ function orderRow(order) {
     <select class="status-pick" aria-label="Status"></select>
     <button class="row-delete" title="Delete">${icon('trash')}</button>
   `;
+  // The person's name goes on top so it's easy to spot
+  row.querySelector('.order-name').textContent = order.customer;
   row.querySelector('.order-item').textContent = order.item;
   row.querySelector('.order-who').textContent =
-    order.customer + ', ' + dueText(order).charAt(0).toLowerCase() + dueText(order).slice(1) + (order.time ? ' at ' + niceTime(order.time) : '');
+    dueText(order) + (order.time ? ' at ' + niceTime(order.time) : '');
   row.querySelector('.order-price').textContent = order.price ? money(order.price) : '';
 
   // Extra details, like "Cake flavor: Chocolate"

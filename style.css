@@ -984,9 +984,22 @@ h1, h2, h3 {
 .order-row.finished .date-block { background: var(--page); color: var(--muted); }
 
 .order-text { min-width: 0; }
-.order-item { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.order-who { display: block; color: var(--muted); font-size: 14px; }
+/* The person's name is the biggest thing in the row */
+.order-name {
+  display: block;
+  font-family: var(--font-head);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--ink-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.order-item { display: block; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.order-who { display: block; color: var(--muted); font-size: 13px; }
 .order-row.late .order-who { color: var(--error); font-weight: 600; }
+.order-row.finished .order-name,
 .order-row.finished .order-item { color: var(--muted); }
 
 .order-price { font-weight: 700; white-space: nowrap; }
