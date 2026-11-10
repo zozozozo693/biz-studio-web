@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Biz Studio</title>
+  <!-- Fonts: Lora for the logo, 6 heading fonts to choose from, Figtree for everything else -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600;700&family=Lora:ital,wght@0,700;1,700&family=Nunito:wght@800&family=Fredoka:wght@600&family=Playfair+Display:wght@700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- PROFILE SETUP (shown first) -->
+  <div class="setup" id="setup">
+    <header class="setup-top">
+      <div class="logo">
+        <span class="logo-word">Biz Studio</span>
+        <svg class="logo-star" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 1l3 7 7 1-5 5 1.5 8L12 18l-6.5 4L7 14 2 9l7-1z"/>
+        </svg>
+      </div>
+      <ol class="setup-steps" id="setup-steps"></ol>
+    </header>
+    <div class="setup-bar"><span id="setup-progress"></span></div>
+
+    <main class="setup-body" id="setup-body">
+      <div class="setup-form" id="setup-form"></div>
+
+      <!-- A mini version of the app, shown on the Look page (filled in by app.js) -->
+      <aside class="look-preview" id="look-preview" aria-hidden="true" hidden></aside>
+    </main>
+  </div>
+
+  <!-- MAIN APP (shown after setup) -->
+  <div class="app" id="app" hidden>
+    <aside class="sidebar">
+      <div class="side-brand">
+        <span id="side-avatar"></span>
+        <div class="logo logo-small">
+          <span class="logo-word" id="brand-name">Biz Studio</span>
+          <svg class="logo-star" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 1l3 7 7 1-5 5 1.5 8L12 18l-6.5 4L7 14 2 9l7-1z"/>
+          </svg>
+        </div>
+      </div>
+      <nav id="menu"></nav>
+    </aside>
+
+    <main class="content" id="page"></main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
