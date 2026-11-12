@@ -44,6 +44,8 @@ const ICONS = {
   trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
   camera2: '<path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
   star: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
+  upload: '<path d="M12 15V4M7 9l5-5 5 5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
+  file: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
   sparkle: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/>',
 };
 
@@ -374,7 +376,7 @@ const SECTIONS = [
     emptyText: (w) => w.orders + ' and events will show up on the day they are due.' },
   { id: 'customers', icon: 'users', label: (w) => w.customers,
     emptyTitle: (w) => 'No ' + w.customers.toLowerCase() + ' yet',
-    emptyText: (w) => w.customers + ' are added automatically when they book with you.' },
+    emptyText: (w) => w.customers + ' are added automatically from your ' + w.orders.toLowerCase() + '.' },
   { id: 'products', icon: 'box', label: (w) => w.products,
     emptyTitle: 'Nothing on your list yet',
     emptyText: (w) => 'Add your ' + w.products.toLowerCase() + ' with their prices, ' + w.supplies.toLowerCase() + ' and steps.' },
@@ -552,6 +554,8 @@ function eraseProfile() {
   try {
     localStorage.removeItem(SAVE_KEY);
     localStorage.removeItem(ORDERS_KEY);
+    localStorage.removeItem('bizStudio.customers');
+    localStorage.removeItem('bizStudio.formMatch');
   } catch (error) {
     // nothing to erase
   }
@@ -1262,6 +1266,10 @@ function makeMenuButton(section) {
   button.addEventListener('click', function () {
     currentSection = section.id;
     orderView = null; // always open Orders on the list
+    customerView = null; // and Customers on the list
+    calendarMonth = null; // and the Calendar on this month
+    calendarDay = todayText();
+    orderCameFrom = null;
     showMenu();
     showPage();
   });
@@ -1371,6 +1379,8 @@ function showPage() {
     showGoalTips(page);
   }
   if (section.id === 'orders') showOrders(page);
+  if (section.id === 'customers') showCustomers(page);
+  if (section.id === 'calendar') showCalendar(page);
   if (section.id === 'settings') showSettings(page);
 }
 
@@ -1808,6 +1818,7 @@ function sortedOrders() {
 
 // ---------- The Orders page ----------
 function showOrders(page) {
+  if (orderView === 'import') return showImport(page);
   if (orderView !== null) return showOrderForm(page);
 
   page.querySelector('.empty').remove();
@@ -1823,23 +1834,32 @@ function showOrders(page) {
   const titleBox = document.createElement('div');
   titleBox.append(head.querySelector('h1'), head.querySelector('p'));
   head.appendChild(titleBox);
+  const buttons = document.createElement('div');
+  buttons.className = 'head-buttons';
+  const formBtn = document.createElement('button');
+  formBtn.className = 'btn secondary with-icon';
+  formBtn.innerHTML = icon('upload') + '<span>From Google Form</span>';
+  formBtn.addEventListener('click', function () { openOrderForm('import'); });
   const addBtn = document.createElement('button');
   addBtn.className = 'btn with-icon';
   addBtn.innerHTML = icon('plus') + '<span></span>';
   addBtn.querySelector('span').textContent = 'New ' + oneOrder();
   addBtn.addEventListener('click', function () { openOrderForm('new'); });
-  head.appendChild(addBtn);
+  buttons.append(formBtn, addBtn);
+  head.appendChild(buttons);
 
   // No orders yet: a friendly empty message with a button
   if (orders.length === 0) {
     const empty = document.createElement('div');
     empty.className = 'empty sky';
     empty.innerHTML = '<span class="empty-icon">' + icon('receipt') + '</span><h3></h3><p></p>' +
-      '<button class="btn" id="first-order"></button>';
+      '<div class="empty-buttons"><button class="btn" id="first-order"></button>' +
+      '<button class="btn secondary" id="first-import">Bring them in from your Google Form</button></div>';
     empty.querySelector('h3').textContent = 'No ' + w.orders.toLowerCase() + ' yet';
     empty.querySelector('p').textContent = 'Add your first ' + oneOrder() + ' to start keeping track of who needs what, and when.';
     empty.querySelector('#first-order').textContent = 'Add your first ' + oneOrder();
     empty.querySelector('#first-order').addEventListener('click', function () { openOrderForm('new'); });
+    empty.querySelector('#first-import').addEventListener('click', function () { openOrderForm('import'); });
     page.appendChild(empty);
     return;
   }
@@ -1978,7 +1998,23 @@ function niceTime(text) {
 }
 
 // ---------- Adding and editing an order ----------
+// Closes the form, going back to wherever it was opened from
+function leaveOrderForm() {
+  orderView = null;
+  if (orderCameFrom) {
+    currentSection = orderCameFrom.section;
+    customerView = orderCameFrom.customer;
+    orderCameFrom = null;
+    showMenu();
+  }
+}
+
+// If an order is opened from Customers or the Calendar, go back there after
+let orderCameFrom = null; // { section, customer }
+let orderPrefill = null;  // things filled in already, like { customer, contact } or { due }
+
 function openOrderForm(which) {
+  orderCameFrom = currentSection === 'orders' ? null : { section: currentSection, customer: customerView };
   currentSection = 'orders';
   orderView = which;
   showMenu();
@@ -1989,8 +2025,9 @@ function showOrderForm(page) {
   const w = words();
   const isNew = orderView === 'new';
   const order = isNew
-    ? { customer: '', contact: '', item: '', due: '', time: '', price: '', status: 'new', notes: '' }
+    ? Object.assign({ customer: '', contact: '', item: '', due: '', time: '', price: '', status: 'new', notes: '' }, orderPrefill)
     : orders.find(function (o) { return o.id === orderView; });
+  orderPrefill = null;
 
   page.innerHTML = `
     <button class="back-link" id="order-back">${icon('back')}<span></span></button>
@@ -2004,7 +2041,7 @@ function showOrderForm(page) {
         </div>
         <div>
           <label class="label" for="o-contact">Phone or email (optional)</label>
-          <input id="o-contact" class="input" autocomplete="off" placeholder="(555) 123-4567">
+          <input id="o-contact" class="input" autocomplete="off" placeholder="555-123-4567 or an email">
         </div>
 
         <div class="span-2">
@@ -2062,7 +2099,7 @@ function showOrderForm(page) {
   fields.forEach(function (name) {
     page.querySelector('#o-' + name).value = order[name] || '';
   });
-  if (isNew) page.querySelector('#o-due').value = todayText();
+  if (isNew && !order.due) page.querySelector('#o-due').value = todayText();
 
   // Extra details: the owner's own questions, plus ideas to add more
   const extra = Object.assign({}, order.extra || {});
@@ -2106,10 +2143,16 @@ function showOrderForm(page) {
   }
   drawStatus();
 
-  page.querySelector('#o-customer').focus();
+  addPhoneDashes(page.querySelector('#o-contact'));
+  if (order.customer) page.querySelector('#o-item').focus();
+  else page.querySelector('#o-customer').focus();
+  if (orderCameFrom) {
+    page.querySelector('#order-back span').textContent = 'Back to ' +
+      (orderCameFrom.customer ? order.customer || 'them' : say(findSection(orderCameFrom.section).label));
+  }
 
   function goBack() {
-    orderView = null;
+    leaveOrderForm();
     showPage();
   }
   page.querySelector('#order-back').addEventListener('click', goBack);
@@ -2159,10 +2202,1128 @@ function showOrderForm(page) {
     del.hidden = false;
     del.textContent = 'Delete this ' + oneOrder();
     del.addEventListener('click', function () {
-      orderView = null;
+      leaveOrderForm();
       deleteOrders([order.id]);
     });
   }
+}
+
+// =========================================
+// ORDERS FROM A GOOGLE FORM
+// The owner downloads their form answers as a .csv file from Google Sheets,
+// picks it here, and tells the app which question goes where.
+// =========================================
+const MATCH_KEY = 'bizStudio.formMatch'; // remembers their matches for next time
+let importData = null; // { fileName, questions: [...], rows: [[...], ...] } once a file is picked
+
+function loadMatches() {
+  try { return JSON.parse(localStorage.getItem(MATCH_KEY)) || {}; } catch (error) { return {}; }
+}
+function saveMatches(matches) {
+  try { localStorage.setItem(MATCH_KEY, JSON.stringify(matches)); } catch (error) { /* fine */ }
+}
+
+// Reads CSV text into rows of cells. Handles "quoted, cells" and line breaks inside answers.
+function parseCSV(text) {
+  text = text.replace(/^﻿/, ''); // remove the invisible mark some files start with
+  const rows = [];
+  let row = [];
+  let cell = '';
+  let quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (quoted) {
+      if (ch === '"' && text[i + 1] === '"') { cell += '"'; i++; }
+      else if (ch === '"') quoted = false;
+      else cell += ch;
+    } else if (ch === '"') quoted = true;
+    else if (ch === ',') { row.push(cell); cell = ''; }
+    else if (ch === '\n' || ch === '\r') {
+      if (ch === '\r' && text[i + 1] === '\n') i++;
+      row.push(cell); rows.push(row); row = []; cell = '';
+    } else cell += ch;
+  }
+  if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+  return rows.filter(function (r) { return r.some(function (c) { return c.trim() !== ''; }); });
+}
+
+// Turns what someone typed into a date like "2026-11-14", or '' if it can't tell
+function readFormDate(raw) {
+  const text = String(raw || '').trim();
+  if (!text) return '';
+  const pad = function (n) { return String(n).padStart(2, '0'); };
+  let m = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return m[1] + '-' + pad(m[2]) + '-' + pad(m[3]);
+  m = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if (m) {
+    const year = m[3].length === 2 ? '20' + m[3] : m[3];
+    return year + '-' + pad(m[1]) + '-' + pad(m[2]);
+  }
+  const parsed = new Date(text);
+  if (isNaN(parsed)) return '';
+  if (!/\d{4}/.test(text)) {
+    // No year typed ("Nov 14"): use this year, or next year if that date already passed a while ago
+    parsed.setFullYear(new Date().getFullYear());
+    if (parsed < new Date(Date.now() - 60 * 86400000)) parsed.setFullYear(parsed.getFullYear() + 1);
+  }
+  return parsed.getFullYear() + '-' + pad(parsed.getMonth() + 1) + '-' + pad(parsed.getDate());
+}
+
+// "2:30 PM" or "14:30:00" -> "14:30", or '' if there is no time in it
+function readFormTime(raw) {
+  const text = String(raw || '');
+  let m = text.match(/(\d{1,2}):(\d{2})(?::\d{2})?\s*([ap]\.?m\.?)?/i);
+  if (!m) {
+    const short = text.match(/\b(\d{1,2})\s*([ap]\.?m\.?)/i);
+    if (!short) return '';
+    m = [short[0], short[1], '00', short[2]];
+  }
+  let hour = Number(m[1]);
+  const ampm = (m[3] || '').toLowerCase().replace(/\./g, '');
+  if (ampm === 'pm' && hour < 12) hour += 12;
+  if (ampm === 'am' && hour === 12) hour = 0;
+  if (hour > 23) return '';
+  return String(hour).padStart(2, '0') + ':' + m[2];
+}
+
+// Where each form answer can go
+function matchChoices() {
+  const w = words();
+  const choices = [
+    { id: '', label: 'Leave it out' },
+    { id: 'customer', label: w.customers.replace(/s$/, '') + ' name' },
+    { id: 'contact', label: 'Phone or email' },
+    { id: 'item', label: 'What they want' },
+    { id: 'due', label: 'Due date' },
+    { id: 'time', label: 'Time' },
+    { id: 'price', label: 'Price' },
+    { id: 'notes', label: 'Notes' },
+    { id: 'sent', label: 'When they filled out the form' },
+  ];
+  profile.details.forEach(function (d) {
+    choices.push({ id: 'd:' + d.id, label: d.name, group: 'Your extra details' });
+  });
+  choices.push({ id: 'new', label: 'Make it a new extra detail', group: 'Your extra details' });
+  return choices;
+}
+
+// A first guess at where a question goes, from its wording
+function guessMatch(question, saved) {
+  if (saved[question] !== undefined) {
+    const s = saved[question];
+    if (!s.startsWith('d:') || profile.details.some(function (d) { return 'd:' + d.id === s; })) return s;
+  }
+  const q = question.toLowerCase();
+  const detail = profile.details.find(function (d) {
+    const name = d.name.toLowerCase();
+    return q.includes(name) || name.includes(q.replace(/\?$/, '').trim());
+  });
+  if (detail) return 'd:' + detail.id;
+  if (/timestamp|submitted/.test(q)) return 'sent';
+  if (/e-?mail|phone|number to reach|contact|text you/.test(q)) return 'contact';
+  if (/\bname\b/.test(q)) return 'customer';
+  if (/\btime\b/.test(q) && !/\bdate\b/.test(q)) return 'time';
+  if (/\bdate\b|\bwhen\b|\bday\b|pick ?up|deliver|need it|due/.test(q)) return 'due';
+  if (/price|cost|budget|total|\$/.test(q)) return 'price';
+  if (/order|want|would you like|item|product|what can we|what do you need/.test(q)) return 'item';
+  return 'notes';
+}
+
+// Picks a file and reads it
+function readImportFile(file, done) {
+  if (!file) return;
+  if (!/\.csv$/i.test(file.name)) {
+    done('That file is not a .csv file. In Google Sheets, go to File, then Download, then Comma Separated Values (.csv).');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function () {
+    const rows = parseCSV(String(reader.result));
+    if (rows.length < 2) {
+      done('That file doesn\'t have any answers in it yet.');
+      return;
+    }
+    const questions = rows[0].map(function (q) { return q.trim(); });
+    importData = {
+      fileName: file.name,
+      questions: questions,
+      rows: rows.slice(1).map(function (r) {
+        // make every row as long as the questions row
+        return questions.map(function (q, i) { return (r[i] || '').trim(); });
+      }),
+    };
+    done(null);
+  };
+  reader.onerror = function () { done('That file couldn\'t be opened. Try downloading it again.'); };
+  reader.readAsText(file);
+}
+
+// Builds orders from the rows, using the matches
+function buildImportedOrders(matches, forReal) {
+  const results = [];
+  const details = {}; // detail id -> detail
+  profile.details.forEach(function (d) { details[d.id] = d; });
+  const knownKeys = new Set(orders.map(function (o) { return o.formKey; }).filter(Boolean));
+  let skipped = 0;
+
+  importData.rows.forEach(function (cells) {
+    const order = {
+      customer: '', contact: '', item: '', due: '', time: '', price: '',
+      status: 'new', notes: '', extra: {},
+    };
+    const items = [];
+    const notes = [];
+    let sent = '';
+
+    importData.questions.forEach(function (question, i) {
+      const answer = cells[i];
+      const target = matches[i];
+      if (!answer || !target) return;
+      if (target === 'customer' || target === 'contact') {
+        const value = target === 'contact' ? phoneWithDashes(answer) : answer;
+        order[target] = order[target] ? order[target] + ', ' + value : value;
+      } else if (target === 'item') items.push(answer);
+      else if (target === 'notes') notes.push(question.replace(/[?:]\s*$/, '') + ': ' + answer);
+      else if (target === 'sent') sent = answer;
+      else if (target === 'due') {
+        order.due = readFormDate(answer);
+        if (!order.due) notes.push('Date from the form: ' + answer);
+        if (!order.time && /:|[ap]\.?m/i.test(answer)) order.time = readFormTime(answer);
+      } else if (target === 'time') order.time = readFormTime(answer) || order.time;
+      else if (target === 'price') {
+        const n = parseFloat(answer.replace(/[^0-9.]/g, ''));
+        if (!isNaN(n)) order.price = n;
+      } else if (target.startsWith('d:')) {
+        const d = details[target.slice(2)];
+        if (d) order.extra[d.id] = formAnswerFor(d, answer, forReal);
+      }
+    });
+
+    // Every order needs a date. If the form didn't have one, use the day it was sent.
+    if (!order.due) order.due = readFormDate(sent) || todayText();
+    order.item = items.join(', ') || 'Order from your form';
+    order.customer = order.customer || 'No name given';
+    order.notes = notes.join('\n');
+
+    // A fingerprint, so the same answer isn't added twice
+    order.formKey = sent ? sent + '|' + order.customer : cells.join('|');
+    if (knownKeys.has(order.formKey)) { skipped++; return; }
+    knownKeys.add(order.formKey);
+
+    order.created = sent && !isNaN(new Date(sent)) ? new Date(sent).toISOString() : new Date().toISOString();
+    results.push(order);
+  });
+
+  return { orders: results, skipped: skipped };
+}
+
+// Turns a form answer into the right kind of answer for an extra detail
+function formAnswerFor(detail, answer, forReal) {
+  if (detail.kind === 'yesno') return /^(yes|y|true|x|sure|please)/i.test(answer);
+  if (detail.kind === 'number') {
+    const n = parseFloat(answer.replace(/[^0-9.\-]/g, ''));
+    return isNaN(n) ? '' : n;
+  }
+  if (detail.kind === 'date') return readFormDate(answer);
+  if (detail.kind === 'list') {
+    const found = detail.choices.find(function (c) { return c.toLowerCase() === answer.toLowerCase(); });
+    if (found) return found;
+    // a new choice from the form, so it can still be picked later
+    if (forReal) detail.choices.push(answer);
+    return answer;
+  }
+  return answer;
+}
+
+// ---------- The "From Google Form" page ----------
+function showImport(page) {
+  const w = words();
+  page.innerHTML = `
+    <button class="back-link" id="import-back">${icon('back')}<span></span></button>
+    <div class="import-page">
+      <h1></h1>
+      <p class="help"></p>
+
+      <section class="import-step">
+        <span class="import-num">1</span>
+        <div>
+          <h2>Download your answers</h2>
+          <ol class="how-to">
+            <li>Open your Google Form and click <b>Responses</b>.</li>
+            <li>Click <b>View in Sheets</b> (or <b>Link to Sheets</b> the first time).</li>
+            <li>In the sheet, click <b>File</b>, then <b>Download</b>, then <b>Comma Separated Values (.csv)</b>.</li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="import-step">
+        <span class="import-num">2</span>
+        <div class="step-body">
+          <h2>Pick that file</h2>
+          <div id="file-area"></div>
+          <p class="error" id="file-error" role="alert"></p>
+        </div>
+      </section>
+
+      <section class="import-step" id="match-step" hidden>
+        <span class="import-num">3</span>
+        <div class="step-body">
+          <h2>Tell the app where each answer goes</h2>
+          <p class="step-help">We made a guess for each question. Change any that look wrong.</p>
+          <div class="match-list" id="match-list"></div>
+          <div id="import-summary"></div>
+          <p class="error" id="import-error" role="alert"></p>
+          <div class="form-actions">
+            <button class="btn" id="import-go"></button>
+            <button class="btn secondary" id="import-cancel">Cancel</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  `;
+  page.querySelector('#import-back span').textContent = 'Back to ' + w.orders;
+  page.querySelector('h1').textContent = 'Bring in ' + w.orders.toLowerCase() + ' from your Google Form';
+  page.querySelector('.help').textContent = 'Everyone who filled out your form shows up here as a new ' + oneOrder() +
+    '. You can do this again any time. Ones you already brought in won\'t be added twice.';
+
+  function goBack() {
+    importData = null;
+    orderView = null;
+    showPage();
+  }
+  page.querySelector('#import-back').addEventListener('click', goBack);
+  page.querySelector('#import-cancel').addEventListener('click', goBack);
+
+  // ----- Step 2: picking the file -----
+  const fileArea = page.querySelector('#file-area');
+  function drawFileArea() {
+    fileArea.innerHTML = '';
+    if (importData) {
+      const chip = document.createElement('div');
+      chip.className = 'file-chip';
+      chip.innerHTML = icon('file') + '<span><b></b><small></small></span><button class="link-btn" type="button">Pick a different file</button>';
+      chip.querySelector('b').textContent = importData.fileName;
+      chip.querySelector('small').textContent = importData.rows.length + (importData.rows.length === 1 ? ' answer' : ' answers');
+      chip.querySelector('button').addEventListener('click', function () {
+        importData = null;
+        drawFileArea();
+        drawMatches();
+      });
+      fileArea.appendChild(chip);
+      return;
+    }
+    const zone = document.createElement('label');
+    zone.className = 'drop-zone';
+    zone.innerHTML = '<input type="file" accept=".csv,text/csv" hidden>' +
+      '<span class="drop-icon">' + icon('upload') + '</span>' +
+      '<b>Choose your file</b><span>or drag it here</span>';
+    const input = zone.querySelector('input');
+    function got(file) {
+      page.querySelector('#file-error').textContent = '';
+      readImportFile(file, function (problem) {
+        if (problem) { page.querySelector('#file-error').textContent = problem; return; }
+        drawFileArea();
+        drawMatches();
+      });
+    }
+    input.addEventListener('change', function () { got(input.files[0]); });
+    zone.addEventListener('dragover', function (e) { e.preventDefault(); zone.classList.add('over'); });
+    zone.addEventListener('dragleave', function () { zone.classList.remove('over'); });
+    zone.addEventListener('drop', function (e) {
+      e.preventDefault();
+      zone.classList.remove('over');
+      got(e.dataTransfer.files[0]);
+    });
+    fileArea.appendChild(zone);
+  }
+
+  // ----- Step 3: matching questions -----
+  let matches = [];
+  function drawMatches() {
+    const step = page.querySelector('#match-step');
+    step.hidden = !importData;
+    if (!importData) return;
+
+    const saved = loadMatches();
+    matches = importData.questions.map(function (q) { return guessMatch(q, saved); });
+
+    const list = page.querySelector('#match-list');
+    list.innerHTML = '';
+    importData.questions.forEach(function (question, i) {
+      const example = importData.rows.map(function (r) { return r[i]; }).find(Boolean) || '';
+      const row = document.createElement('div');
+      row.className = 'match-row';
+      row.innerHTML = '<div class="match-q"><b></b><span></span></div><select class="input"></select>';
+      row.querySelector('b').textContent = question || 'Question ' + (i + 1);
+      row.querySelector('span').textContent = example ? 'Like: ' + example : 'No answers yet';
+
+      const select = row.querySelector('select');
+      select.setAttribute('aria-label', 'Where "' + question + '" goes');
+      let group = null;
+      matchChoices().forEach(function (c) {
+        const option = document.createElement('option');
+        option.value = c.id;
+        option.textContent = c.label;
+        if (c.group) {
+          if (!group) {
+            group = document.createElement('optgroup');
+            group.label = c.group;
+            select.appendChild(group);
+          }
+          group.appendChild(option);
+        } else select.appendChild(option);
+      });
+      select.value = matches[i];
+      if (select.value !== matches[i]) { select.value = 'notes'; matches[i] = 'notes'; }
+      row.classList.toggle('left-out', matches[i] === '');
+      select.addEventListener('change', function () {
+        matches[i] = select.value;
+        row.classList.toggle('left-out', select.value === '');
+        drawSummary();
+      });
+      list.appendChild(row);
+    });
+    drawSummary();
+  }
+
+  // How many will be added, and the button
+  function drawSummary() {
+    const box = page.querySelector('#import-summary');
+    page.querySelector('#import-error').textContent = '';
+    const result = buildImportedOrders(matches.map(function (m) { return m === 'new' ? '' : m; }));
+    const count = result.orders.length;
+    const past = result.orders.filter(function (o) { return daysUntil(o.due) < 0; }).length;
+
+    box.innerHTML = '';
+    const line = document.createElement('p');
+    line.className = 'import-count';
+    line.textContent = count === 0
+      ? 'Everything in this file is already in your app.'
+      : count + ' new ' + (count === 1 ? oneOrder() : w.orders.toLowerCase()) + ' ready to add.' +
+        (result.skipped ? ' ' + result.skipped + ' you already have will be skipped.' : '');
+    box.appendChild(line);
+
+    if (past > 0) {
+      const check = document.createElement('label');
+      check.className = 'check-row past-check';
+      check.innerHTML = '<input type="checkbox" id="past-done" checked><span></span>';
+      check.querySelector('span').textContent = past === 1
+        ? 'Mark the one that was due before today as done'
+        : 'Mark the ' + past + ' that were due before today as done';
+      box.appendChild(check);
+    }
+
+    const go = page.querySelector('#import-go');
+    go.textContent = count === 0 ? 'Nothing new to add' : 'Add ' + count + ' ' + (count === 1 ? oneOrder() : w.orders.toLowerCase());
+    go.disabled = count === 0;
+  }
+
+  page.querySelector('#import-go').addEventListener('click', function () {
+    const error = page.querySelector('#import-error');
+    if (!matches.includes('customer')) {
+      error.textContent = 'Pick which question has the ' + w.customers.replace(/s$/, '').toLowerCase() + '\'s name.';
+      return;
+    }
+    if (!matches.includes('item')) {
+      error.textContent = 'Pick which question says what they want.';
+      return;
+    }
+
+    // Questions they chose to make into new extra details
+    const final = matches.slice();
+    final.forEach(function (m, i) {
+      if (m !== 'new') return;
+      const name = importData.questions[i].replace(/[?:]\s*$/, '').trim() || 'Question ' + (i + 1);
+      const existing = profile.details.find(function (d) { return d.name.toLowerCase() === name.toLowerCase(); });
+      if (existing) { final[i] = 'd:' + existing.id; return; }
+      addDetail({ name: name, kind: 'text' });
+      const added = profile.details[profile.details.length - 1];
+      added.id += '_' + i; // so two added at once never get the same id
+      final[i] = 'd:' + added.id;
+    });
+
+    // Remember the matches for next time
+    const saved = loadMatches();
+    importData.questions.forEach(function (q, i) { saved[q] = final[i]; });
+    saveMatches(saved);
+
+    const result = buildImportedOrders(final, true);
+    const pastDone = page.querySelector('#past-done');
+    result.orders.forEach(function (o, i) {
+      o.id = 'o' + Date.now() + '_' + i;
+      if (pastDone && pastDone.checked && daysUntil(o.due) < 0) o.status = 'done';
+      orders.push(o);
+    });
+    saveOrders();
+    saveProfile(); // new choices or details from the form
+
+    const ids = result.orders.map(function (o) { return o.id; });
+    const count = ids.length;
+    importData = null;
+    orderView = null;
+    orderFilter = 'all';
+    showPage();
+    showUndo('Added ' + count + ' ' + (count === 1 ? oneOrder() : w.orders.toLowerCase()) + ' from your form', function () {
+      orders = orders.filter(function (o) { return !ids.includes(o.id); });
+      saveOrders();
+      showPage();
+    });
+  });
+
+  drawFileArea();
+  drawMatches();
+}
+
+// =========================================
+// CUSTOMERS
+// The list is made from the orders, so nobody has to be typed in twice.
+// Extra things about a person (notes, a phone number, people added by hand)
+// are saved separately, keyed by their name in lowercase.
+// =========================================
+const CUSTOMERS_KEY = 'bizStudio.customers';
+let customerInfo = loadCustomerInfo(); // { "mia rodriguez": { name, contact, notes, added } }
+let customerView = null;    // null = the list, or the key of the person being looked at
+let customerSort = 'recent';
+let customerSearch = '';
+const CARD_COLORS = ['pink', 'mint', 'sky', 'lilac', 'peach', 'butter'];
+
+function loadCustomerInfo() {
+  try { return JSON.parse(localStorage.getItem(CUSTOMERS_KEY)) || {}; } catch (error) { return {}; }
+}
+function saveCustomerInfo() {
+  try { localStorage.setItem(CUSTOMERS_KEY, JSON.stringify(customerInfo)); } catch (error) { /* fine */ }
+}
+
+// "  Mia   Rodriguez " -> "mia rodriguez", so the same person always matches
+function personKey(name) {
+  return String(name || '').trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+// Phone numbers get their dashes as you type: 5552013344 -> 555-201-3344.
+// Emails (anything with a letter or @) are left alone.
+function phoneWithDashes(text) {
+  if (/[a-z@]/i.test(text)) return text;
+  let digits = text.replace(/\D/g, '');
+  let start = '';
+  if (digits.length > 10 && digits[0] === '1') { start = '1-'; digits = digits.slice(1); }
+  digits = digits.slice(0, 10);
+  if (!digits) return text.trim() === '' ? '' : text;
+  let out = digits.slice(0, 3);
+  if (digits.length > 3) out += '-' + digits.slice(3, 6);
+  if (digits.length > 6) out += '-' + digits.slice(6);
+  return start + out;
+}
+
+function addPhoneDashes(input) {
+  input.addEventListener('input', function (e) {
+    // Only fix it up while typing at the end, so the cursor doesn't jump around
+    if (input.selectionStart !== input.value.length) return;
+    if (e.inputType && e.inputType.startsWith('delete')) return;
+    input.value = phoneWithDashes(input.value);
+  });
+  input.addEventListener('blur', function () { input.value = phoneWithDashes(input.value); });
+}
+
+// "Mia Rodriguez" -> "MR"
+function initialsOf(name) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return '?';
+  return (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+}
+
+// The same person always gets the same color
+function personColor(key) {
+  let n = 0;
+  for (let i = 0; i < key.length; i++) n = (n * 31 + key.charCodeAt(i)) % 997;
+  return CARD_COLORS[n % CARD_COLORS.length];
+}
+
+function oneCustomer() {
+  return words().customers.replace(/s$/, '').toLowerCase();
+}
+
+// Everyone, with their orders and totals
+function allCustomers() {
+  const people = {};
+  function person(key, name) {
+    if (!people[key]) people[key] = { key: key, name: name, contact: '', notes: '', orders: [], total: 0, added: false };
+    return people[key];
+  }
+
+  orders.forEach(function (o) {
+    const key = personKey(o.customer);
+    if (!key) return;
+    const p = person(key, o.customer.trim().replace(/\s+/g, ' '));
+    p.orders.push(o);
+    p.total += Number(o.price) || 0;
+  });
+
+  Object.keys(customerInfo).forEach(function (key) {
+    const info = customerInfo[key];
+    if (!people[key] && !info.added) return; // their orders were all deleted
+    const p = person(key, info.name);
+    if (info.name) p.name = info.name;
+    p.notes = info.notes || '';
+    p.added = !!info.added;
+    if (info.contact) p.contact = info.contact;
+  });
+
+  return Object.keys(people).map(function (key) {
+    const p = people[key];
+    // newest first
+    p.orders.sort(function (a, b) { return b.due.localeCompare(a.due); });
+    p.last = p.orders[0] || null;
+    p.first = p.orders.length ? p.orders[p.orders.length - 1].due : '';
+    p.open = p.orders.filter(isOpen).length;
+    p.regular = p.orders.length >= 3;
+    if (!p.contact) {
+      const withContact = p.orders.find(function (o) { return o.contact; });
+      p.contact = withContact ? withContact.contact : '';
+    }
+    return p;
+  });
+}
+
+function findCustomer(key) {
+  return allCustomers().find(function (p) { return p.key === key; });
+}
+
+// "Nov 14, 2026" (no weekday)
+function shortDate(text) {
+  return toDate(text).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function showCustomers(page) {
+  if (customerView) {
+    const person = findCustomer(customerView);
+    if (person) return showCustomer(page, person);
+    customerView = null; // they were renamed or removed
+  }
+
+  const w = words();
+  const people = allCustomers();
+  const regulars = people.filter(function (p) { return p.regular; }).length;
+
+  page.innerHTML = `
+    <header class="page-head with-button">
+      <div>
+        <h1></h1>
+        <p></p>
+      </div>
+      <button class="btn with-icon" id="add-person">${icon('plus')}<span></span></button>
+    </header>
+    <div id="add-person-box"></div>
+    <div id="people-area"></div>
+  `;
+  page.querySelector('h1').textContent = w.customers;
+  page.querySelector('.page-head p').textContent = people.length === 0
+    ? 'Everyone who orders from you, in one place'
+    : people.length + (people.length === 1 ? ' person' : ' people') +
+      (regulars ? ', ' + regulars + (regulars === 1 ? ' comes' : ' come') + ' back often' : '');
+  page.querySelector('#add-person span').textContent = 'Add a ' + oneCustomer();
+  page.querySelector('#add-person').addEventListener('click', function () { showAddPerson(page); });
+
+  const area = page.querySelector('#people-area');
+
+  if (people.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty pink';
+    empty.innerHTML = '<span class="empty-icon">' + icon('users') + '</span><h3></h3><p></p>';
+    empty.querySelector('h3').textContent = 'No ' + w.customers.toLowerCase() + ' yet';
+    empty.querySelector('p').textContent = 'When you add ' + w.orders.toLowerCase() +
+      ', the people who ordered show up here on their own. You can also add someone yourself.';
+    area.appendChild(empty);
+    return;
+  }
+
+  // Search and sort
+  const tools = document.createElement('div');
+  tools.className = 'people-tools';
+  tools.innerHTML = '<input class="input search-box" type="search" placeholder="Find someone" aria-label="Find someone">' +
+    '<div class="filter-tabs" role="tablist"></div>';
+  const search = tools.querySelector('input');
+  search.value = customerSearch;
+  const tabs = tools.querySelector('.filter-tabs');
+  [
+    { id: 'recent', label: 'Most recent' },
+    { id: 'most', label: 'Most ' + w.orders.toLowerCase() },
+    { id: 'spent', label: 'Spent the most' },
+    { id: 'az', label: 'A to Z' },
+  ].forEach(function (t) {
+    const b = document.createElement('button');
+    b.className = 'filter-tab' + (customerSort === t.id ? ' on' : '');
+    b.setAttribute('role', 'tab');
+    b.setAttribute('aria-selected', customerSort === t.id ? 'true' : 'false');
+    b.textContent = t.label;
+    b.addEventListener('click', function () { customerSort = t.id; showPage(); });
+    tabs.appendChild(b);
+  });
+  area.appendChild(tools);
+
+  const grid = document.createElement('div');
+  grid.className = 'people-grid';
+  area.appendChild(grid);
+
+  function drawGrid() {
+    const find = customerSearch.trim().toLowerCase();
+    const shown = people.filter(function (p) {
+      return !find || p.name.toLowerCase().includes(find) || p.contact.toLowerCase().includes(find);
+    });
+    shown.sort(function (a, b) {
+      if (customerSort === 'az') return a.name.localeCompare(b.name);
+      if (customerSort === 'most') return b.orders.length - a.orders.length || a.name.localeCompare(b.name);
+      if (customerSort === 'spent') return b.total - a.total || a.name.localeCompare(b.name);
+      const aDue = a.last ? a.last.due : '';
+      const bDue = b.last ? b.last.due : '';
+      return bDue.localeCompare(aDue) || a.name.localeCompare(b.name);
+    });
+
+    grid.innerHTML = '';
+    if (shown.length === 0) {
+      const none = document.createElement('p');
+      none.className = 'list-empty';
+      none.textContent = 'Nobody matches "' + customerSearch.trim() + '".';
+      grid.appendChild(none);
+      return;
+    }
+    shown.forEach(function (p) { grid.appendChild(personCard(p)); });
+  }
+  search.addEventListener('input', function () {
+    customerSearch = search.value;
+    drawGrid();
+  });
+  drawGrid();
+}
+
+// One card in the list
+function personCard(p) {
+  const w = words();
+  const card = document.createElement('button');
+  card.className = 'person-card ' + personColor(p.key);
+  card.innerHTML = `
+    <span class="person-top">
+      <span class="initials"></span>
+      <span class="person-name-box">
+        <b class="person-name"></b>
+        <span class="person-contact"></span>
+      </span>
+    </span>
+    <span class="person-badges"></span>
+    <span class="person-stats">
+      <span><b class="st-count"></b><small class="st-count-label"></small></span>
+      <span><b class="st-total"></b><small>total</small></span>
+    </span>
+    <span class="person-last"></span>
+  `;
+  card.querySelector('.initials').textContent = initialsOf(p.name);
+  card.querySelector('.person-name').textContent = p.name;
+  card.querySelector('.person-contact').textContent = p.contact || 'No phone or email yet';
+  card.querySelector('.person-contact').classList.toggle('none', !p.contact);
+  card.querySelector('.st-count').textContent = p.orders.length;
+  card.querySelector('.st-count-label').textContent = p.orders.length === 1 ? oneOrder() : w.orders.toLowerCase();
+  card.querySelector('.st-total').textContent = money(p.total);
+  card.querySelector('.person-last').textContent = p.last
+    ? 'Last: ' + p.last.item + ', ' + shortDate(p.last.due)
+    : 'No ' + w.orders.toLowerCase() + ' yet';
+
+  const badges = card.querySelector('.person-badges');
+  personBadges(p).forEach(function (b) { badges.appendChild(b); });
+  if (!badges.children.length) badges.remove();
+
+  card.addEventListener('click', function () {
+    customerView = p.key;
+    showPage();
+    window.scrollTo(0, 0);
+  });
+  return card;
+}
+
+// Little tags like "Comes back often"
+function personBadges(p) {
+  const list = [];
+  function badge(text, color) {
+    const b = document.createElement('span');
+    b.className = 'badge ' + color;
+    b.textContent = text;
+    list.push(b);
+  }
+  if (p.regular) badge('Comes back often', 'lilac');
+  if (p.open) badge(p.open === 1 ? '1 ' + oneOrder() + ' coming up' : p.open + ' ' + words().orders.toLowerCase() + ' coming up', 'butter');
+  return list;
+}
+
+// "Add a customer" mini form at the top of the list
+function showAddPerson(page) {
+  const box = page.querySelector('#add-person-box');
+  if (box.children.length) { box.querySelector('input').focus(); return; }
+  box.innerHTML = `
+    <div class="add-person">
+      <div class="add-person-fields">
+        <div>
+          <label class="label" for="new-name">Name</label>
+          <input class="input" id="new-name" autocomplete="off" placeholder="Mia Rodriguez">
+        </div>
+        <div>
+          <label class="label" for="new-contact">Phone or email (optional)</label>
+          <input class="input" id="new-contact" autocomplete="off" placeholder="555-123-4567 or an email">
+        </div>
+      </div>
+      <p class="error" id="new-error" role="alert"></p>
+      <div class="form-actions">
+        <button class="btn" id="new-add"></button>
+        <button class="btn secondary" id="new-cancel">Never mind</button>
+      </div>
+    </div>
+  `;
+  box.querySelector('#new-add').textContent = 'Add ' + oneCustomer();
+  const name = box.querySelector('#new-name');
+  addPhoneDashes(box.querySelector('#new-contact'));
+  name.focus();
+  box.querySelector('#new-cancel').addEventListener('click', function () { box.innerHTML = ''; });
+
+  function add() {
+    const typed = name.value.trim().replace(/\s+/g, ' ');
+    if (!typed) {
+      box.querySelector('#new-error').textContent = 'Type their name.';
+      name.classList.add('has-error');
+      return;
+    }
+    const key = personKey(typed);
+    if (!findCustomer(key)) {
+      customerInfo[key] = { name: typed, contact: box.querySelector('#new-contact').value.trim(), notes: '', added: true };
+      saveCustomerInfo();
+    }
+    customerView = key; // open their page (or the one that already exists)
+    showPage();
+  }
+  box.querySelector('#new-add').addEventListener('click', add);
+  box.querySelectorAll('input').forEach(function (input) {
+    input.addEventListener('keydown', function (e) { if (e.key === 'Enter') add(); });
+  });
+}
+
+// ---------- One person's page ----------
+function showCustomer(page, p) {
+  const w = words();
+  page.innerHTML = `
+    <button class="back-link" id="person-back">${icon('back')}<span></span></button>
+    <div class="person-page">
+      <header class="person-head ${personColor(p.key)}">
+        <span class="initials big"></span>
+        <div class="person-head-text">
+          <h1></h1>
+          <p class="person-contact-line"></p>
+          <div class="person-badges"></div>
+        </div>
+        <button class="btn secondary small" id="person-edit">Edit</button>
+      </header>
+      <div id="person-edit-box"></div>
+
+      <div class="stat-tiles">
+        <div class="stat-tile sky"><b id="t-count"></b><span id="t-count-label"></span></div>
+        <div class="stat-tile mint"><b id="t-total"></b><span>total</span></div>
+        <div class="stat-tile peach"><b id="t-first"></b><span id="t-first-label"></span></div>
+      </div>
+
+      <section>
+        <div class="person-orders-head">
+          <h2></h2>
+          <button class="btn with-icon" id="person-new-order">${icon('plus')}<span></span></button>
+        </div>
+        <div id="person-orders"></div>
+        <button class="link-btn start-over" id="person-remove" hidden></button>
+      </section>
+    </div>
+  `;
+  page.querySelector('#person-back span').textContent = 'Back to ' + w.customers;
+  page.querySelector('.initials').textContent = initialsOf(p.name);
+  page.querySelector('h1').textContent = p.name;
+  const contactLine = page.querySelector('.person-contact-line');
+  contactLine.textContent = p.contact || 'No phone or email yet';
+  contactLine.classList.toggle('none', !p.contact);
+  const badges = page.querySelector('.person-badges');
+  personBadges(p).forEach(function (b) { badges.appendChild(b); });
+
+  page.querySelector('#t-count').textContent = p.orders.length;
+  page.querySelector('#t-count-label').textContent = p.orders.length === 1 ? oneOrder() : w.orders.toLowerCase();
+  page.querySelector('#t-total').textContent = money(p.total);
+  page.querySelector('#t-first').textContent = p.first ? shortDate(p.first) : 'Not yet';
+  page.querySelector('#t-first-label').textContent = 'first ' + oneOrder();
+
+  function goBack() {
+    customerView = null;
+    showPage();
+  }
+  page.querySelector('#person-back').addEventListener('click', goBack);
+
+  // Their orders
+  page.querySelector('.person-orders-head h2').textContent = 'Their ' + w.orders.toLowerCase();
+  page.querySelector('#person-new-order span').textContent = 'New ' + oneOrder() + ' for ' + p.name.split(' ')[0];
+  page.querySelector('#person-new-order').addEventListener('click', function () {
+    orderPrefill = { customer: p.name, contact: p.contact };
+    openOrderForm('new');
+  });
+
+  const box = page.querySelector('#person-orders');
+  if (p.orders.length) {
+    const list = document.createElement('div');
+    list.className = 'order-list';
+    p.orders.forEach(function (o) { list.appendChild(orderRow(o)); });
+    box.appendChild(list);
+  } else {
+    const none = document.createElement('p');
+    none.className = 'list-empty';
+    none.textContent = 'No ' + w.orders.toLowerCase() + ' yet.';
+    box.appendChild(none);
+
+    // Someone added by hand with no orders can be removed
+    const remove = page.querySelector('#person-remove');
+    remove.hidden = false;
+    remove.textContent = 'Remove ' + p.name;
+    remove.addEventListener('click', function () {
+      const saved = customerInfo[p.key];
+      delete customerInfo[p.key];
+      saveCustomerInfo();
+      customerView = null;
+      showPage();
+      showUndo(p.name + ' removed', function () {
+        customerInfo[p.key] = saved;
+        saveCustomerInfo();
+        showPage();
+      });
+    });
+  }
+
+  page.querySelector('#person-edit').addEventListener('click', function () { showPersonEdit(page, p); });
+}
+
+// Changing someone's name or phone/email
+function showPersonEdit(page, p) {
+  const box = page.querySelector('#person-edit-box');
+  if (box.children.length) return;
+  box.innerHTML = `
+    <div class="add-person">
+      <div class="add-person-fields">
+        <div>
+          <label class="label" for="edit-name">Name</label>
+          <input class="input" id="edit-name" autocomplete="off">
+        </div>
+        <div>
+          <label class="label" for="edit-contact">Phone or email</label>
+          <input class="input" id="edit-contact" autocomplete="off" placeholder="555-123-4567 or an email">
+        </div>
+      </div>
+      <p class="error" id="edit-error" role="alert"></p>
+      <div class="form-actions">
+        <button class="btn" id="edit-save">Save changes</button>
+        <button class="btn secondary" id="edit-cancel">Cancel</button>
+      </div>
+    </div>
+  `;
+  const nameBox = box.querySelector('#edit-name');
+  const contactBox = box.querySelector('#edit-contact');
+  addPhoneDashes(contactBox);
+  nameBox.value = p.name;
+  contactBox.value = p.contact;
+  nameBox.focus();
+  box.querySelector('#edit-cancel').addEventListener('click', function () { box.innerHTML = ''; });
+
+  box.querySelector('#edit-save').addEventListener('click', function () {
+    const name = nameBox.value.trim().replace(/\s+/g, ' ');
+    if (!name) {
+      box.querySelector('#edit-error').textContent = 'Type their name.';
+      nameBox.classList.add('has-error');
+      return;
+    }
+    const newKey = personKey(name);
+    const old = customerInfo[p.key] || { notes: p.notes, added: p.added };
+    delete customerInfo[p.key];
+
+    // If the new name belongs to someone already here, they become one person
+    const other = customerInfo[newKey] || {};
+    customerInfo[newKey] = {
+      name: name,
+      contact: contactBox.value.trim(),
+      notes: [other.notes, old.notes].filter(Boolean).join('\n'),
+      added: !!(old.added || other.added),
+    };
+    saveCustomerInfo();
+
+    // Their orders get the new name too
+    p.orders.forEach(function (o) { o.customer = name; });
+    saveOrders();
+
+    customerView = newKey;
+    showPage();
+  });
+}
+
+// =========================================
+// CALENDAR
+// A month with every order on the day it's due. Click a day to see what's due.
+// =========================================
+let calendarMonth = null;       // first day of the month being shown, like "2026-11-01" (null = this month)
+let calendarDay = todayText();  // the day that's picked
+
+function dateText(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function showCalendar(page) {
+  const w = words();
+  const today = todayText();
+  const month = calendarMonth ? toDate(calendarMonth) : new Date(toDate(today).getFullYear(), toDate(today).getMonth(), 1);
+
+  // Orders by day
+  const byDay = {};
+  orders.forEach(function (o) {
+    if (!o.due) return;
+    (byDay[o.due] = byDay[o.due] || []).push(o);
+  });
+  Object.keys(byDay).forEach(function (day) {
+    byDay[day].sort(function (a, b) { return (a.time || '99').localeCompare(b.time || '99'); });
+  });
+
+  const monthName = month.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const inMonth = orders.filter(function (o) {
+    const d = toDate(o.due);
+    return d.getMonth() === month.getMonth() && d.getFullYear() === month.getFullYear();
+  }).length;
+
+  page.innerHTML = `
+    <header class="page-head with-button">
+      <div>
+        <h1>Calendar</h1>
+        <p></p>
+      </div>
+      <div class="month-nav">
+        <button class="btn secondary small" id="cal-today">Today</button>
+        <button class="round-btn" id="cal-prev" aria-label="Last month">${icon('back')}</button>
+        <h2 class="month-name"></h2>
+        <button class="round-btn" id="cal-next" aria-label="Next month">${icon('chevron')}</button>
+      </div>
+    </header>
+    <div class="calendar-layout">
+      <div class="calendar">
+        <div class="cal-weekdays"></div>
+        <div class="cal-grid"></div>
+      </div>
+      <aside class="day-panel" id="day-panel"></aside>
+    </div>
+  `;
+  page.querySelector('.page-head p').textContent = inMonth === 0
+    ? 'Nothing due in ' + month.toLocaleDateString('en-US', { month: 'long' }) + ' yet'
+    : inMonth + ' ' + (inMonth === 1 ? oneOrder() : w.orders.toLowerCase()) + ' due in ' + month.toLocaleDateString('en-US', { month: 'long' });
+  page.querySelector('.month-name').textContent = monthName;
+
+  function goMonth(change) {
+    const next = new Date(month.getFullYear(), month.getMonth() + change, 1);
+    calendarMonth = dateText(next);
+    showPage();
+  }
+  page.querySelector('#cal-prev').addEventListener('click', function () { goMonth(-1); });
+  page.querySelector('#cal-next').addEventListener('click', function () { goMonth(1); });
+  page.querySelector('#cal-today').addEventListener('click', function () {
+    calendarMonth = null;
+    calendarDay = today;
+    showPage();
+  });
+
+  ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(function (name) {
+    const cell = document.createElement('span');
+    cell.textContent = name;
+    page.querySelector('.cal-weekdays').appendChild(cell);
+  });
+
+  // Start on the Sunday before the 1st, and fill whole weeks
+  const grid = page.querySelector('.cal-grid');
+  const start = new Date(month.getFullYear(), month.getMonth(), 1 - month.getDay());
+  const lastOfMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0);
+  const weeks = Math.ceil((month.getDay() + lastOfMonth.getDate()) / 7);
+
+  for (let i = 0; i < weeks * 7; i++) {
+    const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+    const day = dateText(d);
+    const due = byDay[day] || [];
+    const open = due.filter(isOpen);
+
+    const cell = document.createElement('button');
+    cell.className = 'cal-day';
+    if (d.getMonth() !== month.getMonth()) cell.classList.add('other-month');
+    if (day === today) cell.classList.add('today');
+    if (day === calendarDay) cell.classList.add('picked');
+    if (open.length >= 3) cell.classList.add('busy');
+    cell.setAttribute('aria-label', d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) +
+      (due.length ? ', ' + due.length + ' ' + (due.length === 1 ? oneOrder() : w.orders.toLowerCase()) : ''));
+    cell.innerHTML = '<span class="cal-num"></span><span class="cal-pills"></span>';
+    cell.querySelector('.cal-num').textContent = d.getDate();
+
+    const pills = cell.querySelector('.cal-pills');
+    const showMax = due.length > 3 ? 2 : 3;
+    due.slice(0, showMax).forEach(function (o) {
+      const pill = document.createElement('span');
+      pill.className = 'cal-pill ' + (urgency(o) === 'late' ? 'late' : findStatus(o.status).color);
+      pill.textContent = o.customer.split(' ')[0];
+      pill.title = o.customer + ': ' + o.item + (o.time ? ' at ' + niceTime(o.time) : '');
+      pills.appendChild(pill);
+    });
+    if (due.length > showMax) {
+      const more = document.createElement('span');
+      more.className = 'cal-more';
+      more.textContent = '+' + (due.length - showMax) + ' more';
+      pills.appendChild(more);
+    }
+
+    cell.addEventListener('click', function () {
+      calendarDay = day;
+      if (d.getMonth() !== month.getMonth()) calendarMonth = dateText(new Date(d.getFullYear(), d.getMonth(), 1));
+      showPage();
+    });
+    grid.appendChild(cell);
+  }
+
+  // The picked day, on the side
+  const panel = page.querySelector('#day-panel');
+  const picked = toDate(calendarDay);
+  const pickedOrders = byDay[calendarDay] || [];
+  const days = daysUntil(calendarDay);
+  const when = days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : days === -1 ? 'Yesterday' : '';
+
+  panel.innerHTML = `
+    <p class="day-when"></p>
+    <h2 class="day-title"></h2>
+    <div class="day-orders"></div>
+    <button class="btn with-icon day-add">${icon('plus')}<span></span></button>
+  `;
+  panel.querySelector('.day-when').textContent = when || picked.toLocaleDateString('en-US', { weekday: 'long' });
+  panel.querySelector('.day-title').textContent = picked.toLocaleDateString('en-US',
+    when ? { weekday: 'long', month: 'long', day: 'numeric' } : { month: 'long', day: 'numeric' });
+  panel.querySelector('.day-add span').textContent = 'New ' + oneOrder() + ' on this day';
+  panel.querySelector('.day-add').addEventListener('click', function () {
+    orderPrefill = { due: calendarDay };
+    openOrderForm('new');
+  });
+
+  const list = panel.querySelector('.day-orders');
+  if (!pickedOrders.length) {
+    const none = document.createElement('p');
+    none.className = 'day-free';
+    none.textContent = 'Nothing due. A free day!';
+    list.appendChild(none);
+    return;
+  }
+  pickedOrders.forEach(function (o) {
+    const item = document.createElement('button');
+    item.className = 'day-order ' + (urgency(o) === 'late' ? 'late' : findStatus(o.status).color);
+    item.innerHTML = '<span class="day-top"><span class="day-time"></span><span class="day-status"></span></span>' +
+      '<b class="day-name"></b><span class="day-item"></span>';
+    item.querySelector('.day-time').textContent = o.time ? niceTime(o.time) : 'Any time';
+    item.querySelector('.day-name').textContent = o.customer;
+    item.querySelector('.day-item').textContent = o.item;
+    item.querySelector('.day-status').textContent = urgency(o) === 'late' ? 'Late' : findStatus(o.status).label;
+    item.addEventListener('click', function () { openOrderForm(o.id); });
+    list.appendChild(item);
+  });
 }
 
 // ---------- My Day: what's coming up ----------
