@@ -10,6 +10,7 @@ const ICONS = {
   users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17" cy="9" r="2.5"/><path d="M17.5 14c2.5.3 4 2.2 4 5"/>',
   box: '<path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/>',
   cart: '<circle cx="9" cy="20" r="1.3"/><circle cx="18" cy="20" r="1.3"/><path d="M2 3h3l2.5 12h11l2-8H6"/>',
+  tick: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
   check: '<rect x="3" y="3" width="18" height="18" rx="4"/><path d="m8 12 3 3 5-6"/>',
   calendar: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>',
   tag: '<path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1.5"/>',
@@ -555,6 +556,7 @@ function eraseProfile() {
     localStorage.removeItem(SAVE_KEY);
     localStorage.removeItem(ORDERS_KEY);
     localStorage.removeItem('bizStudio.customers');
+    localStorage.removeItem('bizStudio.tasks');
     localStorage.removeItem('bizStudio.formMatch');
   } catch (error) {
     // nothing to erase
@@ -1381,6 +1383,7 @@ function showPage() {
   if (section.id === 'orders') showOrders(page);
   if (section.id === 'customers') showCustomers(page);
   if (section.id === 'calendar') showCalendar(page);
+  if (section.id === 'todo') showTodo(page);
   if (section.id === 'settings') showSettings(page);
 }
 
@@ -3324,6 +3327,282 @@ function showCalendar(page) {
     item.addEventListener('click', function () { openOrderForm(o.id); });
     list.appendChild(item);
   });
+}
+
+// =========================================
+// TO-DO LIST
+// Tasks the owner adds, plus one task for every open order ("Make Mia's cake"),
+// due the day before the order. Checking off an order's task marks the order Done.
+// Each saved task: { id, text, due ("2026-11-14" or ''), done, doneAt, created }
+// =========================================
+const TASKS_KEY = 'bizStudio.tasks';
+let tasks = loadTasks();
+
+function loadTasks() {
+  try { return JSON.parse(localStorage.getItem(TASKS_KEY)) || []; } catch (error) { return []; }
+}
+function saveTasks() {
+  try { localStorage.setItem(TASKS_KEY, JSON.stringify(tasks)); } catch (error) { /* fine */ }
+}
+
+// "Make" for things you make, "Get ready for" for appointments and jobs
+function orderVerb() {
+  return /orders|commissions/i.test(words().orders) ? 'Make' : 'Get ready for';
+}
+
+// "Birthday cake" -> "birthday cake", but "DJ set" stays "DJ set"
+function lowerFirst(text) {
+  if (text.length > 1 && text[1] === text[1].toUpperCase() && /[A-Z]/.test(text[1])) return text;
+  return text.charAt(0).toLowerCase() + text.slice(1);
+}
+
+// The task for each open order
+function orderTasks() {
+  const today = todayText();
+  return orders.filter(isOpen).map(function (o) {
+    const before = new Date(toDate(o.due).getTime() - 86400000);
+    let due = dateText(before);
+    if (due < today && o.due >= today) due = today; // due today: do it today
+    if (o.due < today) due = o.due;                  // already late
+    return {
+      id: 'order-' + o.id,
+      order: o,
+      text: orderVerb() + ' ' + lowerFirst(o.item) + ' for ' + o.customer.split(' ')[0],
+      due: due,
+      done: false,
+    };
+  });
+}
+
+// Which group a task goes in
+function taskGroup(due) {
+  if (!due) return 'none';
+  const days = daysUntil(due);
+  if (days < 0) return 'late';
+  if (days === 0) return 'today';
+  if (days === 1) return 'tomorrow';
+  if (days < 7) return 'week';
+  return 'later';
+}
+
+const TASK_GROUPS = [
+  { id: 'late', label: 'Late', color: 'pink' },
+  { id: 'today', label: 'Today', color: 'butter' },
+  { id: 'tomorrow', label: 'Tomorrow', color: 'peach' },
+  { id: 'week', label: 'This week', color: 'sky' },
+  { id: 'later', label: 'Later', color: 'lilac' },
+  { id: 'none', label: 'Whenever', color: 'mint' },
+];
+
+function showTodo(page) {
+  const w = words();
+  const open = orderTasks().concat(tasks.filter(function (t) { return !t.done; }));
+  const done = tasks.filter(function (t) { return t.done; })
+    .sort(function (a, b) { return (b.doneAt || '').localeCompare(a.doneAt || ''); });
+  const todayCount = open.filter(function (t) { const g = taskGroup(t.due); return g === 'today' || g === 'late'; }).length;
+
+  page.innerHTML = `
+    <header class="page-head">
+      <h1>To-do list</h1>
+      <p></p>
+    </header>
+    <div class="todo-page">
+      <div class="task-add">
+        <input class="input" id="task-text" autocomplete="off" placeholder="Add a task, like Buy more flour" aria-label="New task">
+        <div class="task-when" role="radiogroup" aria-label="When"></div>
+        <input class="input task-date" id="task-date" type="date" aria-label="Pick a day" hidden>
+        <button class="btn with-icon" id="task-add">${icon('plus')}<span>Add</span></button>
+      </div>
+      <p class="error" id="task-error" role="alert"></p>
+      <div id="task-groups"></div>
+      <section class="task-done" id="task-done" hidden>
+        <div class="task-done-head">
+          <h2>Done</h2>
+          <button class="link-btn clear-finished" id="clear-done"></button>
+        </div>
+        <div class="task-list" id="done-list"></div>
+      </section>
+    </div>
+  `;
+  page.querySelector('.page-head p').textContent = open.length === 0
+    ? 'All caught up'
+    : todayCount === 0
+      ? 'Nothing for today. ' + open.length + ' coming up.'
+      : todayCount + (todayCount === 1 ? ' thing' : ' things') + ' to do today';
+
+  // ----- Adding a task -----
+  let when = 'today';
+  const whenBox = page.querySelector('.task-when');
+  const dateBox = page.querySelector('#task-date');
+  [
+    { id: 'today', label: 'Today' },
+    { id: 'tomorrow', label: 'Tomorrow' },
+    { id: 'pick', label: 'Pick a day' },
+    { id: 'none', label: 'Whenever' },
+  ].forEach(function (opt) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'kind-btn';
+    b.dataset.when = opt.id;
+    b.setAttribute('role', 'radio');
+    b.textContent = opt.label;
+    b.addEventListener('click', function () {
+      when = opt.id;
+      drawWhen();
+      if (when === 'pick') { dateBox.value = dateBox.value || todayText(); dateBox.focus(); }
+    });
+    whenBox.appendChild(b);
+  });
+  function drawWhen() {
+    whenBox.querySelectorAll('button').forEach(function (b) {
+      b.setAttribute('aria-checked', b.dataset.when === when ? 'true' : 'false');
+    });
+    dateBox.hidden = when !== 'pick';
+  }
+  drawWhen();
+
+  const textBox = page.querySelector('#task-text');
+  function addTask() {
+    const text = textBox.value.trim();
+    if (!text) {
+      page.querySelector('#task-error').textContent = 'Type what you need to do.';
+      textBox.focus();
+      return;
+    }
+    let due = '';
+    if (when === 'today') due = todayText();
+    if (when === 'tomorrow') due = dateText(new Date(toDate(todayText()).getTime() + 86400000));
+    if (when === 'pick') due = dateBox.value || todayText();
+    tasks.push({ id: 't' + Date.now(), text: text, due: due, done: false, created: new Date().toISOString() });
+    saveTasks();
+    showPage();
+    document.getElementById('task-text').focus();
+  }
+  page.querySelector('#task-add').addEventListener('click', addTask);
+  textBox.addEventListener('keydown', function (e) { if (e.key === 'Enter') addTask(); });
+  textBox.addEventListener('input', function () { page.querySelector('#task-error').textContent = ''; });
+
+  // ----- The groups -----
+  const groupsBox = page.querySelector('#task-groups');
+  if (open.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty sky';
+    empty.innerHTML = '<span class="empty-icon">' + icon('check') + '</span><h3>All caught up</h3><p></p>';
+    empty.querySelector('p').textContent = 'Add a task above. When you have ' + w.orders.toLowerCase() +
+      ' coming up, tasks for them show up here on their own.';
+    groupsBox.appendChild(empty);
+  }
+  TASK_GROUPS.forEach(function (g) {
+    const list = open.filter(function (t) { return taskGroup(t.due) === g.id; })
+      .sort(function (a, b) { return (a.due || '').localeCompare(b.due || ''); });
+    if (!list.length) return;
+    const section = document.createElement('section');
+    section.className = 'task-group ' + g.color;
+    section.innerHTML = '<h2><span class="group-dot"></span><span></span><b></b></h2><div class="task-list"></div>';
+    section.querySelector('h2 span:last-of-type').textContent = g.label;
+    section.querySelector('h2 b').textContent = list.length;
+    list.forEach(function (t) { section.querySelector('.task-list').appendChild(taskRow(t)); });
+    groupsBox.appendChild(section);
+  });
+
+  // ----- Done -----
+  if (done.length) {
+    const doneBox = page.querySelector('#task-done');
+    doneBox.hidden = false;
+    done.slice(0, 15).forEach(function (t) { page.querySelector('#done-list').appendChild(taskRow(t)); });
+    const clear = page.querySelector('#clear-done');
+    clear.innerHTML = icon('trash') + '<span></span>';
+    clear.querySelector('span').textContent = 'Clear done (' + done.length + ')';
+    clear.addEventListener('click', function () {
+      const before = tasks.slice();
+      tasks = tasks.filter(function (t) { return !t.done; });
+      saveTasks();
+      showPage();
+      showUndo('Cleared ' + done.length + (done.length === 1 ? ' task' : ' tasks'), function () {
+        tasks = before;
+        saveTasks();
+        showPage();
+      });
+    });
+  }
+}
+
+// One task: a checkbox, the words, and when it's due
+function taskRow(t) {
+  const row = document.createElement('div');
+  row.className = 'task-row' + (t.done ? ' done' : '') + (t.order ? ' from-order' : '');
+  row.innerHTML = `
+    <button class="task-check" role="checkbox">${icon('tick')}</button>
+    <div class="task-text">
+      <span class="task-words"></span>
+      <span class="task-meta"></span>
+    </div>
+  `;
+  const check = row.querySelector('.task-check');
+  check.setAttribute('aria-checked', t.done ? 'true' : 'false');
+  check.setAttribute('aria-label', (t.done ? 'Not done: ' : 'Done: ') + t.text);
+  row.querySelector('.task-words').textContent = t.text;
+
+  const meta = row.querySelector('.task-meta');
+  if (t.due && !t.done) {
+    const days = daysUntil(t.due);
+    const dueLine = document.createElement('span');
+    dueLine.className = 'task-due';
+    dueLine.textContent = days < 0 ? 'Was due ' + niceDate(t.due)
+      : days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : niceDate(t.due);
+    meta.appendChild(dueLine);
+  }
+  if (t.order) {
+    // A link to the order this task came from
+    const link = document.createElement('button');
+    link.className = 'task-order-link';
+    link.textContent = capitalize(oneOrder()) + ' due ' + niceDate(t.order.due) + (t.order.time ? ' at ' + niceTime(t.order.time) : '');
+    link.addEventListener('click', function () { openOrderForm(t.order.id); });
+    meta.appendChild(link);
+  }
+  if (!meta.children.length) meta.remove();
+
+  check.addEventListener('click', function () {
+    if (t.order) {
+      // Checking off an order's task marks the order Done
+      const was = t.order.status;
+      t.order.status = 'done';
+      saveOrders();
+      showPage();
+      showUndo(t.order.customer.split(' ')[0] + '\'s ' + oneOrder() + ' marked Done', function () {
+        t.order.status = was;
+        saveOrders();
+        showPage();
+      });
+      return;
+    }
+    t.done = !t.done;
+    t.doneAt = t.done ? new Date().toISOString() : '';
+    saveTasks();
+    showPage();
+  });
+
+  // Tasks you added can be deleted
+  if (!t.order) {
+    const del = document.createElement('button');
+    del.className = 'row-delete';
+    del.innerHTML = icon('trash');
+    del.setAttribute('aria-label', 'Delete ' + t.text);
+    del.title = 'Delete';
+    del.addEventListener('click', function () {
+      const index = tasks.indexOf(t);
+      tasks.splice(index, 1);
+      saveTasks();
+      showPage();
+      showUndo('Task deleted', function () {
+        tasks.splice(index, 0, t);
+        saveTasks();
+        showPage();
+      });
+    });
+    row.appendChild(del);
+  }
+  return row;
 }
 
 // ---------- My Day: what's coming up ----------
