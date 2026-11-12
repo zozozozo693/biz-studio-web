@@ -2,6 +2,88 @@
 // BIZ STUDIO - the code that makes the app work
 // =========================================
 
+// =========================================
+// MORE THAN ONE BUSINESS
+// Each business keeps its own things, saved as "bizStudio.<business id>.orders" and so on.
+// The list of businesses: [{ id, name, type }]. The one open now is saved as "current".
+// =========================================
+const BIZ_LIST_KEY = 'bizStudio.businesses';
+const BIZ_CURRENT_KEY = 'bizStudio.current';
+const BIZ_PARTS = ['profile', 'orders', 'customers', 'tasks', 'formMatch', 'products', 'supplies', 'shopping', 'money'];
+
+function readBusinesses() {
+  try { return JSON.parse(localStorage.getItem(BIZ_LIST_KEY)) || []; } catch (error) { return []; }
+}
+function writeBusinesses(list) {
+  try { localStorage.setItem(BIZ_LIST_KEY, JSON.stringify(list)); } catch (error) { /* fine */ }
+}
+
+let businesses = readBusinesses();
+
+// Someone who used the app before there could be more than one business:
+// move their things into their first business so nothing is lost
+try {
+  const old = localStorage.getItem('bizStudio.profile');
+  if (!businesses.length && old) {
+    const id = 'b' + Date.now().toString(36);
+    BIZ_PARTS.forEach(function (part) {
+      const value = localStorage.getItem('bizStudio.' + part);
+      if (value !== null) {
+        localStorage.setItem('bizStudio.' + id + '.' + part, value);
+        localStorage.removeItem('bizStudio.' + part);
+      }
+    });
+    const saved = JSON.parse(old);
+    businesses = [{ id: id, name: saved.businessName || 'My business', type: saved.businessType || '' }];
+    writeBusinesses(businesses);
+    localStorage.setItem(BIZ_CURRENT_KEY, id);
+  }
+} catch (error) { /* fine */ }
+
+// The business that's open. If there isn't one yet, a new id waiting for setup.
+let currentBiz = null;
+try { currentBiz = localStorage.getItem(BIZ_CURRENT_KEY); } catch (error) { /* fine */ }
+if (!currentBiz) currentBiz = businesses.length ? businesses[0].id : 'b' + Date.now().toString(36);
+
+// Like localStorage, but every key belongs to the open business
+const store = {
+  key: function (k) { return k.replace(/^bizStudio\./, 'bizStudio.' + currentBiz + '.'); },
+  getItem: function (k) { return localStorage.getItem(store.key(k)); },
+  setItem: function (k, v) { localStorage.setItem(store.key(k), v); },
+  removeItem: function (k) { localStorage.removeItem(store.key(k)); },
+};
+
+// Opens another business (the whole app reloads with its things)
+function switchBusiness(id) {
+  try { localStorage.setItem(BIZ_CURRENT_KEY, id); } catch (error) { /* fine */ }
+  location.reload();
+}
+
+// Starts setup for a brand new business, keeping all the others.
+// "start" can pre-fill things, like the business type.
+function addBusiness(start) {
+  const id = 'b' + Date.now().toString(36);
+  try {
+    if (start) sessionStorage.setItem('bizStudio.newBusiness', JSON.stringify(start));
+    sessionStorage.setItem('bizStudio.cameFrom', currentBiz);
+  } catch (error) { /* fine */ }
+  switchBusiness(id);
+}
+
+// Keeps the list of businesses up to date when the profile is saved
+function rememberBusiness() {
+  const entry = { id: currentBiz, name: profile.businessName, type: profile.businessType };
+  const i = businesses.findIndex(function (b) { return b.id === currentBiz; });
+  if (i === -1) businesses.push(entry); else businesses[i] = entry;
+  writeBusinesses(businesses);
+  try { localStorage.setItem(BIZ_CURRENT_KEY, currentBiz); } catch (error) { /* fine */ }
+}
+
+// Reads another business's saved profile (for its picture and colors in the list)
+function profileOf(id) {
+  try { return JSON.parse(localStorage.getItem('bizStudio.' + id + '.profile')) || {}; } catch (error) { return {}; }
+}
+
 // Simple line icons (drawn with SVG so they look sharp at any size)
 const ICONS = {
   // menu icons
@@ -10,6 +92,7 @@ const ICONS = {
   users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17" cy="9" r="2.5"/><path d="M17.5 14c2.5.3 4 2.2 4 5"/>',
   box: '<path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/>',
   cart: '<circle cx="9" cy="20" r="1.3"/><circle cx="18" cy="20" r="1.3"/><path d="M2 3h3l2.5 12h11l2-8H6"/>',
+  flag: '<path d="M5 21V4"/><path d="M5 4h12l-2.5 4.5L17 13H5"/>',
   tick: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
   check: '<rect x="3" y="3" width="18" height="18" rx="4"/><path d="m8 12 3 3 5-6"/>',
   calendar: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>',
@@ -391,8 +474,8 @@ const SECTIONS = [
     emptyTitle: 'No money tracked yet',
     emptyText: 'Payments and the expenses you add are totaled here by week, month and year.' },
   { id: 'finder', icon: 'search', label: 'Finder',
-    emptyTitle: 'Find markets and supplies',
-    emptyText: 'Search for local markets, craft fairs and stores near you.' },
+    emptyTitle: 'Find anything',
+    emptyText: 'Search everything in your app, or find markets and stores near you.' },
   { id: 'printables', icon: 'printer', label: 'Receipts and menus',
     emptyTitle: 'No printables yet',
     emptyText: (w) => 'Make receipts, menus and price lists from your ' + w.products.toLowerCase() + '.' },
@@ -530,7 +613,8 @@ const SAVE_KEY = 'bizStudio.profile';
 
 function saveProfile() {
   try {
-    localStorage.setItem(SAVE_KEY, JSON.stringify(profile));
+    store.setItem(SAVE_KEY, JSON.stringify(profile));
+    rememberBusiness();
   } catch (error) {
     // If the browser won't save, the app still works until it's closed
   }
@@ -539,7 +623,7 @@ function saveProfile() {
 // Returns true if a saved profile was found and loaded
 function loadProfile() {
   try {
-    const saved = JSON.parse(localStorage.getItem(SAVE_KEY));
+    const saved = JSON.parse(store.getItem(SAVE_KEY));
     if (saved && saved.businessName) {
       Object.assign(profile, saved);
       wordsEditedByOwner = true; // keep the words they saved
@@ -553,11 +637,18 @@ function loadProfile() {
 
 function eraseProfile() {
   try {
-    localStorage.removeItem(SAVE_KEY);
-    localStorage.removeItem(ORDERS_KEY);
-    localStorage.removeItem('bizStudio.customers');
-    localStorage.removeItem('bizStudio.tasks');
-    localStorage.removeItem('bizStudio.formMatch');
+    store.removeItem(SAVE_KEY);
+    store.removeItem(ORDERS_KEY);
+    store.removeItem('bizStudio.customers');
+    store.removeItem('bizStudio.tasks');
+    store.removeItem('bizStudio.products');
+    store.removeItem('bizStudio.supplies');
+    store.removeItem('bizStudio.shopping');
+    store.removeItem('bizStudio.money');
+    store.removeItem('bizStudio.formMatch');
+    businesses = businesses.filter(function (b) { return b.id !== currentBiz; });
+    writeBusinesses(businesses);
+    localStorage.setItem(BIZ_CURRENT_KEY, businesses.length ? businesses[0].id : '');
   } catch (error) {
     // nothing to erase
   }
@@ -585,6 +676,7 @@ function showSetup() {
   document.getElementById('app').hidden = true;
   document.getElementById('setup').hidden = false;
   showSetupSteps();
+  showSetupCancel();
 
   // The Look and Goals pages are wider, with the app preview on the right
   const showPreview = setupStep === 2 || setupStep === 3;
@@ -595,6 +687,27 @@ function showSetup() {
   if (setupStep === 1) showNamePage();
   if (setupStep === 2) showLookPage();
   if (setupStep === 3) showGoalsPage();
+}
+
+// When adding another business, a way back to the one they came from
+function showSetupCancel() {
+  const others = businesses.filter(function (b) { return b.id !== currentBiz; });
+  if (!others.length || document.getElementById('setup-cancel')) return;
+  let backTo = others[0];
+  try {
+    const came = sessionStorage.getItem('bizStudio.cameFrom');
+    backTo = others.find(function (b) { return b.id === came; }) || backTo;
+  } catch (error) { /* fine */ }
+  const link = document.createElement('button');
+  link.className = 'back-link setup-cancel';
+  link.id = 'setup-cancel';
+  link.innerHTML = icon('back') + '<span></span>';
+  link.querySelector('span').textContent = 'Back to ' + backTo.name;
+  link.addEventListener('click', function () {
+    eraseProfile(); // throw away the half-made one
+    switchBusiness(backTo.id);
+  });
+  document.querySelector('.setup-top').appendChild(link);
 }
 
 // =========================================
@@ -837,10 +950,67 @@ function saveType() {
     document.getElementById('other-type').focus();
     return;
   }
-  if (editing) return finishSetup();
+  if (editing) {
+    // Switching to a different kind of business? Ask if it's a new one.
+    const changed = profile.businessType !== profileBeforeEdit.businessType ||
+      (profile.businessType === 'other' && profile.otherType !== profileBeforeEdit.otherType);
+    if (changed && hasBusinessData()) return askNewBusiness();
+    return finishSetup();
+  }
   setupStep = 1;
   showSetup();
 }
+
+// True if there are orders, customers or tasks that a new business would clear
+function hasBusinessData() {
+  return orders.length > 0 || tasks.length > 0 || Object.keys(customerInfo).length > 0;
+}
+
+// "Is this a new business?" Start fresh, or keep everything and just fix the type
+function askNewBusiness() {
+  const oldName = profileBeforeEdit.businessType === 'other'
+    ? profileBeforeEdit.otherType : findType(profileBeforeEdit.businessType).label;
+  const newName = profile.businessType === 'other' ? profile.otherType : findType(profile.businessType).label;
+
+  formArea().innerHTML = `
+    <h1>Is this a new business?</h1>
+    <p class="help"></p>
+    <div class="fresh-choices">
+      <button class="fresh-card peach" id="fresh-yes">
+        <span class="fresh-icon">${icon('sprout')}</span>
+        <b>Yes, it's a new business</b>
+        <span></span>
+      </button>
+      <button class="fresh-card sky" id="fresh-no">
+        <span class="fresh-icon">${icon('check')}</span>
+        <b>No, keep everything</b>
+        <span></span>
+      </button>
+    </div>
+    <div class="form-actions"><button class="btn secondary" id="fresh-cancel">Cancel</button></div>
+  `;
+  formArea().querySelector('.help').textContent =
+    'You changed from ' + oldName + ' to ' + newName + '.';
+  formArea().querySelector('#fresh-no span:last-child').textContent =
+    'Same business. Only change the type and words, and keep your ' + words().orders.toLowerCase() + ', ' +
+    words().customers.toLowerCase() + ' and to-do list.';
+  formArea().querySelector('#fresh-yes span:last-child').textContent = 'Set it up on its own. ' +
+    profileBeforeEdit.businessName + ' stays just like it is, and you can switch between them any time.';
+  formArea().querySelector('#fresh-yes').addEventListener('click', function () { startNewBusiness(); });
+  formArea().querySelector('#fresh-no').addEventListener('click', finishSetup);
+  formArea().querySelector('#fresh-cancel').addEventListener('click', cancelEdit);
+  window.scrollTo(0, 0);
+}
+
+// Sets up a new business with the new type already picked. The old one isn't changed.
+function startNewBusiness() {
+  addBusiness({
+    businessType: profile.businessType,
+    otherType: profile.otherType,
+    customWords: profile.customWords,
+  });
+}
+const NEW_BUSINESS_KEY = 'bizStudio.newBusiness';
 
 // ---------- Page 2: business name ----------
 function showNamePage() {
@@ -1247,6 +1417,24 @@ function showSidebarAvatar() {
   const spot = document.getElementById('side-avatar');
   spot.innerHTML = '';
   spot.appendChild(avatar('sm'));
+
+  // Clicking the business name opens the list of businesses
+  const brand = document.querySelector('.side-brand');
+  if (!brand.dataset.ready) {
+    brand.dataset.ready = 'yes';
+    brand.setAttribute('role', 'button');
+    brand.tabIndex = 0;
+    brand.title = 'Switch business';
+    brand.setAttribute('aria-label', 'Switch business');
+    brand.addEventListener('click', openBusinessSwitcher);
+    brand.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openBusinessSwitcher(); }
+    });
+    const swap = document.createElement('span');
+    swap.className = 'brand-switch';
+    swap.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 9 5-5 5 5M7 15l5 5 5-5"/></svg>';
+    brand.appendChild(swap);
+  }
 }
 
 // =========================================
@@ -1270,6 +1458,9 @@ function makeMenuButton(section) {
     orderView = null; // always open Orders on the list
     customerView = null; // and Customers on the list
     calendarMonth = null; // and the Calendar on this month
+    productView = null;   // and the rest on their first page
+    productEditing = false;
+    bookMonth = null;
     calendarDay = todayText();
     orderCameFrom = null;
     showMenu();
@@ -1376,10 +1567,13 @@ function showPage() {
   page.querySelector('.empty h3').textContent = say(section.emptyTitle);
   page.querySelector('.empty p').textContent = say(section.emptyText);
 
-  if (section.id === 'myday') {
-    showComingUp(page);
-    showGoalTips(page);
-  }
+  if (section.id === 'myday') showMyDay(page);
+  if (section.id === 'products') showProducts(page);
+  if (section.id === 'checklist') showSupplies(page);
+  if (section.id === 'pricing') showPricing(page);
+  if (section.id === 'bookkeeping') showBookkeeping(page);
+  if (section.id === 'printables') showPrintables(page);
+  if (section.id === 'finder') showFinder(page);
   if (section.id === 'orders') showOrders(page);
   if (section.id === 'customers') showCustomers(page);
   if (section.id === 'calendar') showCalendar(page);
@@ -1546,7 +1740,160 @@ function detailInput(detail, value) {
   input.className = 'input';
   input.value = value === undefined || value === null ? '' : value;
   wrap.appendChild(input);
+  if (detail.kind === 'date') fancyDate(input, { clearable: true });
   return wrap;
+}
+
+// =========================================
+// DATE PICKER
+// Swaps the browser's plain date box for one that matches the app:
+// a button that opens a small, colorful calendar.
+// The real input stays (hidden), so its .value still works everywhere.
+// =========================================
+function fancyDate(input, options) {
+  options = options || {};
+  const wrap = document.createElement('div');
+  wrap.className = 'date-field';
+  input.parentNode.insertBefore(wrap, input);
+  wrap.appendChild(input);
+  input.type = 'hidden';
+
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'input date-button';
+  button.setAttribute('aria-haspopup', 'dialog');
+  button.innerHTML = '<span class="date-text"></span>' + icon('calendar');
+  wrap.appendChild(button);
+
+  // Clicking the label opens it too
+  const label = input.id ? document.querySelector('label[for="' + input.id + '"]') : null;
+  if (label) {
+    button.setAttribute('aria-label', label.textContent);
+    label.addEventListener('click', function (e) { e.preventDefault(); button.focus(); open(); });
+  }
+
+  // When code sets input.value, the button's words update too
+  const real = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+  Object.defineProperty(input, 'value', {
+    configurable: true,
+    get: function () { return real.get.call(input); },
+    set: function (v) { real.set.call(input, v); showText(); },
+  });
+
+  function showText() {
+    const v = input.value;
+    const text = button.querySelector('.date-text');
+    button.classList.toggle('empty', !v);
+    if (!v) { text.textContent = options.placeholder || 'Pick a day'; return; }
+    const d = toDate(v);
+    const sameYear = d.getFullYear() === new Date().getFullYear();
+    text.textContent = d.toLocaleDateString('en-US',
+      sameYear ? { weekday: 'long', month: 'long', day: 'numeric' } : { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  }
+  showText();
+
+  function pick(v) {
+    input.value = v;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  let pop = null;
+  let month = null;
+
+  function open() {
+    if (pop) return;
+    const start = input.value ? toDate(input.value) : toDate(todayText());
+    month = new Date(start.getFullYear(), start.getMonth(), 1);
+    pop = document.createElement('div');
+    pop.className = 'date-pop';
+    pop.setAttribute('role', 'dialog');
+    wrap.appendChild(pop);
+    wrap.classList.add('open');
+    draw();
+    document.addEventListener('mousedown', outside, true);
+    const focusDay = pop.querySelector('.date-cell.picked') || pop.querySelector('.date-cell.today');
+    if (focusDay) focusDay.focus();
+  }
+
+  function close() {
+    if (!pop) return;
+    pop.remove();
+    pop = null;
+    wrap.classList.remove('open');
+    document.removeEventListener('mousedown', outside, true);
+  }
+
+  function outside(e) {
+    if (!wrap.contains(e.target)) close();
+  }
+
+  function draw() {
+    const today = todayText();
+    pop.innerHTML = `
+      <div class="date-pop-head">
+        <button type="button" class="round-btn small" data-move="-1" aria-label="Last month">${icon('back')}</button>
+        <b></b>
+        <button type="button" class="round-btn small" data-move="1" aria-label="Next month">${icon('chevron')}</button>
+      </div>
+      <div class="date-week"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div>
+      <div class="date-days"></div>
+      <div class="date-pop-foot"></div>
+    `;
+    pop.querySelector('b').textContent = month.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    pop.querySelectorAll('[data-move]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        month = new Date(month.getFullYear(), month.getMonth() + Number(b.dataset.move), 1);
+        draw();
+      });
+    });
+
+    const days = pop.querySelector('.date-days');
+    for (let i = 0; i < month.getDay(); i++) days.appendChild(document.createElement('span'));
+    const count = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+    for (let n = 1; n <= count; n++) {
+      const day = dateText(new Date(month.getFullYear(), month.getMonth(), n));
+      const cell = document.createElement('button');
+      cell.type = 'button';
+      cell.className = 'date-cell' + (day === today ? ' today' : '') + (day === input.value ? ' picked' : '') +
+        (day < today ? ' past' : '');
+      cell.textContent = n;
+      cell.setAttribute('aria-label', toDate(day).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }));
+      cell.addEventListener('click', function () {
+        pick(day);
+        close();
+        button.focus();
+      });
+      days.appendChild(cell);
+    }
+
+    const foot = pop.querySelector('.date-pop-foot');
+    const todayBtn = document.createElement('button');
+    todayBtn.type = 'button';
+    todayBtn.className = 'link-btn';
+    todayBtn.textContent = 'Today';
+    todayBtn.addEventListener('click', function () { pick(today); close(); button.focus(); });
+    foot.appendChild(todayBtn);
+    if (options.clearable) {
+      const clear = document.createElement('button');
+      clear.type = 'button';
+      clear.className = 'link-btn';
+      clear.textContent = 'No date';
+      clear.addEventListener('click', function () { pick(''); close(); button.focus(); });
+      foot.appendChild(clear);
+    }
+  }
+
+  button.addEventListener('click', function () { if (pop) close(); else open(); });
+  wrap.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && pop) {
+      e.preventDefault();
+      e.stopPropagation(); // don't close the whole window, just the calendar
+      close();
+      button.focus();
+    }
+  });
+  return input;
 }
 
 // Reads the answer from a question box
@@ -1693,7 +2040,7 @@ function findStatus(id) {
 
 function loadOrders() {
   try {
-    return JSON.parse(localStorage.getItem(ORDERS_KEY)) || [];
+    return JSON.parse(store.getItem(ORDERS_KEY)) || [];
   } catch (error) {
     return [];
   }
@@ -1701,7 +2048,7 @@ function loadOrders() {
 
 function saveOrders() {
   try {
-    localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+    store.setItem(ORDERS_KEY, JSON.stringify(orders));
   } catch (error) {
     // If the browser won't save, the orders still work until the app is closed
   }
@@ -2103,6 +2450,26 @@ function showOrderForm(page) {
     page.querySelector('#o-' + name).value = order[name] || '';
   });
   if (isNew && !order.due) page.querySelector('#o-due').value = todayText();
+  fancyDate(page.querySelector('#o-due'));
+
+  // Quick picks from their recipes: fills in what they want and the price
+  if (products.length) {
+    const picks = document.createElement('div');
+    picks.className = 'product-picks';
+    products.forEach(function (p) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'idea-btn';
+      b.textContent = p.name + (p.price ? ' ' + money(p.price) : '');
+      b.addEventListener('click', function () {
+        page.querySelector('#o-item').value = p.name;
+        if (p.price) page.querySelector('#o-price').value = p.price;
+        page.querySelector('#o-item').focus();
+      });
+      picks.appendChild(b);
+    });
+    page.querySelector('#o-item').after(picks);
+  }
 
   // Extra details: the owner's own questions, plus ideas to add more
   const extra = Object.assign({}, order.extra || {});
@@ -2220,10 +2587,10 @@ const MATCH_KEY = 'bizStudio.formMatch'; // remembers their matches for next tim
 let importData = null; // { fileName, questions: [...], rows: [[...], ...] } once a file is picked
 
 function loadMatches() {
-  try { return JSON.parse(localStorage.getItem(MATCH_KEY)) || {}; } catch (error) { return {}; }
+  try { return JSON.parse(store.getItem(MATCH_KEY)) || {}; } catch (error) { return {}; }
 }
 function saveMatches(matches) {
-  try { localStorage.setItem(MATCH_KEY, JSON.stringify(matches)); } catch (error) { /* fine */ }
+  try { store.setItem(MATCH_KEY, JSON.stringify(matches)); } catch (error) { /* fine */ }
 }
 
 // Reads CSV text into rows of cells. Handles "quoted, cells" and line breaks inside answers.
@@ -2691,10 +3058,10 @@ let customerSearch = '';
 const CARD_COLORS = ['pink', 'mint', 'sky', 'lilac', 'peach', 'butter'];
 
 function loadCustomerInfo() {
-  try { return JSON.parse(localStorage.getItem(CUSTOMERS_KEY)) || {}; } catch (error) { return {}; }
+  try { return JSON.parse(store.getItem(CUSTOMERS_KEY)) || {}; } catch (error) { return {}; }
 }
 function saveCustomerInfo() {
-  try { localStorage.setItem(CUSTOMERS_KEY, JSON.stringify(customerInfo)); } catch (error) { /* fine */ }
+  try { store.setItem(CUSTOMERS_KEY, JSON.stringify(customerInfo)); } catch (error) { /* fine */ }
 }
 
 // "  Mia   Rodriguez " -> "mia rodriguez", so the same person always matches
@@ -3339,10 +3706,10 @@ const TASKS_KEY = 'bizStudio.tasks';
 let tasks = loadTasks();
 
 function loadTasks() {
-  try { return JSON.parse(localStorage.getItem(TASKS_KEY)) || []; } catch (error) { return []; }
+  try { return JSON.parse(store.getItem(TASKS_KEY)) || []; } catch (error) { return []; }
 }
 function saveTasks() {
-  try { localStorage.setItem(TASKS_KEY, JSON.stringify(tasks)); } catch (error) { /* fine */ }
+  try { store.setItem(TASKS_KEY, JSON.stringify(tasks)); } catch (error) { /* fine */ }
 }
 
 // "Make" for things you make, "Get ready for" for appointments and jobs
@@ -3370,36 +3737,17 @@ function orderTasks() {
       text: orderVerb() + ' ' + lowerFirst(o.item) + ' for ' + o.customer.split(' ')[0],
       due: due,
       done: false,
+      flagged: !!o.flagged, // the flag is kept on the order itself
     };
   });
 }
-
-// Which group a task goes in
-function taskGroup(due) {
-  if (!due) return 'none';
-  const days = daysUntil(due);
-  if (days < 0) return 'late';
-  if (days === 0) return 'today';
-  if (days === 1) return 'tomorrow';
-  if (days < 7) return 'week';
-  return 'later';
-}
-
-const TASK_GROUPS = [
-  { id: 'late', label: 'Late', color: 'pink' },
-  { id: 'today', label: 'Today', color: 'butter' },
-  { id: 'tomorrow', label: 'Tomorrow', color: 'peach' },
-  { id: 'week', label: 'This week', color: 'sky' },
-  { id: 'later', label: 'Later', color: 'lilac' },
-  { id: 'none', label: 'Whenever', color: 'mint' },
-];
 
 function showTodo(page) {
   const w = words();
   const open = orderTasks().concat(tasks.filter(function (t) { return !t.done; }));
   const done = tasks.filter(function (t) { return t.done; })
     .sort(function (a, b) { return (b.doneAt || '').localeCompare(a.doneAt || ''); });
-  const todayCount = open.filter(function (t) { const g = taskGroup(t.due); return g === 'today' || g === 'late'; }).length;
+  const todayCount = open.filter(function (t) { return t.due && daysUntil(t.due) <= 0; }).length;
 
   page.innerHTML = `
     <header class="page-head">
@@ -3407,13 +3755,10 @@ function showTodo(page) {
       <p></p>
     </header>
     <div class="todo-page">
-      <div class="task-add">
-        <input class="input" id="task-text" autocomplete="off" placeholder="Add a task, like Buy more flour" aria-label="New task">
-        <div class="task-when" role="radiogroup" aria-label="When"></div>
-        <input class="input task-date" id="task-date" type="date" aria-label="Pick a day" hidden>
-        <button class="btn with-icon" id="task-add">${icon('plus')}<span>Add</span></button>
-      </div>
-      <p class="error" id="task-error" role="alert"></p>
+      <button class="task-add" id="open-add-task">
+        <span class="task-add-words">Add a task</span>
+        <span class="task-add-btn">${icon('plus')}</span>
+      </button>
       <div id="task-groups"></div>
       <section class="task-done" id="task-done" hidden>
         <div class="task-done-head">
@@ -3430,57 +3775,8 @@ function showTodo(page) {
       ? 'Nothing for today. ' + open.length + ' coming up.'
       : todayCount + (todayCount === 1 ? ' thing' : ' things') + ' to do today';
 
-  // ----- Adding a task -----
-  let when = 'today';
-  const whenBox = page.querySelector('.task-when');
-  const dateBox = page.querySelector('#task-date');
-  [
-    { id: 'today', label: 'Today' },
-    { id: 'tomorrow', label: 'Tomorrow' },
-    { id: 'pick', label: 'Pick a day' },
-    { id: 'none', label: 'Whenever' },
-  ].forEach(function (opt) {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'kind-btn';
-    b.dataset.when = opt.id;
-    b.setAttribute('role', 'radio');
-    b.textContent = opt.label;
-    b.addEventListener('click', function () {
-      when = opt.id;
-      drawWhen();
-      if (when === 'pick') { dateBox.value = dateBox.value || todayText(); dateBox.focus(); }
-    });
-    whenBox.appendChild(b);
-  });
-  function drawWhen() {
-    whenBox.querySelectorAll('button').forEach(function (b) {
-      b.setAttribute('aria-checked', b.dataset.when === when ? 'true' : 'false');
-    });
-    dateBox.hidden = when !== 'pick';
-  }
-  drawWhen();
-
-  const textBox = page.querySelector('#task-text');
-  function addTask() {
-    const text = textBox.value.trim();
-    if (!text) {
-      page.querySelector('#task-error').textContent = 'Type what you need to do.';
-      textBox.focus();
-      return;
-    }
-    let due = '';
-    if (when === 'today') due = todayText();
-    if (when === 'tomorrow') due = dateText(new Date(toDate(todayText()).getTime() + 86400000));
-    if (when === 'pick') due = dateBox.value || todayText();
-    tasks.push({ id: 't' + Date.now(), text: text, due: due, done: false, created: new Date().toISOString() });
-    saveTasks();
-    showPage();
-    document.getElementById('task-text').focus();
-  }
-  page.querySelector('#task-add').addEventListener('click', addTask);
-  textBox.addEventListener('keydown', function (e) { if (e.key === 'Enter') addTask(); });
-  textBox.addEventListener('input', function () { page.querySelector('#task-error').textContent = ''; });
+  // ----- Adding a task opens its own window -----
+  page.querySelector('#open-add-task').addEventListener('click', openAddTask);
 
   // ----- The groups -----
   const groupsBox = page.querySelector('#task-groups');
@@ -3492,15 +3788,50 @@ function showTodo(page) {
       ' coming up, tasks for them show up here on their own.';
     groupsBox.appendChild(empty);
   }
-  TASK_GROUPS.forEach(function (g) {
-    const list = open.filter(function (t) { return taskGroup(t.due) === g.id; })
-      .sort(function (a, b) { return (a.due || '').localeCompare(b.due || ''); });
-    if (!list.length) return;
+  // Flagged tasks go at the very top, in their own box
+  const flagged = open.filter(function (t) { return t.flagged; })
+    .sort(function (a, b) { return (a.due || '9999').localeCompare(b.due || '9999'); });
+  if (flagged.length) {
     const section = document.createElement('section');
-    section.className = 'task-group ' + g.color;
-    section.innerHTML = '<h2><span class="group-dot"></span><span></span><b></b></h2><div class="task-list"></div>';
-    section.querySelector('h2 span:last-of-type').textContent = g.label;
-    section.querySelector('h2 b').textContent = list.length;
+    section.className = 'task-group flagged-group';
+    section.innerHTML = '<h2><span class="flag-badge">' + icon('flag') + '</span><span class="group-date">Important</span>' +
+      '<b class="group-count"></b></h2><div class="task-list"></div>';
+    section.querySelector('.group-count').textContent = flagged.length;
+    flagged.forEach(function (t) { section.querySelector('.task-list').appendChild(taskRow(t, true)); });
+    groupsBox.appendChild(section);
+  }
+
+  // One group for each date, soonest first. Tasks with no date go last.
+  const byDate = {};
+  open.filter(function (t) { return !t.flagged; }).forEach(function (t) { (byDate[t.due || ''] = byDate[t.due || ''] || []).push(t); });
+  const dates = Object.keys(byDate).sort(function (a, b) {
+    if (!a) return 1;
+    if (!b) return -1;
+    return a.localeCompare(b);
+  });
+  const colors = ['sky', 'lilac', 'peach', 'mint'];
+  let colorIndex = 0;
+  dates.forEach(function (day) {
+    const list = byDate[day];
+    const section = document.createElement('section');
+    let color = 'mint';
+    let tag = '';
+    if (day) {
+      const days = daysUntil(day);
+      if (days < 0) { color = 'pink'; tag = 'Late'; }
+      else if (days === 0) { color = 'butter'; tag = 'Today'; }
+      else if (days === 1) { color = 'peach'; tag = 'Tomorrow'; }
+      else { color = colors[colorIndex++ % colors.length]; }
+    }
+    section.className = 'task-group ' + color;
+    section.innerHTML = '<h2><span class="group-dot"></span><span class="group-date"></span>' +
+      '<span class="group-tag"></span><b class="group-count"></b></h2><div class="task-list"></div>';
+    section.querySelector('.group-date').textContent = day
+      ? toDate(day).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+      : 'No date';
+    const tagBox = section.querySelector('.group-tag');
+    if (tag) tagBox.textContent = tag; else tagBox.remove();
+    section.querySelector('.group-count').textContent = list.length;
     list.forEach(function (t) { section.querySelector('.task-list').appendChild(taskRow(t)); });
     groupsBox.appendChild(section);
   });
@@ -3527,10 +3858,87 @@ function showTodo(page) {
   }
 }
 
+// The "New task" window that pops up over the page: what to do, and which day
+function openAddTask() {
+  const box = document.createElement('dialog');
+  box.className = 'task-dialog';
+  box.innerHTML = `
+    <form method="dialog" class="task-dialog-inner">
+      <div class="dialog-head">
+        <h2>New task</h2>
+        <button type="button" class="dialog-close" aria-label="Close">${icon('plus')}</button>
+      </div>
+
+      <label class="label" for="new-task">What do you need to do?</label>
+      <input class="input" id="new-task" autocomplete="off" placeholder="Buy more flour">
+      <p class="error" id="new-task-error" role="alert"></p>
+
+      <label class="label" for="new-task-date">What day?</label>
+      <input class="input" id="new-task-date" type="date">
+
+      <button type="button" class="flag-toggle" id="new-task-flag" aria-pressed="false">
+        ${icon('flag')}<span><b>Important</b><small>Flag it so it stays at the top</small></span>
+      </button>
+
+      <div class="form-actions">
+        <button type="submit" class="btn with-icon" id="save-task">${icon('plus')}<span>Add task</span></button>
+        <button type="button" class="btn secondary" id="cancel-task">Cancel</button>
+      </div>
+    </form>
+  `;
+  document.body.appendChild(box);
+
+  const text = box.querySelector('#new-task');
+  const dateBox = box.querySelector('#new-task-date');
+  dateBox.value = todayText();
+  fancyDate(dateBox, { clearable: true, placeholder: 'No date' });
+  const flagBtn = box.querySelector('#new-task-flag');
+  flagBtn.addEventListener('click', function () {
+    flagBtn.setAttribute('aria-pressed', flagBtn.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+  });
+  text.addEventListener('input', function () { box.querySelector('#new-task-error').textContent = ''; });
+
+  function close() {
+    box.close();
+    box.remove();
+  }
+  box.querySelector('.dialog-close').addEventListener('click', close);
+  box.querySelector('#cancel-task').addEventListener('click', close);
+  box.addEventListener('cancel', function (e) { e.preventDefault(); close(); }); // the Esc key
+  box.addEventListener('click', function (e) { if (e.target === box) close(); }); // clicking outside
+
+  box.querySelector('form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const words = text.value.trim();
+    if (!words) {
+      box.querySelector('#new-task-error').textContent = 'Type what you need to do.';
+      text.focus();
+      return;
+    }
+    const id = 't' + Date.now();
+    tasks.push({
+      id: id, text: words, due: dateBox.value, done: false,
+      flagged: flagBtn.getAttribute('aria-pressed') === 'true',
+      created: new Date().toISOString(),
+    });
+    saveTasks();
+    close();
+    showPage();
+    showUndo('Task added', function () {
+      tasks = tasks.filter(function (t) { return t.id !== id; });
+      saveTasks();
+      showPage();
+    });
+  });
+
+  box.showModal();
+  text.focus();
+}
+
 // One task: a checkbox, the words, and when it's due
-function taskRow(t) {
+function taskRow(t, showDate) {
   const row = document.createElement('div');
-  row.className = 'task-row' + (t.done ? ' done' : '') + (t.order ? ' from-order' : '');
+  row.className = 'task-row' + (t.done ? ' done' : '') + (t.order ? ' from-order' : '') + (t.flagged && !t.done ? ' flagged' : '');
   row.innerHTML = `
     <button class="task-check" role="checkbox">${icon('tick')}</button>
     <div class="task-text">
@@ -3544,12 +3952,13 @@ function taskRow(t) {
   row.querySelector('.task-words').textContent = t.text;
 
   const meta = row.querySelector('.task-meta');
-  if (t.due && !t.done) {
-    const days = daysUntil(t.due);
+  // Done and flagged tasks show their day (the rest are already under their date)
+  if (t.due && (t.done || showDate)) {
     const dueLine = document.createElement('span');
-    dueLine.className = 'task-due';
-    dueLine.textContent = days < 0 ? 'Was due ' + niceDate(t.due)
-      : days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : niceDate(t.due);
+    dueLine.className = 'task-due' + (!t.done && daysUntil(t.due) < 0 ? ' late' : '');
+    const days = daysUntil(t.due);
+    dueLine.textContent = t.done ? niceDate(t.due)
+      : days < 0 ? 'Late, was ' + niceDate(t.due) : days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : niceDate(t.due);
     meta.appendChild(dueLine);
   }
   if (t.order) {
@@ -3582,6 +3991,27 @@ function taskRow(t) {
     showPage();
   });
 
+  // The flag: marks a task as important and moves it to the top
+  if (!t.done) {
+    const flag = document.createElement('button');
+    flag.className = 'task-flag';
+    flag.innerHTML = icon('flag');
+    flag.setAttribute('aria-pressed', t.flagged ? 'true' : 'false');
+    flag.setAttribute('aria-label', (t.flagged ? 'Unflag ' : 'Flag as important: ') + t.text);
+    flag.title = t.flagged ? 'Unflag' : 'Flag as important';
+    flag.addEventListener('click', function () {
+      if (t.order) {
+        t.order.flagged = !t.order.flagged;
+        saveOrders();
+      } else {
+        t.flagged = !t.flagged;
+        saveTasks();
+      }
+      showPage();
+    });
+    row.appendChild(flag);
+  }
+
   // Tasks you added can be deleted
   if (!t.order) {
     const del = document.createElement('button');
@@ -3601,31 +4031,1414 @@ function taskRow(t) {
       });
     });
     row.appendChild(del);
+  } else {
+    // Order tasks can't be deleted here; an empty space keeps the flags lined up
+    const space = document.createElement('span');
+    space.className = 'row-space';
+    row.appendChild(space);
   }
   return row;
 }
 
-// ---------- My Day: what's coming up ----------
-function showComingUp(page) {
-  const soon = sortedOrders().filter(function (o) {
-    return isOpen(o) && daysUntil(o.due) <= 7;
-  });
-  if (soon.length === 0) return; // keep the "Nothing due today" message
+// =========================================
+// SHARED: saving lists, pop-up windows, little helpers
+// =========================================
+function loadList(key) {
+  try { return JSON.parse(store.getItem(key)) || []; } catch (error) { return []; }
+}
+function saveList(key, list) {
+  try { store.setItem(key, JSON.stringify(list)); } catch (error) { /* fine */ }
+}
+function newId(start) {
+  return start + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+function oneProduct() { return words().products.replace(/s$/, '').toLowerCase(); }
+function oneSupply() { return words().supplies.replace(/s$/, '').toLowerCase(); }
 
-  const empty = page.querySelector('.empty');
-  const box = document.createElement('section');
-  box.innerHTML = '<div class="section-head"><h2 class="tips-title"></h2><button class="link-btn" id="see-all"></button></div>' +
-    '<div class="order-list"></div>';
-  box.querySelector('h2').textContent = 'Coming up this week';
-  box.querySelector('#see-all').textContent = 'See all ' + words().orders.toLowerCase();
-  box.querySelector('#see-all').addEventListener('click', function () {
-    currentSection = 'orders';
-    orderView = null;
-    showMenu();
+// Rounds to at most 2 decimals and drops trailing zeros: 1.50 -> "1.5", 2 -> "2"
+function niceNumber(n) {
+  return String(Math.round(Number(n || 0) * 100) / 100);
+}
+
+// Goes to another part of the app
+function goTo(sectionId) {
+  currentSection = sectionId;
+  showMenu();
+  showPage();
+  window.scrollTo(0, 0);
+}
+
+// A pop-up window like the New task one. fill(box) sets it up;
+// onSave(box) returns false to keep it open (for example, when something is missing).
+function openWindow(options) {
+  const box = document.createElement('dialog');
+  box.className = 'task-dialog' + (options.wide ? ' wide' : '');
+  box.innerHTML = `
+    <form method="dialog" class="task-dialog-inner">
+      <div class="dialog-head">
+        <h2></h2>
+        <button type="button" class="dialog-close" aria-label="Close">${icon('plus')}</button>
+      </div>
+      <div class="dialog-body">${options.html}</div>
+      <p class="error" id="window-error" role="alert"></p>
+      <div class="form-actions">
+        <button type="submit" class="btn" id="window-save"></button>
+        <button type="button" class="btn secondary" id="window-cancel">Cancel</button>
+      </div>
+    </form>
+  `;
+  box.querySelector('h2').textContent = options.title;
+  box.querySelector('#window-save').textContent = options.saveLabel || 'Save';
+  document.body.appendChild(box);
+
+  function close() { box.close(); box.remove(); }
+  box.querySelector('.dialog-close').addEventListener('click', close);
+  box.querySelector('#window-cancel').addEventListener('click', close);
+  box.addEventListener('cancel', function (e) { e.preventDefault(); close(); });
+  box.addEventListener('click', function (e) { if (e.target === box) close(); });
+  box.querySelector('form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    box.querySelector('#window-error').textContent = '';
+    if (options.onSave(box) === false) return;
+    close();
+  });
+  box.problem = function (text) { box.querySelector('#window-error').textContent = text; };
+
+  if (options.fill) options.fill(box);
+  box.showModal();
+  const first = box.querySelector('input, select, textarea');
+  if (first) first.focus();
+  return box;
+}
+
+// =========================================
+// INGREDIENTS (supplies)
+// Each: { id, name, unit, packSize, packPrice, have }
+// "I buy 5 lb for $4.50, and I have 2 lb"
+// =========================================
+const SUPPLIES_KEY = 'bizStudio.supplies';
+let supplies = loadList(SUPPLIES_KEY);
+function saveSupplies() { saveList(SUPPLIES_KEY, supplies); }
+function findSupply(id) { return supplies.find(function (s) { return s.id === id; }); }
+
+// What one unit costs, like $0.90 for one lb
+function unitCost(supply) {
+  const size = Number(supply.packSize);
+  const price = Number(supply.packPrice);
+  return size > 0 && price > 0 ? price / size : 0;
+}
+
+const UNIT_IDEAS = ['cups', 'tbsp', 'tsp', 'oz', 'lb', 'g', 'kg', 'ml', 'each', 'sticks', 'dozen'];
+
+// =========================================
+// RECIPES (products)
+// Each: { id, name, price, makes, hours, uses: [{ supplyId, amount }], steps }
+// =========================================
+const PRODUCTS_KEY = 'bizStudio.products';
+let products = loadList(PRODUCTS_KEY);
+function saveProducts() { saveList(PRODUCTS_KEY, products); }
+function findProduct(id) { return products.find(function (p) { return p.id === id; }); }
+
+let productView = null;   // null = the list, 'new', or a product id
+let productEditing = false;
+let productScale = 1;
+
+// What the ingredients for one batch cost
+function productCost(p) {
+  return p.uses.reduce(function (sum, use) {
+    const s = findSupply(use.supplyId);
+    return sum + (s ? unitCost(s) * Number(use.amount || 0) : 0);
+  }, 0);
+}
+
+// Ingredients that don't have a price yet (so the cost isn't complete)
+function missingPrices(p) {
+  return p.uses.map(function (u) { return findSupply(u.supplyId); })
+    .filter(function (s) { return s && !unitCost(s); });
+}
+
+// Which product an order is for, by matching the name in "What they want"
+function productForOrder(order) {
+  const text = (order.item || '').toLowerCase();
+  let best = null;
+  products.forEach(function (p) {
+    const name = p.name.toLowerCase().trim();
+    if (name && text.includes(name) && (!best || name.length > best.name.length)) best = p;
+  });
+  return best;
+}
+
+const PRODUCT_COLORS = ['pink', 'peach', 'butter', 'mint', 'sky', 'lilac'];
+function productColor(p) { return PRODUCT_COLORS[products.indexOf(p) % PRODUCT_COLORS.length]; }
+
+function showProducts(page) {
+  if (productView) {
+    const p = productView === 'new' ? null : findProduct(productView);
+    if (productView === 'new' || productEditing) return showProductForm(page, p);
+    if (p) return showProduct(page, p);
+    productView = null;
+  }
+  const w = words();
+  page.innerHTML = `
+    <header class="page-head with-button">
+      <div><h1></h1><p></p></div>
+      <button class="btn with-icon" id="new-product">${icon('plus')}<span></span></button>
+    </header>
+    <div id="product-area"></div>
+  `;
+  page.querySelector('h1').textContent = w.products;
+  page.querySelector('.page-head p').textContent = products.length
+    ? products.length + ' ' + (products.length === 1 ? oneProduct() : w.products.toLowerCase())
+    : 'What you make, what goes into it, and what you charge';
+  page.querySelector('#new-product span').textContent = 'New ' + oneProduct();
+  page.querySelector('#new-product').addEventListener('click', function () {
+    productView = 'new';
     showPage();
   });
-  soon.slice(0, 5).forEach(function (o) { box.querySelector('.order-list').appendChild(orderRow(o)); });
-  empty.replaceWith(box);
+
+  const area = page.querySelector('#product-area');
+  if (!products.length) {
+    area.innerHTML = '<div class="empty pink"><span class="empty-icon">' + icon('box') + '</span><h3></h3><p></p></div>';
+    area.querySelector('h3').textContent = 'No ' + w.products.toLowerCase() + ' yet';
+    area.querySelector('p').textContent = 'Add what you make with its ' + w.supplies.toLowerCase() +
+      '. The app works out what it costs you and what to buy for your ' + w.orders.toLowerCase() + '.';
+    return;
+  }
+
+  const grid = document.createElement('div');
+  grid.className = 'product-grid';
+  products.forEach(function (p) {
+    const cost = productCost(p);
+    const card = document.createElement('button');
+    card.className = 'product-card ' + productColor(p);
+    card.innerHTML = `
+      <span class="product-top"><span class="product-icon">${icon('box')}</span><span class="product-price"></span></span>
+      <b class="product-name"></b>
+      <span class="product-makes"></span>
+      <span class="product-foot"><span class="pf-uses"></span><span class="pf-cost"></span></span>
+    `;
+    card.querySelector('.product-name').textContent = p.name;
+    card.querySelector('.product-price').textContent = p.price ? money(p.price) : 'No price';
+    card.querySelector('.product-makes').textContent = p.makes ? 'Makes ' + p.makes : '';
+    card.querySelector('.pf-uses').textContent = p.uses.length + ' ' + (p.uses.length === 1 ? oneSupply() : w.supplies.toLowerCase());
+    card.querySelector('.pf-cost').textContent = cost ? 'Costs ' + money(cost) : '';
+    card.addEventListener('click', function () {
+      productView = p.id;
+      productScale = 1;
+      showPage();
+      window.scrollTo(0, 0);
+    });
+    grid.appendChild(card);
+  });
+  area.appendChild(grid);
+}
+
+// One recipe: what goes in it (scaled up or down), the steps, and the cost
+function showProduct(page, p) {
+  const w = words();
+  const cost = productCost(p) * productScale;
+  page.innerHTML = `
+    <button class="back-link" id="product-back">${icon('back')}<span></span></button>
+    <div class="product-page">
+      <header class="product-head ${productColor(p)}">
+        <span class="product-icon big">${icon('box')}</span>
+        <div class="product-head-text"><h1></h1><p></p></div>
+        <button class="btn secondary small" id="product-edit">Edit</button>
+      </header>
+
+      <div class="stat-tiles">
+        <div class="stat-tile lilac"><b id="pt-price"></b><span>you charge</span></div>
+        <div class="stat-tile peach"><b id="pt-cost"></b><span id="pt-cost-label"></span></div>
+        <div class="stat-tile mint"><b id="pt-profit"></b><span>left over</span></div>
+      </div>
+
+      <section class="recipe-box">
+        <div class="recipe-head">
+          <h2></h2>
+          <div class="scale-pick" role="radiogroup" aria-label="How many batches"></div>
+        </div>
+        <ul class="uses-list" id="uses-list"></ul>
+        <p class="price-warning" id="price-warning" hidden></p>
+      </section>
+
+      <section class="recipe-box" id="steps-box">
+        <h2>Steps</h2>
+        <ol class="steps-list" id="steps-list"></ol>
+      </section>
+
+      <div class="product-actions">
+        <button class="btn with-icon" id="product-order">${icon('plus')}<span></span></button>
+      </div>
+    </div>
+  `;
+  page.querySelector('#product-back span').textContent = 'Back to ' + w.products;
+  page.querySelector('h1').textContent = p.name;
+  page.querySelector('.product-head-text p').textContent = [p.makes ? 'Makes ' + p.makes : '', p.hours ? 'Takes about ' + niceNumber(p.hours) + (Number(p.hours) === 1 ? ' hour' : ' hours') : '']
+    .filter(Boolean).join('. ') || 'Add how much it makes and how long it takes with Edit.';
+  page.querySelector('#pt-price').textContent = p.price ? money(p.price * productScale) : 'Not set';
+  page.querySelector('#pt-cost').textContent = money(cost);
+  page.querySelector('#pt-cost-label').textContent = w.supplies.toLowerCase() + ' cost';
+  page.querySelector('#pt-profit').textContent = p.price ? money(p.price * productScale - cost) : 'Not set';
+
+  page.querySelector('.recipe-head h2').textContent = w.supplies;
+  const scale = page.querySelector('.scale-pick');
+  [{ v: 0.5, t: 'Half' }, { v: 1, t: '1 batch' }, { v: 2, t: '2x' }, { v: 3, t: '3x' }].forEach(function (s) {
+    const b = document.createElement('button');
+    b.className = 'kind-btn';
+    b.setAttribute('role', 'radio');
+    b.setAttribute('aria-checked', productScale === s.v ? 'true' : 'false');
+    b.textContent = s.t;
+    b.addEventListener('click', function () { productScale = s.v; showPage(); });
+    scale.appendChild(b);
+  });
+
+  const list = page.querySelector('#uses-list');
+  if (!p.uses.length) {
+    list.innerHTML = '<li class="uses-none"></li>';
+    list.firstChild.textContent = 'No ' + w.supplies.toLowerCase() + ' added yet.';
+  }
+  p.uses.forEach(function (use) {
+    const s = findSupply(use.supplyId);
+    if (!s) return;
+    const li = document.createElement('li');
+    li.innerHTML = '<span class="use-amount"></span><span class="use-name"></span><span class="use-cost"></span>';
+    li.querySelector('.use-amount').textContent = niceNumber(use.amount * productScale) + ' ' + s.unit;
+    li.querySelector('.use-name').textContent = s.name;
+    li.querySelector('.use-cost').textContent = unitCost(s) ? money(unitCost(s) * use.amount * productScale) : 'No price';
+    list.appendChild(li);
+  });
+  const missing = missingPrices(p);
+  if (missing.length) {
+    const warn = page.querySelector('#price-warning');
+    warn.hidden = false;
+    warn.textContent = 'Add what you pay for ' + missing.map(function (s) { return s.name; }).join(', ') +
+      ' in ' + w.supplies + ' and shopping to get the full cost.';
+  }
+
+  const steps = (p.steps || '').split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+  if (!steps.length) page.querySelector('#steps-box').remove();
+  steps.forEach(function (step) {
+    const li = document.createElement('li');
+    li.textContent = step.replace(/^\d+[.)]\s*/, '');
+    page.querySelector('#steps-list').appendChild(li);
+  });
+
+  page.querySelector('#product-back').addEventListener('click', function () { productView = null; showPage(); });
+  page.querySelector('#product-edit').addEventListener('click', function () { productEditing = true; showPage(); });
+  page.querySelector('#product-order span').textContent = 'New ' + oneOrder() + ' for this';
+  page.querySelector('#product-order').addEventListener('click', function () {
+    orderPrefill = { item: p.name, price: p.price || '' };
+    openOrderForm('new');
+  });
+}
+
+// Adding or changing a recipe
+function showProductForm(page, p) {
+  const w = words();
+  const isNew = !p;
+  const draft = p ? JSON.parse(JSON.stringify(p)) : { id: newId('p'), name: '', price: '', makes: '', hours: '', uses: [], steps: '' };
+
+  page.innerHTML = `
+    <button class="back-link" id="pf-back">${icon('back')}<span></span></button>
+    <div class="order-form product-form">
+      <h1></h1>
+      <div class="form-grid">
+        <div class="span-2">
+          <label class="label" for="pf-name">Name</label>
+          <input id="pf-name" class="input" autocomplete="off">
+        </div>
+        <div>
+          <label class="label" for="pf-price">What you charge</label>
+          <div class="money-box"><span>$</span><input id="pf-price" class="input" type="number" min="0" step="0.01" placeholder="0.00"></div>
+        </div>
+        <div>
+          <label class="label" for="pf-makes">How much it makes</label>
+          <input id="pf-makes" class="input" autocomplete="off" placeholder="1 cake, 12 cupcakes">
+        </div>
+        <div>
+          <label class="label" for="pf-hours">Hours it takes you</label>
+          <input id="pf-hours" class="input" type="number" min="0" step="0.25" placeholder="2">
+        </div>
+      </div>
+
+      <section class="uses-edit">
+        <h2></h2>
+        <div id="uses-rows"></div>
+        <div class="add-use" id="add-use"></div>
+      </section>
+
+      <label class="label" for="pf-steps">Steps <span class="label-hint">(one per line)</span></label>
+      <textarea id="pf-steps" class="input" rows="6"></textarea>
+
+      <p class="error" id="pf-error" role="alert"></p>
+      <div class="form-actions">
+        <button class="btn" id="pf-save"></button>
+        <button class="btn secondary" id="pf-cancel">Cancel</button>
+        <span class="spacer"></span>
+        <button class="link-btn delete-btn" id="pf-delete" hidden>${icon('trash')}<span></span></button>
+      </div>
+    </div>
+  `;
+  page.querySelector('#pf-back span').textContent = isNew ? 'Back to ' + w.products : 'Back to ' + p.name;
+  page.querySelector('h1').textContent = isNew ? 'New ' + oneProduct() : 'Edit ' + p.name;
+  page.querySelector('#pf-name').placeholder = findType(profile.businessType).samples[0];
+  page.querySelector('.uses-edit h2').textContent = 'What goes in it';
+  page.querySelector('#pf-save').textContent = isNew ? 'Add ' + oneProduct() : 'Save changes';
+  ['name', 'price', 'makes', 'hours', 'steps'].forEach(function (f) { page.querySelector('#pf-' + f).value = draft[f] || ''; });
+
+  // Ingredient rows: amount, unit (from the ingredient), name, remove
+  const rows = page.querySelector('#uses-rows');
+  function drawUses() {
+    rows.innerHTML = '';
+    if (!draft.uses.length) {
+      rows.innerHTML = '<p class="list-empty uses-none"></p>';
+      rows.firstChild.textContent = 'Nothing added yet. Pick from your ' + w.supplies.toLowerCase() + ' below, or add a new one.';
+    }
+    draft.uses.forEach(function (use, i) {
+      const s = findSupply(use.supplyId);
+      if (!s) return;
+      const row = document.createElement('div');
+      row.className = 'use-row';
+      row.innerHTML = '<input class="input use-amt" type="number" min="0" step="0.01" aria-label="Amount">' +
+        '<span class="use-unit"></span><span class="use-name"></span>' +
+        '<button class="row-delete" type="button">' + icon('trash') + '</button>';
+      row.querySelector('.use-amt').value = use.amount;
+      row.querySelector('.use-unit').textContent = s.unit;
+      row.querySelector('.use-name').textContent = s.name;
+      row.querySelector('.row-delete').setAttribute('aria-label', 'Remove ' + s.name);
+      row.querySelector('.use-amt').addEventListener('input', function (e) { use.amount = Number(e.target.value) || 0; });
+      row.querySelector('.row-delete').addEventListener('click', function () { draft.uses.splice(i, 1); drawUses(); });
+      rows.appendChild(row);
+    });
+    drawAdd();
+  }
+
+  // Chips for each ingredient not used yet, plus "+ New ingredient"
+  const add = page.querySelector('#add-use');
+  function drawAdd() {
+    add.innerHTML = '';
+    const unused = supplies.filter(function (s) { return !draft.uses.some(function (u) { return u.supplyId === s.id; }); });
+    unused.forEach(function (s) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'idea-btn';
+      b.textContent = '+ ' + s.name;
+      b.addEventListener('click', function () { draft.uses.push({ supplyId: s.id, amount: 1 }); drawUses(); focusLast(); });
+      add.appendChild(b);
+    });
+    const other = document.createElement('button');
+    other.type = 'button';
+    other.className = 'idea-btn other';
+    other.textContent = '+ New ' + oneSupply();
+    other.addEventListener('click', function () {
+      editSupply(null, function (s) { draft.uses.push({ supplyId: s.id, amount: 1 }); drawUses(); focusLast(); });
+    });
+    add.appendChild(other);
+  }
+  function focusLast() {
+    const amts = rows.querySelectorAll('.use-amt');
+    if (amts.length) { amts[amts.length - 1].focus(); amts[amts.length - 1].select(); }
+  }
+  drawUses();
+
+  function leave() {
+    productEditing = false;
+    if (isNew) productView = null;
+    showPage();
+  }
+  page.querySelector('#pf-back').addEventListener('click', leave);
+  page.querySelector('#pf-cancel').addEventListener('click', leave);
+
+  page.querySelector('#pf-save').addEventListener('click', function () {
+    const name = page.querySelector('#pf-name').value.trim();
+    if (!name) {
+      page.querySelector('#pf-error').textContent = 'Give it a name to save it.';
+      page.querySelector('#pf-name').focus();
+      return;
+    }
+    draft.name = name;
+    draft.price = page.querySelector('#pf-price').value ? Number(page.querySelector('#pf-price').value) : '';
+    draft.makes = page.querySelector('#pf-makes').value.trim();
+    draft.hours = page.querySelector('#pf-hours').value ? Number(page.querySelector('#pf-hours').value) : '';
+    draft.steps = page.querySelector('#pf-steps').value.trim();
+    draft.uses = draft.uses.filter(function (u) { return Number(u.amount) > 0; });
+    if (isNew) products.push(draft);
+    else products[products.indexOf(p)] = draft;
+    saveProducts();
+    productEditing = false;
+    productView = draft.id;
+    showPage();
+    window.scrollTo(0, 0);
+  });
+
+  if (!isNew) {
+    const del = page.querySelector('#pf-delete');
+    del.hidden = false;
+    del.querySelector('span').textContent = 'Delete ' + oneProduct();
+    del.addEventListener('click', function () {
+      const index = products.indexOf(p);
+      products.splice(index, 1);
+      saveProducts();
+      productEditing = false;
+      productView = null;
+      showPage();
+      showUndo(p.name + ' deleted', function () {
+        products.splice(index, 0, p);
+        saveProducts();
+        showPage();
+      });
+    });
+  }
+  page.querySelector('#pf-name').focus();
+}
+
+// The window for adding or changing an ingredient
+function editSupply(s, done) {
+  const w = words();
+  const isNew = !s;
+  openWindow({
+    title: isNew ? 'New ' + oneSupply() : 'Edit ' + s.name,
+    saveLabel: isNew ? 'Add ' + oneSupply() : 'Save changes',
+    html: `
+      <label class="label" for="sw-name">Name</label>
+      <input class="input" id="sw-name" autocomplete="off" placeholder="Flour">
+      <label class="label" for="sw-unit">You measure it in</label>
+      <input class="input" id="sw-unit" autocomplete="off" placeholder="cups" list="unit-ideas">
+      <datalist id="unit-ideas">${UNIT_IDEAS.map(function (u) { return '<option value="' + u + '">'; }).join('')}</datalist>
+      <p class="label">When you buy it</p>
+      <div class="buy-line">
+        <span>You get</span>
+        <input class="input" id="sw-size" type="number" min="0" step="0.01" placeholder="20" aria-label="How much you get">
+        <span class="sw-unit-word">cups</span>
+        <span>for</span>
+        <div class="money-box"><span>$</span><input class="input" id="sw-price" type="number" min="0" step="0.01" placeholder="4.50" aria-label="Price"></div>
+      </div>
+      <label class="label" for="sw-have">How much you have now</label>
+      <input class="input" id="sw-have" type="number" min="0" step="0.01" placeholder="0">
+    `,
+    fill: function (box) {
+      const unit = box.querySelector('#sw-unit');
+      function unitWords() { box.querySelector('.sw-unit-word').textContent = unit.value.trim() || 'units'; }
+      unit.addEventListener('input', unitWords);
+      if (s) {
+        box.querySelector('#sw-name').value = s.name;
+        unit.value = s.unit;
+        box.querySelector('#sw-size').value = s.packSize || '';
+        box.querySelector('#sw-price').value = s.packPrice || '';
+        box.querySelector('#sw-have').value = s.have || '';
+      }
+      unitWords();
+    },
+    onSave: function (box) {
+      const name = box.querySelector('#sw-name').value.trim();
+      if (!name) { box.problem('Type its name.'); return false; }
+      const values = {
+        name: name,
+        unit: box.querySelector('#sw-unit').value.trim() || 'each',
+        packSize: Number(box.querySelector('#sw-size').value) || '',
+        packPrice: Number(box.querySelector('#sw-price').value) || '',
+        have: Number(box.querySelector('#sw-have').value) || 0,
+      };
+      if (isNew) {
+        s = Object.assign({ id: newId('s') }, values);
+        supplies.push(s);
+      } else {
+        Object.assign(s, values);
+      }
+      saveSupplies();
+      if (done) done(s);
+      else showPage();
+    },
+  });
+}
+
+// =========================================
+// INGREDIENTS AND SHOPPING
+// The shopping list fills itself in from the recipes for orders due in the next 2 weeks.
+// You can add your own things to buy too: { id, text, done }
+// =========================================
+const SHOPPING_KEY = 'bizStudio.shopping';
+let shopping = loadList(SHOPPING_KEY);
+function saveShopping() { saveList(SHOPPING_KEY, shopping); }
+
+// What the upcoming orders need, and how much more to buy
+function whatToBuy() {
+  const need = {}; // supplyId -> amount needed
+  const forOrders = {}; // supplyId -> [names]
+  orders.filter(function (o) { return isOpen(o) && daysUntil(o.due) <= 14; }).forEach(function (o) {
+    const p = productForOrder(o);
+    if (!p) return;
+    p.uses.forEach(function (u) {
+      need[u.supplyId] = (need[u.supplyId] || 0) + Number(u.amount || 0);
+      (forOrders[u.supplyId] = forOrders[u.supplyId] || []).push(o.customer.split(' ')[0]);
+    });
+  });
+  return Object.keys(need).map(function (id) {
+    const s = findSupply(id);
+    if (!s) return null;
+    const short = need[id] - Number(s.have || 0);
+    if (short <= 0) return null;
+    const packs = s.packSize ? Math.ceil(short / s.packSize) : 0;
+    return { supply: s, need: need[id], short: short, packs: packs, cost: packs * Number(s.packPrice || 0), who: forOrders[id] };
+  }).filter(Boolean);
+}
+
+function showSupplies(page) {
+  const w = words();
+  const buy = whatToBuy();
+  const extra = shopping.filter(function (i) { return !i.done; });
+  const bought = shopping.filter(function (i) { return i.done; });
+
+  page.innerHTML = `
+    <header class="page-head with-button">
+      <div><h1></h1><p></p></div>
+      <button class="btn with-icon" id="new-supply">${icon('plus')}<span></span></button>
+    </header>
+    <div class="supplies-layout">
+      <section class="shop-box">
+        <div class="shop-head">
+          <span class="shop-icon">${icon('cart')}</span>
+          <div><h2>Shopping list</h2><p id="shop-sub"></p></div>
+        </div>
+        <div id="shop-list"></div>
+        <form class="shop-add" id="shop-add">
+          <input class="task-input" id="shop-text" autocomplete="off" placeholder="Add something to buy" aria-label="Add something to buy">
+          <button class="task-add-btn small" aria-label="Add">${icon('plus')}</button>
+        </form>
+      </section>
+      <section class="have-box">
+        <h2></h2>
+        <div id="have-list"></div>
+      </section>
+    </div>
+  `;
+  page.querySelector('h1').textContent = w.supplies + ' and shopping';
+  page.querySelector('.page-head p').textContent = buy.length + extra.length
+    ? (buy.length + extra.length) + ' thing' + (buy.length + extra.length === 1 ? '' : 's') + ' to buy'
+    : 'You have what you need';
+  page.querySelector('#new-supply span').textContent = 'New ' + oneSupply();
+  page.querySelector('#new-supply').addEventListener('click', function () { editSupply(null); });
+  page.querySelector('.have-box h2').textContent = 'What you have';
+
+  // ----- Shopping list -----
+  const shopList = page.querySelector('#shop-list');
+  const total = buy.reduce(function (sum, b) { return sum + b.cost; }, 0);
+  page.querySelector('#shop-sub').textContent = buy.length
+    ? 'For your ' + w.orders.toLowerCase() + ' in the next 2 weeks' + (total ? ', about ' + money(total) : '')
+    : 'Things for your ' + w.orders.toLowerCase() + ' show up here on their own';
+
+  buy.forEach(function (b) {
+    const row = document.createElement('div');
+    row.className = 'shop-row auto';
+    row.innerHTML = '<button class="task-check" role="checkbox" aria-checked="false">' + icon('tick') + '</button>' +
+      '<div class="task-text"><span class="task-words"></span><span class="task-meta"><span class="task-due"></span></span></div>' +
+      '<span class="shop-cost"></span>';
+    row.querySelector('.task-words').textContent = b.supply.name + ', buy ' + (b.packs
+      ? niceNumber(b.packs * b.supply.packSize) + ' ' + b.supply.unit + ' (' + b.packs + (b.packs === 1 ? ' pack)' : ' packs)')
+      : niceNumber(b.short) + ' ' + b.supply.unit);
+    row.querySelector('.task-due').textContent = 'Need ' + niceNumber(b.need) + ' ' + b.supply.unit + ', have ' +
+      niceNumber(b.supply.have || 0) + '. For ' + Array.from(new Set(b.who)).join(', ');
+    row.querySelector('.shop-cost').textContent = b.cost ? money(b.cost) : '';
+    row.querySelector('.task-check').setAttribute('aria-label', 'Bought ' + b.supply.name);
+    row.querySelector('.task-check').addEventListener('click', function () {
+      // Bought it: add it to what you have, and to your money out
+      const before = b.supply.have || 0;
+      const added = b.packs ? b.packs * b.supply.packSize : b.short;
+      b.supply.have = Number(before) + added;
+      saveSupplies();
+      let entry = null;
+      if (b.cost) {
+        entry = { id: newId('m'), kind: 'out', amount: Math.round(b.cost * 100) / 100, what: b.supply.name, date: todayText() };
+        moneyEntries.push(entry);
+        saveMoney();
+      }
+      showPage();
+      showUndo('Bought ' + b.supply.name + (entry ? ', added ' + money(entry.amount) + ' to Bookkeeping' : ''), function () {
+        b.supply.have = before;
+        saveSupplies();
+        if (entry) { moneyEntries = moneyEntries.filter(function (m) { return m !== entry; }); saveMoney(); }
+        showPage();
+      });
+    });
+    shopList.appendChild(row);
+  });
+
+  extra.concat(bought).forEach(function (item) {
+    const row = document.createElement('div');
+    row.className = 'shop-row' + (item.done ? ' done' : '');
+    row.innerHTML = '<button class="task-check" role="checkbox">' + icon('tick') + '</button>' +
+      '<div class="task-text"><span class="task-words"></span></div>' +
+      '<button class="row-delete">' + icon('trash') + '</button>';
+    row.querySelector('.task-words').textContent = item.text;
+    row.querySelector('.task-check').setAttribute('aria-checked', item.done ? 'true' : 'false');
+    row.querySelector('.task-check').addEventListener('click', function () {
+      item.done = !item.done;
+      saveShopping();
+      showPage();
+    });
+    row.querySelector('.row-delete').setAttribute('aria-label', 'Remove ' + item.text);
+    row.querySelector('.row-delete').addEventListener('click', function () {
+      shopping = shopping.filter(function (i) { return i !== item; });
+      saveShopping();
+      showPage();
+    });
+    shopList.appendChild(row);
+  });
+  if (!buy.length && !shopping.length) {
+    shopList.innerHTML = '<p class="shop-empty">Nothing to buy right now.</p>';
+  }
+
+  page.querySelector('#shop-add').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const text = page.querySelector('#shop-text').value.trim();
+    if (!text) return;
+    shopping.push({ id: newId('b'), text: text, done: false });
+    saveShopping();
+    showPage();
+    document.getElementById('shop-text').focus();
+  });
+
+  // ----- What you have -----
+  const have = page.querySelector('#have-list');
+  if (!supplies.length) {
+    have.innerHTML = '<p class="list-empty"></p>';
+    have.firstChild.textContent = 'Add your ' + w.supplies.toLowerCase() + ' with what you pay for them, so the app can work out costs and your shopping list.';
+    return;
+  }
+  const list = document.createElement('div');
+  list.className = 'supply-list';
+  supplies.slice().sort(function (a, b) { return a.name.localeCompare(b.name); }).forEach(function (s) {
+    const short = buy.find(function (b) { return b.supply === s; });
+    const row = document.createElement('div');
+    row.className = 'supply-row' + (short ? ' low' : '');
+    row.innerHTML = `
+      <button class="supply-main"><b></b><span></span></button>
+      <div class="have-stepper">
+        <button class="round-btn small" aria-label="Less">${'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 12h12"/></svg>'}</button>
+        <span class="have-amount"></span>
+        <button class="round-btn small" aria-label="More">${icon('plus')}</button>
+      </div>
+    `;
+    row.querySelector('b').textContent = s.name;
+    row.querySelector('.supply-main span').textContent = unitCost(s)
+      ? money(s.packPrice) + ' for ' + niceNumber(s.packSize) + ' ' + s.unit
+      : 'No price yet';
+    row.querySelector('.have-amount').textContent = niceNumber(s.have || 0) + ' ' + s.unit;
+    row.querySelector('.supply-main').addEventListener('click', function () { editSupply(s); });
+    const step = s.packSize ? Math.max(1, Math.round(s.packSize / 10)) : 1;
+    const btns = row.querySelectorAll('.have-stepper button');
+    btns[0].addEventListener('click', function () { s.have = Math.max(0, Number(s.have || 0) - step); saveSupplies(); showPage(); });
+    btns[1].addEventListener('click', function () { s.have = Number(s.have || 0) + step; saveSupplies(); showPage(); });
+    list.appendChild(row);
+  });
+  have.appendChild(list);
+}
+
+// =========================================
+// PRICING AND PROFIT
+// True cost = ingredients + your time. Suggested price adds the profit you want.
+// =========================================
+function pricingSettings() {
+  return { hourly: profile.hourlyPay === undefined ? 15 : profile.hourlyPay, extra: profile.profitWanted === undefined ? 30 : profile.profitWanted };
+}
+
+function showPricing(page) {
+  const w = words();
+  const set = pricingSettings();
+  page.innerHTML = `
+    <header class="page-head"><h1>Pricing and profit</h1><p></p></header>
+    <div class="pricing-settings">
+      <label><span>Pay yourself</span>
+        <div class="money-box"><span>$</span><input class="input" id="pay-rate" type="number" min="0" step="0.5"></div>
+        <span>an hour</span></label>
+      <label><span>Profit on top</span>
+        <input class="input" id="profit-rate" type="number" min="0" step="5"><span>%</span></label>
+    </div>
+    <div id="price-list"></div>
+  `;
+  page.querySelector('.page-head p').textContent = 'What each ' + oneProduct() + ' really costs you, and what to charge';
+  const pay = page.querySelector('#pay-rate');
+  const extra = page.querySelector('#profit-rate');
+  pay.value = set.hourly;
+  extra.value = set.extra;
+  function saveRates() {
+    profile.hourlyPay = Number(pay.value) || 0;
+    profile.profitWanted = Number(extra.value) || 0;
+    saveProfile();
+    drawList();
+  }
+  pay.addEventListener('change', saveRates);
+  extra.addEventListener('change', saveRates);
+
+  const box = page.querySelector('#price-list');
+  function drawList() {
+    box.innerHTML = '';
+    if (!products.length) {
+      box.innerHTML = '<div class="empty mint"><span class="empty-icon">' + icon('tag') + '</span><h3></h3><p></p><button class="btn" id="go-products"></button></div>';
+      box.querySelector('h3').textContent = 'Add your ' + w.products.toLowerCase() + ' first';
+      box.querySelector('p').textContent = 'Once you add what goes into each one, this page works out your costs and a fair price.';
+      box.querySelector('#go-products').textContent = 'Go to ' + w.products;
+      box.querySelector('#go-products').addEventListener('click', function () { goTo('products'); });
+      return;
+    }
+    const s = pricingSettings();
+    products.forEach(function (p) {
+      const supplyCost = productCost(p);
+      const timeCost = Number(p.hours || 0) * s.hourly;
+      const trueCost = supplyCost + timeCost;
+      const suggested = Math.ceil(trueCost * (1 + s.extra / 100));
+      const price = Number(p.price || 0);
+      const left = price - trueCost;
+      let mood = 'none';
+      let note = 'No price set yet';
+      if (price) {
+        if (left < 0) { mood = 'bad'; note = 'You lose ' + money(-left) + ' each time'; }
+        else if (price < suggested) { mood = 'thin'; note = 'You make ' + money(left) + ', a little under your goal'; }
+        else { mood = 'good'; note = 'You make ' + money(left) + ' each time'; }
+      }
+
+      const card = document.createElement('div');
+      card.className = 'price-card ' + mood;
+      card.innerHTML = `
+        <div class="pc-head"><b></b><span class="pc-note"></span></div>
+        <div class="pc-bar" aria-hidden="true"><span class="pc-supplies"></span><span class="pc-time"></span><span class="pc-profit"></span></div>
+        <div class="pc-numbers">
+          <span><small></small><b class="n-supplies"></b></span>
+          <span><small>Your time</small><b class="n-time"></b></span>
+          <span><small>True cost</small><b class="n-cost"></b></span>
+          <span><small>You charge</small><b class="n-price"></b></span>
+          <span class="pc-suggest"><small>Suggested</small><b class="n-suggest"></b></span>
+        </div>
+        <button class="btn small" hidden>Use the suggested price</button>
+      `;
+      card.querySelector('.pc-head b').textContent = p.name;
+      card.querySelector('.pc-note').textContent = note;
+      card.querySelector('.pc-numbers small').textContent = w.supplies;
+      card.querySelector('.n-supplies').textContent = money(supplyCost);
+      card.querySelector('.n-time').textContent = p.hours ? money(timeCost) : 'Not set';
+      card.querySelector('.n-cost').textContent = money(trueCost);
+      card.querySelector('.n-price').textContent = price ? money(price) : 'Not set';
+      card.querySelector('.n-suggest').textContent = trueCost ? money(suggested) : '-';
+
+      // The bar: ingredients, time, and what's left over, out of the price
+      const whole = Math.max(price, trueCost) || 1;
+      card.querySelector('.pc-supplies').style.width = (supplyCost / whole * 100) + '%';
+      card.querySelector('.pc-time').style.width = (timeCost / whole * 100) + '%';
+      card.querySelector('.pc-profit').style.width = (Math.max(0, left) / whole * 100) + '%';
+
+      const use = card.querySelector('.btn');
+      if (trueCost && price !== suggested) {
+        use.hidden = false;
+        use.textContent = 'Charge ' + money(suggested) + ' instead';
+        use.addEventListener('click', function () {
+          const was = p.price;
+          p.price = suggested;
+          saveProducts();
+          drawList();
+          showUndo(p.name + ' is now ' + money(suggested), function () { p.price = was; saveProducts(); drawList(); });
+        });
+      }
+      box.appendChild(card);
+    });
+    const how = document.createElement('p');
+    how.className = 'pricing-how';
+    how.textContent = 'True cost is your ' + w.supplies.toLowerCase() + ' plus your time. The suggested price adds the profit you picked on top, rounded up to the next dollar.';
+    box.appendChild(how);
+  }
+  drawList();
+}
+
+// =========================================
+// BOOKKEEPING
+// Money in: paid orders, plus anything you add. Money out: what you add (and shopping you check off).
+// Each added entry: { id, kind: 'in' or 'out', amount, what, date }
+// =========================================
+const MONEY_KEY = 'bizStudio.money';
+let moneyEntries = loadList(MONEY_KEY);
+function saveMoney() { saveList(MONEY_KEY, moneyEntries); }
+let bookMonth = null; // "2026-11-01", or null for this month
+
+// Every money line, paid orders included
+function allMoney() {
+  const list = moneyEntries.map(function (m) { return Object.assign({ fromOrder: null }, m); });
+  orders.filter(function (o) { return o.status === 'paid' && Number(o.price); }).forEach(function (o) {
+    list.push({ id: 'order-' + o.id, kind: 'in', amount: Number(o.price), what: o.item + ' for ' + o.customer, date: o.due, fromOrder: o });
+  });
+  return list;
+}
+
+function monthTotals(list, year, month) {
+  let moneyIn = 0;
+  let moneyOut = 0;
+  list.forEach(function (m) {
+    const d = toDate(m.date);
+    if (d.getFullYear() !== year || d.getMonth() !== month) return;
+    if (m.kind === 'in') moneyIn += Number(m.amount); else moneyOut += Number(m.amount);
+  });
+  return { moneyIn: moneyIn, moneyOut: moneyOut };
+}
+
+function showBookkeeping(page) {
+  const w = words();
+  const today = toDate(todayText());
+  const month = bookMonth ? toDate(bookMonth) : new Date(today.getFullYear(), today.getMonth(), 1);
+  const list = allMoney();
+  const totals = monthTotals(list, month.getFullYear(), month.getMonth());
+  const unpaid = orders.filter(function (o) { return o.status === 'done' && Number(o.price); });
+  const unpaidTotal = unpaid.reduce(function (sum, o) { return sum + Number(o.price); }, 0);
+
+  page.innerHTML = `
+    <header class="page-head with-button">
+      <div><h1>Bookkeeping</h1><p></p></div>
+      <div class="month-nav">
+        <button class="round-btn" id="bk-prev" aria-label="Last month">${icon('back')}</button>
+        <h2 class="month-name"></h2>
+        <button class="round-btn" id="bk-next" aria-label="Next month">${icon('chevron')}</button>
+      </div>
+    </header>
+    <div class="money-tiles">
+      <div class="money-tile mint"><span>Money in</span><b id="mt-in"></b></div>
+      <div class="money-tile pink"><span>Money out</span><b id="mt-out"></b></div>
+      <div class="money-tile sky"><span>You kept</span><b id="mt-kept"></b></div>
+      <div class="money-tile butter"><span>Waiting to be paid</span><b id="mt-wait"></b></div>
+    </div>
+    <section class="chart-box">
+      <h2>Last 6 months</h2>
+      <div class="money-chart" id="money-chart"></div>
+      <div class="chart-key"><span class="key-in">Money in</span><span class="key-out">Money out</span></div>
+    </section>
+    <section>
+      <div class="person-orders-head">
+        <h2>This month</h2>
+        <div class="head-buttons">
+          <button class="btn secondary with-icon" id="add-out">${icon('plus')}<span>Money out</span></button>
+          <button class="btn with-icon" id="add-in">${icon('plus')}<span>Money in</span></button>
+        </div>
+      </div>
+      <div class="money-list" id="money-list"></div>
+    </section>
+  `;
+  page.querySelector('.page-head p').textContent = 'Paid ' + w.orders.toLowerCase() + ' count as money in on their due date';
+  page.querySelector('.month-name').textContent = month.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  page.querySelector('#mt-in').textContent = money(totals.moneyIn);
+  page.querySelector('#mt-out').textContent = money(totals.moneyOut);
+  page.querySelector('#mt-kept').textContent = money(totals.moneyIn - totals.moneyOut);
+  page.querySelector('#mt-wait').textContent = money(unpaidTotal);
+
+  page.querySelector('#bk-prev').addEventListener('click', function () { bookMonth = dateText(new Date(month.getFullYear(), month.getMonth() - 1, 1)); showPage(); });
+  page.querySelector('#bk-next').addEventListener('click', function () { bookMonth = dateText(new Date(month.getFullYear(), month.getMonth() + 1, 1)); showPage(); });
+  page.querySelector('#add-in').addEventListener('click', function () { editMoney('in'); });
+  page.querySelector('#add-out').addEventListener('click', function () { editMoney('out'); });
+
+  // Bars for the last 6 months
+  const chart = page.querySelector('#money-chart');
+  const months = [];
+  for (let i = 5; i >= 0; i--) months.push(new Date(month.getFullYear(), month.getMonth() - i, 1));
+  const sums = months.map(function (m) { return monthTotals(list, m.getFullYear(), m.getMonth()); });
+  const top = Math.max.apply(null, sums.map(function (s) { return Math.max(s.moneyIn, s.moneyOut); }).concat([1]));
+  months.forEach(function (m, i) {
+    const col = document.createElement('div');
+    col.className = 'chart-col' + (i === 5 ? ' now' : '');
+    col.innerHTML = '<div class="chart-bars"><span class="bar-in"></span><span class="bar-out"></span></div><span class="chart-label"></span>';
+    col.querySelector('.bar-in').style.height = (sums[i].moneyIn / top * 100) + '%';
+    col.querySelector('.bar-out').style.height = (sums[i].moneyOut / top * 100) + '%';
+    col.querySelector('.bar-in').title = 'In: ' + money(sums[i].moneyIn);
+    col.querySelector('.bar-out').title = 'Out: ' + money(sums[i].moneyOut);
+    col.querySelector('.chart-label').textContent = m.toLocaleDateString('en-US', { month: 'short' });
+    chart.appendChild(col);
+  });
+
+  // The list for this month, newest first
+  const box = page.querySelector('#money-list');
+  const lines = list.filter(function (m) {
+    const d = toDate(m.date);
+    return d.getFullYear() === month.getFullYear() && d.getMonth() === month.getMonth();
+  }).sort(function (a, b) { return b.date.localeCompare(a.date); });
+  if (!lines.length) {
+    box.innerHTML = '<p class="list-empty">Nothing this month yet.</p>';
+    return;
+  }
+  lines.forEach(function (m) {
+    const row = document.createElement('div');
+    row.className = 'money-row ' + m.kind;
+    row.innerHTML = '<span class="money-date"></span><button class="money-what"></button><b class="money-amount"></b>';
+    row.querySelector('.money-date').textContent = niceDate(m.date);
+    row.querySelector('.money-what').textContent = m.what || (m.kind === 'in' ? 'Money in' : 'Money out');
+    row.querySelector('.money-amount').textContent = (m.kind === 'in' ? '+' : '-') + money(m.amount);
+    row.querySelector('.money-what').addEventListener('click', function () {
+      if (m.fromOrder) openOrderForm(m.fromOrder.id);
+      else editMoney(m.kind, moneyEntries.find(function (x) { return x.id === m.id; }));
+    });
+    if (m.fromOrder) {
+      const tag = document.createElement('span');
+      tag.className = 'money-tag';
+      tag.textContent = capitalize(oneOrder());
+      row.querySelector('.money-what').appendChild(tag);
+    }
+    box.appendChild(row);
+  });
+}
+
+// Adding or changing money in or out
+function editMoney(kind, entry) {
+  const isNew = !entry;
+  openWindow({
+    title: isNew ? (kind === 'in' ? 'Money in' : 'Money out') : 'Edit',
+    saveLabel: isNew ? 'Add it' : 'Save changes',
+    html: `
+      <label class="label" for="mw-what"></label>
+      <input class="input" id="mw-what" autocomplete="off">
+      <label class="label" for="mw-amount">How much</label>
+      <div class="money-box"><span>$</span><input class="input" id="mw-amount" type="number" min="0" step="0.01" placeholder="0.00"></div>
+      <label class="label" for="mw-date">What day</label>
+      <input class="input" id="mw-date" type="date">
+      <button type="button" class="link-btn delete-btn" id="mw-delete" hidden>${icon('trash')}<span>Delete this</span></button>
+    `,
+    fill: function (box) {
+      box.querySelector('label[for="mw-what"]').textContent = kind === 'in' ? 'What it was for' : 'What you bought or paid';
+      box.querySelector('#mw-what').placeholder = kind === 'in' ? 'Bake sale, tips' : 'Cake boxes, booth fee';
+      const date = box.querySelector('#mw-date');
+      date.value = entry ? entry.date : todayText();
+      fancyDate(date);
+      if (entry) {
+        box.querySelector('#mw-what').value = entry.what;
+        box.querySelector('#mw-amount').value = entry.amount;
+        const del = box.querySelector('#mw-delete');
+        del.hidden = false;
+        del.addEventListener('click', function () {
+          moneyEntries = moneyEntries.filter(function (m) { return m !== entry; });
+          saveMoney();
+          box.close();
+          box.remove();
+          showPage();
+          showUndo('Deleted', function () { moneyEntries.push(entry); saveMoney(); showPage(); });
+        });
+      }
+    },
+    onSave: function (box) {
+      const amount = Number(box.querySelector('#mw-amount').value);
+      if (!amount) { box.problem('Type how much it was.'); return false; }
+      const values = { kind: kind, amount: amount, what: box.querySelector('#mw-what').value.trim(), date: box.querySelector('#mw-date').value || todayText() };
+      if (entry) Object.assign(entry, values);
+      else moneyEntries.push(Object.assign({ id: newId('m') }, values));
+      saveMoney();
+      showPage();
+    },
+  });
+}
+
+// =========================================
+// RECEIPTS AND MENUS
+// A receipt for any order, and a menu of everything you make. Both can be printed.
+// =========================================
+let printTab = 'receipt';
+let receiptOrder = null;
+
+function showPrintables(page) {
+  const w = words();
+  page.innerHTML = `
+    <header class="page-head"><h1>Receipts and menus</h1><p>Make one, then print it or save it as a PDF</p></header>
+    <div class="filter-tabs print-tabs" role="tablist">
+      <button class="filter-tab" data-tab="receipt" role="tab">Receipt</button>
+      <button class="filter-tab" data-tab="menu" role="tab">Menu</button>
+    </div>
+    <div class="print-layout">
+      <div class="print-controls" id="print-controls"></div>
+      <div class="paper-wrap"><div class="paper print-area" id="paper"></div></div>
+    </div>
+  `;
+  page.querySelectorAll('[data-tab]').forEach(function (b) {
+    const on = b.dataset.tab === printTab;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+    b.addEventListener('click', function () { printTab = b.dataset.tab; showPage(); });
+  });
+
+  const controls = page.querySelector('#print-controls');
+  const paper = page.querySelector('#paper');
+
+  // The business name at the top of the paper, like the sticker logo
+  function paperTop(title) {
+    const top = document.createElement('div');
+    top.className = 'paper-top';
+    top.innerHTML = '<div class="paper-logo"><span></span></div><p class="paper-title"></p>';
+    top.querySelector('.paper-logo span').textContent = profile.businessName;
+    top.querySelector('.paper-title').textContent = title;
+    if (profile.photo) {
+      const img = document.createElement('img');
+      img.src = profile.photo;
+      img.alt = '';
+      img.className = 'paper-photo';
+      top.prepend(img);
+    }
+    return top;
+  }
+
+  const printBtn = document.createElement('button');
+  printBtn.className = 'btn with-icon print-btn';
+  printBtn.innerHTML = icon('printer') + '<span>Print</span>';
+  printBtn.addEventListener('click', function () { window.print(); });
+
+  if (printTab === 'receipt') {
+    const choices = sortedOrders();
+    if (!choices.length) {
+      controls.innerHTML = '<p class="list-empty"></p>';
+      controls.firstChild.textContent = 'Add an ' + oneOrder() + ' first, then make a receipt for it here.';
+      paper.parentNode.remove();
+      return;
+    }
+    if (!receiptOrder || !orders.find(function (o) { return o.id === receiptOrder; })) receiptOrder = choices[0].id;
+    controls.innerHTML = '<label class="label" for="receipt-pick"></label><select class="input" id="receipt-pick"></select>';
+    controls.querySelector('label').textContent = 'Which ' + oneOrder();
+    const pick = controls.querySelector('select');
+    choices.forEach(function (o) {
+      const opt = document.createElement('option');
+      opt.value = o.id;
+      opt.textContent = o.customer + ': ' + o.item + ' (' + niceDate(o.due) + ')';
+      pick.appendChild(opt);
+    });
+    pick.value = receiptOrder;
+    pick.addEventListener('change', function () { receiptOrder = pick.value; showPage(); });
+    controls.appendChild(printBtn);
+
+    const o = orders.find(function (x) { return x.id === receiptOrder; });
+    paper.appendChild(paperTop('Receipt'));
+    const body = document.createElement('div');
+    body.className = 'receipt-body';
+    body.innerHTML = `
+      <div class="receipt-meta">
+        <div><small>For</small><b class="r-name"></b><span class="r-contact"></span></div>
+        <div class="right"><small>Date</small><b class="r-date"></b><span class="r-time"></span></div>
+      </div>
+      <table class="receipt-table"><thead><tr><th>Item</th><th class="right">Price</th></tr></thead><tbody></tbody>
+        <tfoot><tr><td>Total</td><td class="right r-total"></td></tr></tfoot></table>
+      <p class="receipt-stamp"></p>
+      <p class="paper-thanks">Thank you for your order!</p>
+    `;
+    body.querySelector('.r-name').textContent = o.customer;
+    body.querySelector('.r-contact').textContent = o.contact || '';
+    body.querySelector('.r-date').textContent = toDate(o.due).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    body.querySelector('.r-time').textContent = o.time ? niceTime(o.time) : '';
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td><b></b><span class="r-details"></span></td><td class="right"></td>';
+    tr.querySelector('b').textContent = o.item;
+    tr.querySelector('.r-details').textContent = detailChips(o).join('. ');
+    tr.querySelector('.right').textContent = o.price ? money(o.price) : '';
+    body.querySelector('tbody').appendChild(tr);
+    body.querySelector('.r-total').textContent = money(o.price || 0);
+    const stamp = body.querySelector('.receipt-stamp');
+    stamp.textContent = o.status === 'paid' ? 'Paid' : 'Not paid yet';
+    stamp.classList.add(o.status === 'paid' ? 'paid' : 'due');
+    paper.appendChild(body);
+    return;
+  }
+
+  // ----- Menu -----
+  if (!products.length) {
+    controls.innerHTML = '<p class="list-empty"></p><button class="btn" id="go-products"></button>';
+    controls.firstChild.textContent = 'Add your ' + w.products.toLowerCase() + ' with prices first, then your menu makes itself.';
+    controls.querySelector('#go-products').textContent = 'Go to ' + w.products;
+    controls.querySelector('#go-products').addEventListener('click', function () { goTo('products'); });
+    paper.parentNode.remove();
+    return;
+  }
+  if (profile.menuTitle === undefined) profile.menuTitle = 'Menu';
+  if (profile.menuNote === undefined) profile.menuNote = '';
+  controls.innerHTML = `
+    <label class="label" for="menu-title">Title</label>
+    <input class="input" id="menu-title" autocomplete="off">
+    <label class="label" for="menu-note">A note at the bottom</label>
+    <textarea class="input" id="menu-note" rows="3" placeholder="Order 3 days ahead. Text 555-201-3344"></textarea>
+  `;
+  controls.appendChild(printBtn);
+  const titleBox = controls.querySelector('#menu-title');
+  const noteBox = controls.querySelector('#menu-note');
+  titleBox.value = profile.menuTitle;
+  noteBox.value = profile.menuNote;
+
+  function drawMenu() {
+    paper.innerHTML = '';
+    paper.appendChild(paperTop(profile.menuTitle || 'Menu'));
+    const items = document.createElement('div');
+    items.className = 'menu-items';
+    products.forEach(function (p) {
+      const row = document.createElement('div');
+      row.className = 'menu-item';
+      row.innerHTML = '<div><b></b><span></span></div><span class="menu-dots"></span><b class="menu-price"></b>';
+      row.querySelector('div b').textContent = p.name;
+      row.querySelector('div span').textContent = p.makes || '';
+      row.querySelector('.menu-price').textContent = p.price ? money(p.price) : 'Ask';
+      items.appendChild(row);
+    });
+    paper.appendChild(items);
+    if (profile.menuNote) {
+      const note = document.createElement('p');
+      note.className = 'paper-thanks';
+      note.textContent = profile.menuNote;
+      paper.appendChild(note);
+    }
+  }
+  function saveMenuWords() {
+    profile.menuTitle = titleBox.value;
+    profile.menuNote = noteBox.value.trim();
+    saveProfile();
+    drawMenu();
+  }
+  titleBox.addEventListener('input', saveMenuWords);
+  noteBox.addEventListener('input', saveMenuWords);
+  drawMenu();
+}
+
+// =========================================
+// FINDER
+// One search box for everything in the app, plus quick links to find places near you.
+// =========================================
+let finderText = '';
+
+function showFinder(page) {
+  const w = words();
+  page.innerHTML = `
+    <header class="page-head"><h1>Finder</h1><p>Search everything in your app, or find places near you</p></header>
+    <div class="finder-box">
+      ${icon('search')}
+      <input class="task-input" id="finder-input" type="search" autocomplete="off" aria-label="Search">
+    </div>
+    <div id="finder-results"></div>
+    <section class="near-box">
+      <h2>Find near you</h2>
+      <div class="near-grid" id="near-grid"></div>
+    </section>
+  `;
+  const input = page.querySelector('#finder-input');
+  input.placeholder = 'Search ' + [w.orders, w.customers, w.products, 'tasks'].map(function (x) { return x.toLowerCase(); }).join(', ');
+  input.value = finderText;
+
+  const near = [
+    { label: 'Farmers markets', q: 'farmers markets near me', color: 'mint' },
+    { label: 'Craft fairs', q: 'craft fairs near me', color: 'lilac' },
+    { label: w.supplies + ' stores', q: findType(profile.businessType).label + ' ' + w.supplies.toLowerCase() + ' supply store near me', color: 'peach' },
+    { label: 'Places to sell', q: 'pop up markets for small businesses near me', color: 'sky' },
+  ];
+  near.forEach(function (n) {
+    const a = document.createElement('a');
+    a.className = 'near-card ' + n.color;
+    a.href = 'https://www.google.com/maps/search/' + encodeURIComponent(n.q);
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.innerHTML = '<span class="near-icon">' + icon('search') + '</span><b></b><span>Opens Google Maps</span>';
+    a.querySelector('b').textContent = n.label;
+    page.querySelector('#near-grid').appendChild(a);
+  });
+
+  const results = page.querySelector('#finder-results');
+  function search() {
+    finderText = input.value;
+    results.innerHTML = '';
+    const q = input.value.trim().toLowerCase();
+    if (!q) return;
+    const groups = [];
+
+    function has() {
+      for (let i = 0; i < arguments.length; i++) if (String(arguments[i] || '').toLowerCase().includes(q)) return true;
+      return false;
+    }
+    groups.push({ title: w.orders, color: 'sky', items: orders.filter(function (o) { return has(o.customer, o.item, o.notes, o.contact, detailChips(o).join(' ')); })
+      .map(function (o) { return { main: o.customer + ': ' + o.item, sub: dueText(o), go: function () { openOrderForm(o.id); } }; }) });
+    groups.push({ title: w.customers, color: 'pink', items: allCustomers().filter(function (p) { return has(p.name, p.contact); })
+      .map(function (p) { return { main: p.name, sub: p.orders.length + ' ' + (p.orders.length === 1 ? oneOrder() : w.orders.toLowerCase()), go: function () { customerView = p.key; goTo('customers'); } }; }) });
+    groups.push({ title: w.products, color: 'peach', items: products.filter(function (p) { return has(p.name, p.steps, p.makes); })
+      .map(function (p) { return { main: p.name, sub: p.price ? money(p.price) : '', go: function () { productView = p.id; productScale = 1; goTo('products'); } }; }) });
+    groups.push({ title: w.supplies, color: 'butter', items: supplies.filter(function (s) { return has(s.name); })
+      .map(function (s) { return { main: s.name, sub: 'You have ' + niceNumber(s.have || 0) + ' ' + s.unit, go: function () { goTo('checklist'); } }; }) });
+    groups.push({ title: 'Tasks', color: 'mint', items: tasks.filter(function (t) { return has(t.text); })
+      .map(function (t) { return { main: t.text, sub: t.done ? 'Done' : t.due ? niceDate(t.due) : 'No date', go: function () { goTo('todo'); } }; }) });
+
+    const found = groups.filter(function (g) { return g.items.length; });
+    if (!found.length) {
+      results.innerHTML = '<p class="list-empty finder-none"></p>';
+      results.firstChild.textContent = 'Nothing matches "' + input.value.trim() + '".';
+      return;
+    }
+    found.forEach(function (g) {
+      const section = document.createElement('section');
+      section.className = 'finder-group ' + g.color;
+      section.innerHTML = '<h2><span class="group-dot"></span><span></span><b class="group-count"></b></h2><div class="finder-list"></div>';
+      section.querySelector('h2 span:nth-child(2)').textContent = g.title;
+      section.querySelector('.group-count').textContent = g.items.length;
+      g.items.slice(0, 8).forEach(function (item) {
+        const b = document.createElement('button');
+        b.className = 'finder-item';
+        b.innerHTML = '<b></b><span></span>';
+        b.querySelector('b').textContent = item.main;
+        b.querySelector('span').textContent = item.sub;
+        b.addEventListener('click', item.go);
+        section.querySelector('.finder-list').appendChild(b);
+      });
+      results.appendChild(section);
+    });
+  }
+  input.addEventListener('input', search);
+  search();
+  input.focus();
+}
+
+// =========================================
+// MY DAY
+// The first page: today at a glance.
+// =========================================
+function showMyDay(page) {
+  const w = words();
+  page.querySelector('.empty').remove();
+  const today = todayText();
+  const dueToday = orders.filter(function (o) { return isOpen(o) && o.due === today; });
+  const late = orders.filter(function (o) { return isOpen(o) && o.due < today; });
+  const todayTasks = orderTasks().concat(tasks.filter(function (t) { return !t.done; }))
+    .filter(function (t) { return t.flagged || (t.due && t.due <= today); })
+    .sort(function (a, b) { return (b.flagged ? 1 : 0) - (a.flagged ? 1 : 0) || (a.due || '').localeCompare(b.due || ''); });
+  const now = toDate(today);
+  const thisMonth = monthTotals(allMoney(), now.getFullYear(), now.getMonth());
+  const toBuy = whatToBuy().length + shopping.filter(function (i) { return !i.done; }).length;
+
+  const tiles = document.createElement('div');
+  tiles.className = 'day-tiles';
+  [
+    { n: dueToday.length, label: (dueToday.length === 1 ? oneOrder() : w.orders.toLowerCase()) + ' due today', color: 'butter', go: 'calendar' },
+    { n: todayTasks.length, label: todayTasks.length === 1 ? 'task for today' : 'tasks for today', color: 'sky', go: 'todo' },
+    { n: money(thisMonth.moneyIn), label: 'paid to you this month', color: 'mint', go: 'bookkeeping' },
+    { n: toBuy, label: toBuy === 1 ? 'thing to buy' : 'things to buy', color: 'peach', go: 'checklist' },
+  ].forEach(function (t) {
+    const b = document.createElement('button');
+    b.className = 'day-tile ' + t.color;
+    b.innerHTML = '<b></b><span></span>';
+    b.querySelector('b').textContent = t.n;
+    b.querySelector('span').textContent = t.label;
+    b.addEventListener('click', function () { goTo(t.go); });
+    tiles.appendChild(b);
+  });
+  page.appendChild(tiles);
+
+  if (late.length) {
+    const warn = document.createElement('button');
+    warn.className = 'late-banner';
+    warn.innerHTML = icon('clock') + '<span></span>';
+    warn.querySelector('span').textContent = late.length + ' ' + (late.length === 1 ? oneOrder() + ' is' : w.orders.toLowerCase() + ' are') + ' late. Tap to see.';
+    warn.addEventListener('click', function () { orderFilter = 'open'; goTo('orders'); });
+    page.appendChild(warn);
+  }
+
+  const two = document.createElement('div');
+  two.className = 'day-columns';
+  page.appendChild(two);
+
+  // Today's tasks
+  const taskBox = document.createElement('section');
+  taskBox.innerHTML = '<div class="section-head"><h2 class="tips-title">To do today</h2><button class="link-btn">See all</button></div>';
+  taskBox.querySelector('.link-btn').addEventListener('click', function () { goTo('todo'); });
+  if (todayTasks.length) {
+    const list = document.createElement('div');
+    list.className = 'task-list';
+    todayTasks.slice(0, 6).forEach(function (t) { list.appendChild(taskRow(t, true)); });
+    taskBox.appendChild(list);
+  } else {
+    const none = document.createElement('p');
+    none.className = 'day-free';
+    none.textContent = 'Nothing on your list for today.';
+    taskBox.appendChild(none);
+  }
+  two.appendChild(taskBox);
+
+  // Orders coming up this week
+  const soon = sortedOrders().filter(function (o) { return isOpen(o) && daysUntil(o.due) <= 7; });
+  const orderBox = document.createElement('section');
+  orderBox.innerHTML = '<div class="section-head"><h2 class="tips-title"></h2><button class="link-btn"></button></div>';
+  orderBox.querySelector('h2').textContent = 'Coming up this week';
+  orderBox.querySelector('.link-btn').textContent = 'See all';
+  orderBox.querySelector('.link-btn').addEventListener('click', function () { orderView = null; goTo('orders'); });
+  if (soon.length) {
+    const list = document.createElement('div');
+    list.className = 'day-orders';
+    soon.slice(0, 5).forEach(function (o) {
+      const item = document.createElement('button');
+      item.className = 'day-order ' + (urgency(o) === 'late' ? 'late' : findStatus(o.status).color);
+      item.innerHTML = '<span class="day-top"><span class="day-time"></span><span class="day-status"></span></span><b class="day-name"></b><span class="day-item"></span>';
+      item.querySelector('.day-time').textContent = dueText(o) + (o.time ? ' at ' + niceTime(o.time) : '');
+      item.querySelector('.day-status').textContent = urgency(o) === 'late' ? 'Late' : findStatus(o.status).label;
+      item.querySelector('.day-name').textContent = o.customer;
+      item.querySelector('.day-item').textContent = o.item;
+      item.addEventListener('click', function () { openOrderForm(o.id); });
+      list.appendChild(item);
+    });
+    orderBox.appendChild(list);
+  } else {
+    const none = document.createElement('p');
+    none.className = 'day-free';
+    none.textContent = 'No ' + w.orders.toLowerCase() + ' due this week.';
+    orderBox.appendChild(none);
+  }
+  two.appendChild(orderBox);
+
+  showGoalTips(page);
+}
+
+// =========================================
+// SWITCHING BUSINESSES
+// =========================================
+// Fills a list with one row per business, plus "Add another business"
+function businessRows(list, afterPick) {
+  businesses.forEach(function (b) {
+    const p = profileOf(b.id);
+    const row = document.createElement('button');
+    row.className = 'settings-row biz-row' + (b.id === currentBiz ? ' current' : '');
+    row.innerHTML = '<span class="biz-avatar"></span><span class="row-text"><strong></strong><span class="row-value"></span></span>' +
+      '<span class="biz-here"></span>';
+    const pic = row.querySelector('.biz-avatar');
+    if (p.photo) {
+      const img = document.createElement('img');
+      img.src = p.photo;
+      img.alt = '';
+      pic.appendChild(img);
+    } else {
+      pic.textContent = initialsOf(b.name || '?');
+    }
+    row.querySelector('strong').textContent = b.name;
+    const type = b.type === 'other' ? capitalize(p.otherType || 'Something else') : (findType(b.type) || { label: '' }).label;
+    row.querySelector('.row-value').textContent = type;
+    if (b.id === currentBiz) row.querySelector('.biz-here').textContent = 'Open now';
+    else row.querySelector('.biz-here').innerHTML = '<span class="biz-open">Open</span>';
+    row.addEventListener('click', function () {
+      if (b.id === currentBiz) { if (afterPick) afterPick(); return; }
+      switchBusiness(b.id);
+    });
+    list.appendChild(row);
+  });
+  const add = document.createElement('button');
+  add.className = 'settings-row biz-add';
+  add.innerHTML = '<span class="biz-avatar add">' + icon('plus') + '</span>' +
+    '<span class="row-text"><strong>Add another business</strong><span class="row-value">Your other businesses stay saved</span></span>';
+  add.addEventListener('click', function () { addBusiness(null); });
+  list.appendChild(add);
+}
+
+// The window that opens from the business name at the top of the menu
+function openBusinessSwitcher() {
+  const box = document.createElement('dialog');
+  box.className = 'task-dialog';
+  box.innerHTML = `
+    <div class="task-dialog-inner">
+      <div class="dialog-head">
+        <h2>Your businesses</h2>
+        <button type="button" class="dialog-close" aria-label="Close">${icon('plus')}</button>
+      </div>
+      <div class="settings-list biz-switch-list"></div>
+    </div>
+  `;
+  document.body.appendChild(box);
+  function close() { box.close(); box.remove(); }
+  businessRows(box.querySelector('.biz-switch-list'), close);
+  box.querySelector('.dialog-close').addEventListener('click', close);
+  box.addEventListener('cancel', function (e) { e.preventDefault(); close(); });
+  box.addEventListener('click', function (e) { if (e.target === box) close(); });
+  box.showModal();
 }
 
 // =========================================
@@ -3698,7 +5511,10 @@ function showSettings(page) {
       </button>
     </div>
 
-    <button class="start-over" id="erase-btn">Erase everything and start over</button>
+    <h2 class="settings-group">Your businesses</h2>
+    <div class="settings-list" id="biz-list"></div>
+
+    <button class="start-over" id="erase-btn"></button>
   `;
 
   // Text from the owner is added with textContent so it shows exactly as typed
@@ -3749,12 +5565,17 @@ function showSettings(page) {
     if (erase.dataset.sure !== 'yes') {
       erase.dataset.sure = 'yes';
       erase.classList.add('sure');
-      erase.textContent = 'Are you sure? Click again to erase everything';
+      erase.textContent = 'This deletes everything in ' + profile.businessName + '. Click again to delete it';
       return;
     }
     eraseProfile();
     location.reload();
   });
+  erase.textContent = 'Delete ' + profile.businessName;
+
+  // Every business, with a way to switch and to add another
+  const bizList = box.querySelector('#biz-list');
+  businessRows(bizList);
 
   if (showSavedMessage) {
     const note = document.createElement('p');
@@ -3817,7 +5638,20 @@ function showGoalTips(page) {
 // If a profile was saved before, go straight to the app.
 // Otherwise, start Profile Setup.
 // =========================================
-if (loadProfile()) {
+// ---------- Start the app ----------
+let newBusiness = null;
+try {
+  newBusiness = JSON.parse(sessionStorage.getItem(NEW_BUSINESS_KEY));
+  sessionStorage.removeItem(NEW_BUSINESS_KEY);
+} catch (error) { /* fine */ }
+
+if (newBusiness) {
+  // They just started a new business: skip to the name step, type already picked
+  Object.assign(profile, newBusiness);
+  wordsEditedByOwner = true;
+  setupStep = 1;
+  showSetup();
+} else if (loadProfile()) {
   openApp();
 } else {
   showSetup();
