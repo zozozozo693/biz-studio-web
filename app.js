@@ -1417,24 +1417,6 @@ function showSidebarAvatar() {
   const spot = document.getElementById('side-avatar');
   spot.innerHTML = '';
   spot.appendChild(avatar('sm'));
-
-  // Clicking the business name opens the list of businesses
-  const brand = document.querySelector('.side-brand');
-  if (!brand.dataset.ready) {
-    brand.dataset.ready = 'yes';
-    brand.setAttribute('role', 'button');
-    brand.tabIndex = 0;
-    brand.title = 'Switch business';
-    brand.setAttribute('aria-label', 'Switch business');
-    brand.addEventListener('click', openBusinessSwitcher);
-    brand.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openBusinessSwitcher(); }
-    });
-    const swap = document.createElement('span');
-    swap.className = 'brand-switch';
-    swap.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 9 5-5 5 5M7 15l5 5 5-5"/></svg>';
-    brand.appendChild(swap);
-  }
 }
 
 // =========================================
@@ -1471,14 +1453,27 @@ function makeMenuButton(section) {
 
 // The menu groups for this owner: My Day, then "Picked for you" (their goals),
 // then the normal groups without the sections that moved up
+// Tabs some kinds of business don't use. Cleaning and yard businesses
+// keep track of their jobs on the Calendar instead of a Jobs tab.
+const NO_ORDERS_TAB = ['cleaning', 'yard'];
+function hiddenSections() {
+  let type = profile.businessType;
+  if (type === 'other') {
+    const guess = guessType(profile.otherType);
+    type = guess ? guess.id : 'other';
+  }
+  return NO_ORDERS_TAB.includes(type) ? ['orders'] : [];
+}
+
 function menuGroups() {
-  const focus = focusSections();
+  const hidden = hiddenSections();
+  const focus = focusSections().filter(function (id) { return !hidden.includes(id); });
   const groups = [MENU_GROUPS[0]];
   if (focus.length > 0) groups.push({ label: 'Picked for you', items: focus });
 
   MENU_GROUPS.slice(1).forEach(function (group) {
     if (group.items.includes('settings')) return; // Settings is added at the bottom
-    const items = group.items.filter(function (id) { return !focus.includes(id); });
+    const items = group.items.filter(function (id) { return !focus.includes(id) && !hidden.includes(id); });
     if (items.length > 0) groups.push({ label: group.label, items: items });
   });
   return groups;
@@ -1522,6 +1517,11 @@ function greeting() {
 
 // Draws the page on the right for the current section
 function showPage() {
+  // A hidden tab's list opens the Calendar instead (its form still works from there)
+  if (hiddenSections().includes(currentSection) && currentSection === 'orders' && orderView === null) {
+    currentSection = 'calendar';
+    showMenu();
+  }
   const section = findSection(currentSection);
   const page = document.getElementById('page');
 
@@ -5384,7 +5384,7 @@ function showMyDay(page) {
 // SWITCHING BUSINESSES
 // =========================================
 // Fills a list with one row per business, plus "Add another business"
-function businessRows(list, afterPick) {
+function businessRows(list) {
   businesses.forEach(function (b) {
     const p = profileOf(b.id);
     const row = document.createElement('button');
@@ -5406,7 +5406,7 @@ function businessRows(list, afterPick) {
     if (b.id === currentBiz) row.querySelector('.biz-here').textContent = 'Open now';
     else row.querySelector('.biz-here').innerHTML = '<span class="biz-open">Open</span>';
     row.addEventListener('click', function () {
-      if (b.id === currentBiz) { if (afterPick) afterPick(); return; }
+      if (b.id === currentBiz) return;
       switchBusiness(b.id);
     });
     list.appendChild(row);
@@ -5417,28 +5417,6 @@ function businessRows(list, afterPick) {
     '<span class="row-text"><strong>Add another business</strong><span class="row-value">Your other businesses stay saved</span></span>';
   add.addEventListener('click', function () { addBusiness(null); });
   list.appendChild(add);
-}
-
-// The window that opens from the business name at the top of the menu
-function openBusinessSwitcher() {
-  const box = document.createElement('dialog');
-  box.className = 'task-dialog';
-  box.innerHTML = `
-    <div class="task-dialog-inner">
-      <div class="dialog-head">
-        <h2>Your businesses</h2>
-        <button type="button" class="dialog-close" aria-label="Close">${icon('plus')}</button>
-      </div>
-      <div class="settings-list biz-switch-list"></div>
-    </div>
-  `;
-  document.body.appendChild(box);
-  function close() { box.close(); box.remove(); }
-  businessRows(box.querySelector('.biz-switch-list'), close);
-  box.querySelector('.dialog-close').addEventListener('click', close);
-  box.addEventListener('cancel', function (e) { e.preventDefault(); close(); });
-  box.addEventListener('click', function (e) { if (e.target === box) close(); });
-  box.showModal();
 }
 
 // =========================================
@@ -5469,7 +5447,10 @@ function showSettings(page) {
       </div>
     </header>
 
-    <h2 class="settings-group">Your business</h2>
+    <h2 class="settings-group">Your businesses</h2>
+    <div class="settings-list" id="biz-list"></div>
+
+    <h2 class="settings-group">This business</h2>
     <div class="settings-list">
       <button class="settings-row pink" data-step="1">
         <span class="nav-icon">${icon('tag')}</span>
@@ -5510,9 +5491,6 @@ function showSettings(page) {
         <span class="row-arrow">${icon('chevron')}</span>
       </button>
     </div>
-
-    <h2 class="settings-group">Your businesses</h2>
-    <div class="settings-list" id="biz-list"></div>
 
     <button class="start-over" id="erase-btn"></button>
   `;
