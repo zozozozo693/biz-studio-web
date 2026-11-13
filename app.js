@@ -9,7 +9,7 @@
 // =========================================
 const BIZ_LIST_KEY = 'bizStudio.businesses';
 const BIZ_CURRENT_KEY = 'bizStudio.current';
-const BIZ_PARTS = ['profile', 'orders', 'customers', 'tasks', 'formMatch', 'products', 'supplies', 'shopping', 'money'];
+const BIZ_PARTS = ['profile', 'orders', 'customers', 'tasks', 'formMatch', 'products', 'supplies', 'shopping', 'money', 'events'];
 
 function readBusinesses() {
   try { return JSON.parse(localStorage.getItem(BIZ_LIST_KEY)) || []; } catch (error) { return []; }
@@ -128,6 +128,7 @@ const ICONS = {
   trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
   camera2: '<path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
   star: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
+  download: '<path d="M12 4v11M7 10l5 5 5-5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
   upload: '<path d="M12 15V4M7 9l5-5 5 5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
   file: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
   sparkle: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/>',
@@ -414,7 +415,9 @@ const GOALS = [
   { id: 'organize', color: 'peach', icon: 'folder',
     label: 'My info is all over the place',
     focus: ['orders', 'customers'],
-    tip: (w) => 'Keep every one of your ' + w.orders.toLowerCase() + ' and ' + w.customers.toLowerCase() + ' here instead of in texts and notes.' },
+    tip: (w) => usesOrders()
+      ? 'Keep every one of your ' + w.orders.toLowerCase() + ' and ' + w.customers.toLowerCase() + ' here instead of in texts and notes.'
+      : 'Keep your ' + w.customers.toLowerCase() + ', to-dos and events here instead of in texts and notes.' },
   { id: 'money', color: 'mint', icon: 'book',
     label: 'I want to track my money',
     focus: ['bookkeeping', 'pricing'],
@@ -460,7 +463,7 @@ const SECTIONS = [
     emptyText: (w) => w.orders + ' and events will show up on the day they are due.' },
   { id: 'customers', icon: 'users', label: (w) => w.customers,
     emptyTitle: (w) => 'No ' + w.customers.toLowerCase() + ' yet',
-    emptyText: (w) => w.customers + ' are added automatically from your ' + w.orders.toLowerCase() + '.' },
+    emptyText: (w) => usesOrders() ? w.customers + ' are added automatically from your ' + w.orders.toLowerCase() + '.' : 'Keep everyone you work for in one place.' },
   { id: 'products', icon: 'box', label: (w) => w.products,
     emptyTitle: 'Nothing on your list yet',
     emptyText: (w) => 'Add your ' + w.products.toLowerCase() + ' with their prices, ' + w.supplies.toLowerCase() + ' and steps.' },
@@ -476,7 +479,7 @@ const SECTIONS = [
   { id: 'finder', icon: 'search', label: 'Finder',
     emptyTitle: 'Find anything',
     emptyText: 'Search everything in your app, or find markets and stores near you.' },
-  { id: 'printables', icon: 'printer', label: 'Receipts and menus',
+  { id: 'printables', icon: 'printer', label: () => (usesOrders() ? 'Receipts and menus' : 'Menus'),
     emptyTitle: 'No printables yet',
     emptyText: (w) => 'Make receipts, menus and price lists from your ' + w.products.toLowerCase() + '.' },
   { id: 'settings', icon: 'sliders', label: 'Settings',
@@ -646,6 +649,7 @@ function eraseProfile() {
     store.removeItem('bizStudio.shopping');
     store.removeItem('bizStudio.money');
     store.removeItem('bizStudio.formMatch');
+    store.removeItem('bizStudio.events');
     businesses = businesses.filter(function (b) { return b.id !== currentBiz; });
     writeBusinesses(businesses);
     localStorage.setItem(BIZ_CURRENT_KEY, businesses.length ? businesses[0].id : '');
@@ -1401,6 +1405,7 @@ let showSavedMessage = false; // shows "Changes saved" once on the Settings page
 
 // Shows the main app
 function openApp() {
+  if (!usesOrders()) orders = []; // no jobs anywhere for this kind of business
   applyLook();
   document.getElementById('setup-form').innerHTML = ''; // setup is done, clear it out
   document.getElementById('setup').hidden = true;
@@ -1463,6 +1468,11 @@ function hiddenSections() {
     type = guess ? guess.id : 'other';
   }
   return NO_ORDERS_TAB.includes(type) ? ['orders'] : [];
+}
+
+// False for businesses without jobs or orders at all (cleaning, yard)
+function usesOrders() {
+  return !hiddenSections().includes('orders');
 }
 
 function menuGroups() {
@@ -1579,6 +1589,213 @@ function showPage() {
   if (section.id === 'calendar') showCalendar(page);
   if (section.id === 'todo') showTodo(page);
   if (section.id === 'settings') showSettings(page);
+  updateHelper();
+}
+
+// =========================================
+// PIP, THE HELPER
+// A little star who sits in the corner and pops up with tips about your business.
+// Tips come from your real orders, tasks, recipes and money. Click Pip for the next one.
+// =========================================
+const HELPER_NAME = 'Pip';
+let helperTipIndex = 0;
+let helperSection = null;
+const helperSeen = {}; // tips already shown this visit, so Pip doesn't nag
+
+// Pip, drawn as a little star with a face
+function pipDrawing() {
+  return `
+    <svg class="pip-svg" viewBox="0 0 100 100" aria-hidden="true">
+      <path class="pip-body" d="M50 8c3 0 5 2 6.5 5.5l8 17 18.5 2.6c7 1 8.5 6 3.5 10.8L73 57.2l3.2 18.6c1.2 7-3.3 10-9.4 6.8L50 73.8l-16.8 8.8c-6.1 3.2-10.6.2-9.4-6.8L27 57.2 13.5 43.9c-5-4.8-3.5-9.8 3.5-10.8l18.5-2.6 8-17C45 10 47 8 50 8z"/>
+      <g class="pip-eyes">
+        <ellipse cx="41" cy="46" rx="3.6" ry="4.6"/>
+        <ellipse cx="59" cy="46" rx="3.6" ry="4.6"/>
+      </g>
+      <circle class="pip-shine" cx="42.3" cy="44.3" r="1.3"/>
+      <circle class="pip-shine" cx="60.3" cy="44.3" r="1.3"/>
+      <ellipse class="pip-cheek" cx="34" cy="55" rx="4.5" ry="2.8"/>
+      <ellipse class="pip-cheek" cx="66" cy="55" rx="4.5" ry="2.8"/>
+      <path class="pip-smile" d="M43.5 55.5c3.5 4.2 9.5 4.2 13 0"/>
+    </svg>
+  `;
+}
+
+// Tips that fit right now. Ones about the page you're on come first.
+function helperTips(sectionId) {
+  const w = words();
+  const tips = [];
+  const today = todayText();
+  const add = function (text, options) { tips.push(Object.assign({ text: text, page: '', urgent: false }, options || {})); };
+  const first = function (name) { return String(name || '').split(' ')[0]; };
+
+  const late = orders.filter(function (o) { return isOpen(o) && o.due < today; });
+  const dueToday = orders.filter(function (o) { return isOpen(o) && o.due === today; });
+  const dueTomorrow = orders.filter(function (o) { return isOpen(o) && daysUntil(o.due) === 1; });
+  const unpaid = orders.filter(function (o) { return o.status === 'done' && Number(o.price); });
+  const flagged = tasks.filter(function (t) { return t.flagged && !t.done; });
+  const todayTasks = tasks.filter(function (t) { return !t.done && t.due && t.due <= today; });
+  const toBuy = whatToBuy();
+  const eventsToday = events.filter(function (e) { return e.date === today; });
+
+  if (late.length) {
+    add(late.length === 1
+      ? 'Heads up! ' + first(late[0].customer) + '\'s ' + late[0].item.toLowerCase() + ' is late.'
+      : 'Heads up! ' + late.length + ' ' + w.orders.toLowerCase() + ' are late.', { urgent: true, go: 'calendar', page: 'orders' });
+  }
+  if (dueToday.length) {
+    add(dueToday.length === 1
+      ? first(dueToday[0].customer) + '\'s ' + dueToday[0].item.toLowerCase() + ' is due today' + (dueToday[0].time ? ' at ' + niceTime(dueToday[0].time) : '') + '.'
+      : 'You have ' + dueToday.length + ' ' + w.orders.toLowerCase() + ' due today. You can do it!', { urgent: true, go: 'calendar', page: 'calendar' });
+  }
+  if (dueTomorrow.length) {
+    add(dueTomorrow.length === 1
+      ? 'Don\'t forget: ' + first(dueTomorrow[0].customer) + '\'s ' + dueTomorrow[0].item.toLowerCase() + ' is due tomorrow.'
+      : dueTomorrow.length + ' ' + w.orders.toLowerCase() + ' are due tomorrow. Time to get ready!', { go: 'calendar', page: 'calendar' });
+  }
+  eventsToday.forEach(function (e) {
+    add('Today: ' + e.title + (e.time ? ' at ' + niceTime(e.time) : '') + '. Have fun!', { go: 'calendar', page: 'calendar' });
+  });
+  if (flagged.length) {
+    add('You flagged "' + flagged[0].text + '" as important.' + (flagged.length > 1 ? ' And ' + (flagged.length - 1) + ' more.' : ''), { go: 'todo', page: 'todo' });
+  } else if (todayTasks.length) {
+    add('You have ' + todayTasks.length + (todayTasks.length === 1 ? ' thing' : ' things') + ' on your to-do list for today.', { go: 'todo', page: 'todo' });
+  }
+  if (toBuy.length) {
+    add('You\'re running low on ' + toBuy[0].supply.name.toLowerCase() + (toBuy.length > 1 ? ' and ' + (toBuy.length - 1) + ' more' : '') +
+      ' for your upcoming ' + w.orders.toLowerCase() + '.', { go: 'checklist', page: 'checklist' });
+  }
+  if (unpaid.length) {
+    add(unpaid.length === 1
+      ? first(unpaid[0].customer) + '\'s ' + oneOrder() + ' is done but not paid yet.'
+      : unpaid.length + ' finished ' + w.orders.toLowerCase() + ' are waiting to be paid.', { go: 'bookkeeping', page: 'bookkeeping' });
+  }
+
+  // Pricing: losing money, or a little low
+  const s = pricingSettings();
+  products.forEach(function (p) {
+    const trueCost = productCost(p) + Number(p.hours || 0) * s.hourly;
+    if (!p.price || !trueCost) return;
+    if (p.price < trueCost) add('Your ' + p.name.toLowerCase() + ' costs more to make than you charge. Let\'s fix that!', { go: 'pricing', page: 'pricing', urgent: true });
+    else if (p.price < Math.ceil(trueCost * (1 + s.extra / 100))) add('You could charge a little more for your ' + p.name.toLowerCase() + '.', { go: 'pricing', page: 'pricing' });
+  });
+
+  // Getting started
+  if (!orders.length && usesOrders()) add('Add your first ' + oneOrder() + ' and I\'ll help you keep track of it.', { go: 'orders', page: 'orders' });
+  if (!products.length) add('Add your ' + w.products.toLowerCase() + ' so I can work out what things cost you.', { go: 'products', page: 'products' });
+  if (products.length && !supplies.length) add('Add what you pay for your ' + w.supplies.toLowerCase() + ', and I\'ll make your shopping list.', { go: 'checklist', page: 'checklist' });
+  let lastBackup = null;
+  try { lastBackup = localStorage.getItem(LAST_BACKUP_KEY); } catch (error) { /* fine */ }
+  const backupDays = lastBackup ? Math.round((Date.now() - new Date(lastBackup)) / 86400000) : null;
+  if ((backupDays === null && (orders.length || products.length || tasks.length)) || backupDays >= 7) {
+    add('It\'s been a while since your last backup. Save one in Settings so nothing gets lost!', { go: 'settings', page: 'settings' });
+  }
+  if (!profile.photo) add('Add a picture for your business in Settings. It goes on your receipts too!', { go: 'settings', page: 'settings' });
+
+  // Little page helpers
+  const pageTips = {
+    customers: 'Click someone to see all their ' + w.orders.toLowerCase() + ' in one place.',
+    calendar: 'Click a day, then Add to put an event or a to-do on it.',
+    printables: 'Print a menu and bring it to your next market.',
+    finder: 'Try searching for a name, a ' + oneProduct() + ', or anything else.',
+    bookkeeping: 'Add money you spend with Money out, so you know what you really kept.',
+  };
+  if (pageTips[sectionId]) add(pageTips[sectionId], { page: sectionId });
+
+  if (!tips.length || tips.every(function (t) { return !t.urgent; })) {
+    add(['You\'re doing great. Keep it up!', 'Nothing urgent right now. Nice work!', 'All caught up! Maybe treat yourself to a snack.'][new Date().getDate() % 3]);
+  }
+
+  // This page's tips first, then urgent ones, then the rest
+  tips.sort(function (a, b) {
+    return (b.page === sectionId) - (a.page === sectionId) || b.urgent - a.urgent;
+  });
+  return tips;
+}
+
+// Draws Pip in the corner (once), and decides whether to pop up
+function updateHelper() {
+  let pip = document.getElementById('pip');
+  if (profile.helperOff) { if (pip) pip.remove(); return; }
+  if (!pip) {
+    pip = document.createElement('div');
+    pip.id = 'pip';
+    pip.className = 'pip';
+    pip.innerHTML = `
+      <div class="pip-bubble" role="status" aria-live="polite" hidden>
+        <button class="pip-close" aria-label="Close">${icon('plus')}</button>
+        <b class="pip-name"></b>
+        <p class="pip-text"></p>
+        <div class="pip-actions">
+          <button class="btn small pip-go">Show me</button>
+          <button class="link-btn pip-next">Next tip</button>
+        </div>
+      </div>
+      <button class="pip-buddy" aria-label="Tips from ${HELPER_NAME}">
+        ${pipDrawing()}
+        <span class="pip-dot" hidden></span>
+      </button>
+    `;
+    pip.querySelector('.pip-name').textContent = HELPER_NAME;
+    document.getElementById('app').appendChild(pip);
+    pip.querySelector('.pip-buddy').addEventListener('click', function () {
+      const bubble = pip.querySelector('.pip-bubble');
+      if (bubble.hidden) showTip(); else closeTip();
+    });
+    pip.querySelector('.pip-close').addEventListener('click', closeTip);
+    pip.querySelector('.pip-next').addEventListener('click', function () { helperTipIndex++; showTip(); });
+    pip.querySelector('.pip-go').addEventListener('click', function () {
+      const tip = currentTips()[helperTipIndex % currentTips().length];
+      closeTip();
+      if (tip && tip.go) {
+        if (tip.go === 'orders') orderView = null;
+        goTo(tip.go);
+      }
+    });
+  }
+
+  // New page: start from its first tip. Pop up by itself only for something new and urgent.
+  if (helperSection !== currentSection) {
+    helperSection = currentSection;
+    helperTipIndex = 0;
+    closeTip();
+  }
+  const tips = currentTips();
+  const top = tips[0];
+  const fresh = top && (top.urgent || top.page === currentSection) && !helperSeen[top.text];
+  pip.querySelector('.pip-dot').hidden = !fresh;
+  if (fresh && currentSection === 'myday' && top.urgent) showTip();
+}
+
+function currentTips() {
+  return helperTips(currentSection);
+}
+
+function showTip() {
+  const pip = document.getElementById('pip');
+  if (!pip) return;
+  const tips = currentTips();
+  const tip = tips[helperTipIndex % tips.length];
+  helperSeen[tip.text] = true;
+  const bubble = pip.querySelector('.pip-bubble');
+  bubble.hidden = false;
+  bubble.classList.toggle('urgent', !!tip.urgent);
+  pip.querySelector('.pip-text').textContent = tip.text;
+  pip.querySelector('.pip-go').hidden = !tip.go || tip.go === currentSection;
+  pip.querySelector('.pip-next').hidden = tips.length < 2;
+  pip.querySelector('.pip-dot').hidden = true;
+  pip.classList.add('talking');
+  // A little hop each time Pip talks
+  const buddy = pip.querySelector('.pip-buddy');
+  buddy.classList.remove('hop');
+  void buddy.offsetWidth;
+  buddy.classList.add('hop');
+}
+
+function closeTip() {
+  const pip = document.getElementById('pip');
+  if (!pip) return;
+  pip.querySelector('.pip-bubble').hidden = true;
+  pip.classList.remove('talking');
 }
 
 // =========================================
@@ -1783,7 +2000,7 @@ function fancyDate(input, options) {
   function showText() {
     const v = input.value;
     const text = button.querySelector('.date-text');
-    button.classList.toggle('empty', !v);
+    button.classList.toggle('is-empty', !v);
     if (!v) { text.textContent = options.placeholder || 'Pick a day'; return; }
     const d = toDate(v);
     const sameYear = d.getFullYear() === new Date().getFullYear();
@@ -1895,6 +2112,205 @@ function fancyDate(input, options) {
   });
   return input;
 }
+
+// =========================================
+// DROPDOWNS
+// Every <select> in the app is swapped for one that matches the app's colors:
+// a button, and a rounded list that pops up under it.
+// The real select stays (hidden), so .value and 'change' still work everywhere.
+// =========================================
+function fancySelect(select) {
+  if (select.dataset.fancy) return;
+  select.dataset.fancy = 'yes';
+
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'pick-button ' + select.className;
+  button.setAttribute('aria-haspopup', 'listbox');
+  button.setAttribute('aria-expanded', 'false');
+  if (select.getAttribute('aria-label')) button.setAttribute('aria-label', select.getAttribute('aria-label'));
+  button.innerHTML = '<span class="pick-text"></span><svg class="pick-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+  select.after(button);
+  select.classList.add('select-hidden');
+  select.tabIndex = -1;
+
+  const label = select.id ? document.querySelector('label[for="' + select.id + '"]') : null;
+  if (label) {
+    if (!button.getAttribute('aria-label')) button.setAttribute('aria-label', label.textContent);
+    label.addEventListener('click', function (e) { e.preventDefault(); button.focus(); open(); });
+  }
+
+  let list = null; // the open list, if any
+
+  // Setting select.value in code updates the button too
+  const real = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');
+  Object.defineProperty(select, 'value', {
+    configurable: true,
+    get: function () { return real.get.call(select); },
+    set: function (v) { real.set.call(select, v); showText(); },
+  });
+
+  function showText() {
+    const chosen = select.options[select.selectedIndex];
+    button.querySelector('.pick-text').textContent = chosen ? chosen.textContent : '';
+    button.classList.toggle('is-empty', !chosen || chosen.value === '');
+    // Keep color classes (like the status colors) in step with the select
+    button.className = 'pick-button ' + select.className.replace('select-hidden', '').trim() +
+      (!chosen || chosen.value === '' ? ' is-empty' : '') + (list ? ' open' : '');
+  }
+  showText();
+  new MutationObserver(showText).observe(select, { childList: true, attributes: true, attributeFilter: ['class'] });
+
+  function open() {
+    if (list) return;
+    list = document.createElement('div');
+    list.className = 'pick-list';
+    list.setAttribute('role', 'listbox');
+
+    function addOption(option) {
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'pick-option';
+      item.setAttribute('role', 'option');
+      const on = option.value === select.value;
+      item.setAttribute('aria-selected', on ? 'true' : 'false');
+      item.innerHTML = '<span class="pick-dot"></span><span class="pick-label"></span>' +
+        '<svg class="pick-tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
+      item.querySelector('.pick-label').textContent = option.textContent;
+      if (option.dataset.color) item.classList.add('has-dot', option.dataset.color);
+      else item.querySelector('.pick-dot').remove();
+      if (option.value === '') item.classList.add('blank');
+      item.addEventListener('click', function () {
+        select.value = option.value;
+        select.dispatchEvent(new Event('input', { bubbles: true }));
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        close();
+        if (document.body.contains(button)) button.focus();
+      });
+      list.appendChild(item);
+    }
+    Array.from(select.children).forEach(function (child) {
+      if (child.tagName === 'OPTGROUP') {
+        const head = document.createElement('div');
+        head.className = 'pick-group';
+        head.textContent = child.label;
+        list.appendChild(head);
+        Array.from(child.children).forEach(addOption);
+      } else addOption(child);
+    });
+
+    // Put it on top of everything, right under the button (inside a pop-up window if there is one)
+    (button.closest('dialog') || document.body).appendChild(list);
+    place();
+    button.setAttribute('aria-expanded', 'true');
+    button.classList.add('open');
+    // Start on the picked one (or, for times, around 9 AM)
+    const items = Array.from(list.querySelectorAll('.pick-option'));
+    let onItem = list.querySelector('.pick-option[aria-selected="true"]:not(.blank)');
+    if (!onItem && select.dataset.startAt) {
+      const at = Array.from(select.options).findIndex(function (o) { return o.value === select.dataset.startAt; });
+      if (at > -1) {
+        items[at].scrollIntoView({ block: 'start' });
+        list.scrollTop -= 6;
+      }
+    }
+    if (onItem) {
+      onItem.scrollIntoView({ block: 'center' });
+      onItem.focus({ preventScroll: true });
+    } else {
+      const at = select.dataset.startAt ? Array.from(select.options).findIndex(function (o) { return o.value === select.dataset.startAt; }) : -1;
+      (items[at] || items[0]).focus({ preventScroll: true });
+    }
+    document.addEventListener('mousedown', outside, true);
+    window.addEventListener('resize', close);
+    document.addEventListener('scroll', onScroll, true);
+  }
+
+  function place() {
+    const r = button.getBoundingClientRect();
+    const width = Math.max(r.width, 200);
+    list.style.minWidth = width + 'px';
+    list.style.left = Math.min(r.left, window.innerWidth - width - 12) + 'px';
+    const below = window.innerHeight - r.bottom;
+    if (below < 240 && r.top > below) {
+      list.style.bottom = (window.innerHeight - r.top + 6) + 'px';
+      list.style.top = 'auto';
+      list.style.maxHeight = Math.min(320, r.top - 16) + 'px';
+    } else {
+      list.style.top = (r.bottom + 6) + 'px';
+      list.style.bottom = 'auto';
+      list.style.maxHeight = Math.min(320, below - 16) + 'px';
+    }
+  }
+
+  function close() {
+    if (!list) return;
+    list.remove();
+    list = null;
+    button.setAttribute('aria-expanded', 'false');
+    button.classList.remove('open');
+    document.removeEventListener('mousedown', outside, true);
+    window.removeEventListener('resize', close);
+    document.removeEventListener('scroll', onScroll, true);
+  }
+  function outside(e) {
+    if (!list.contains(e.target) && !button.contains(e.target)) close();
+  }
+  function onScroll(e) {
+    if (list && !list.contains(e.target)) close();
+  }
+
+  button.addEventListener('click', function () { if (list) close(); else open(); });
+  button.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); open(); }
+  });
+
+  // Arrow keys move through the list, Esc closes it
+  function onListKey(e) {
+    if (!list) return;
+    const items = Array.from(list.querySelectorAll('.pick-option'));
+    const at = items.indexOf(document.activeElement);
+    if (e.key === 'ArrowDown') { e.preventDefault(); (items[at + 1] || items[0]).focus(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); (items[at - 1] || items[items.length - 1]).focus(); }
+    else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); button.focus(); }
+    else if (e.key === 'Tab') close();
+  }
+  document.addEventListener('keydown', function (e) { if (list && list.contains(e.target)) onListKey(e); }, true);
+}
+
+// Time boxes become a dropdown of times (every 15 minutes), so they match too
+function timeSelect(input) {
+  const select = document.createElement('select');
+  select.id = input.id;
+  select.className = input.className;
+  select.dataset.startAt = '09:00';
+  const times = [''];
+  for (let h = 5; h < 23; h++) {
+    ['00', '15', '30', '45'].forEach(function (m) { times.push(String(h).padStart(2, '0') + ':' + m); });
+  }
+  if (input.value && !times.includes(input.value)) { times.push(input.value); times.sort(); }
+  times.forEach(function (t) {
+    const option = document.createElement('option');
+    option.value = t;
+    option.textContent = t ? niceTime(t) : 'No time';
+    select.appendChild(option);
+  });
+  select.value = input.value || '';
+  input.replaceWith(select);
+  return select;
+}
+
+// Any dropdown or time box that shows up anywhere gets the app's look
+function dressUp(node) {
+  if (node.nodeType !== 1) return;
+  const times = node.matches('input[type="time"]') ? [node] : Array.from(node.querySelectorAll('input[type="time"]'));
+  times.forEach(timeSelect);
+  const selects = node.tagName === 'SELECT' ? [node] : Array.from(node.querySelectorAll('select'));
+  selects.forEach(fancySelect);
+}
+new MutationObserver(function (changes) {
+  changes.forEach(function (change) { change.addedNodes.forEach(dressUp); });
+}).observe(document.body, { childList: true, subtree: true });
 
 // Reads the answer from a question box
 function readDetail(detail, page) {
@@ -2047,6 +2463,7 @@ function loadOrders() {
 }
 
 function saveOrders() {
+  if (!usesOrders()) return; // don't touch saved ones for a business without orders
   try {
     store.setItem(ORDERS_KEY, JSON.stringify(orders));
   } catch (error) {
@@ -2089,11 +2506,15 @@ function showUndo(message, undo) {
   toast.querySelector('span').textContent = message;
   toast.hidden = false;
 
-  toast.querySelector('.toast-undo').addEventListener('click', function () {
-    toast.hidden = true;
-    clearTimeout(undoTimer);
-    undo();
-  });
+  if (undo) {
+    toast.querySelector('.toast-undo').addEventListener('click', function () {
+      toast.hidden = true;
+      clearTimeout(undoTimer);
+      undo();
+    });
+  } else {
+    toast.querySelector('.toast-undo').remove(); // just a message
+  }
 
   clearTimeout(undoTimer);
   undoTimer = setTimeout(function () { toast.hidden = true; }, 6000);
@@ -2317,6 +2738,7 @@ function orderRow(order) {
     const option = document.createElement('option');
     option.value = st.id;
     option.textContent = st.label;
+    option.dataset.color = st.color;
     pick.appendChild(option);
   });
   pick.value = order.status;
@@ -3200,8 +3622,9 @@ function showCustomers(page) {
     empty.className = 'empty pink';
     empty.innerHTML = '<span class="empty-icon">' + icon('users') + '</span><h3></h3><p></p>';
     empty.querySelector('h3').textContent = 'No ' + w.customers.toLowerCase() + ' yet';
-    empty.querySelector('p').textContent = 'When you add ' + w.orders.toLowerCase() +
-      ', the people who ordered show up here on their own. You can also add someone yourself.';
+    empty.querySelector('p').textContent = usesOrders()
+      ? 'When you add ' + w.orders.toLowerCase() + ', the people who ordered show up here on their own. You can also add someone yourself.'
+      : 'Add the people you work for, with their phone or email, so they\'re all in one place.';
     area.appendChild(empty);
     return;
   }
@@ -3219,7 +3642,7 @@ function showCustomers(page) {
     { id: 'most', label: 'Most ' + w.orders.toLowerCase() },
     { id: 'spent', label: 'Spent the most' },
     { id: 'az', label: 'A to Z' },
-  ].forEach(function (t) {
+  ].filter(function (t) { return usesOrders() || t.id === 'az' || t.id === 'recent'; }).forEach(function (t) {
     const b = document.createElement('button');
     b.className = 'filter-tab' + (customerSort === t.id ? ' on' : '');
     b.setAttribute('role', 'tab');
@@ -3299,6 +3722,10 @@ function personCard(p) {
   const badges = card.querySelector('.person-badges');
   personBadges(p).forEach(function (b) { badges.appendChild(b); });
   if (!badges.children.length) badges.remove();
+  if (!usesOrders()) {
+    card.querySelector('.person-stats').remove();
+    card.querySelector('.person-last').remove();
+  }
 
   card.addEventListener('click', function () {
     customerView = p.key;
@@ -3465,6 +3892,13 @@ function showCustomer(page, p) {
   }
 
   page.querySelector('#person-edit').addEventListener('click', function () { showPersonEdit(page, p); });
+
+  // No orders or jobs for this business: just their info and a way to remove them
+  if (!usesOrders()) {
+    page.querySelector('.stat-tiles').remove();
+    page.querySelector('.person-orders-head').remove();
+    box.remove();
+  }
 }
 
 // Changing someone's name or phone/email
@@ -3544,14 +3978,22 @@ function showCalendar(page) {
   const today = todayText();
   const month = calendarMonth ? toDate(calendarMonth) : new Date(toDate(today).getFullYear(), toDate(today).getMonth(), 1);
 
-  // Orders by day
+  // Orders, events and to-dos by day
   const byDay = {};
+  const eventsByDay = {};
+  const tasksByDay = {};
   orders.forEach(function (o) {
     if (!o.due) return;
     (byDay[o.due] = byDay[o.due] || []).push(o);
   });
-  Object.keys(byDay).forEach(function (day) {
-    byDay[day].sort(function (a, b) { return (a.time || '99').localeCompare(b.time || '99'); });
+  events.forEach(function (e) { (eventsByDay[e.date] = eventsByDay[e.date] || []).push(e); });
+  tasks.forEach(function (t) {
+    if (t.due && !t.done) (tasksByDay[t.due] = tasksByDay[t.due] || []).push(t);
+  });
+  [byDay, eventsByDay].forEach(function (lists) {
+    Object.keys(lists).forEach(function (day) {
+      lists[day].sort(function (a, b) { return (a.time || '99').localeCompare(b.time || '99'); });
+    });
   });
 
   const monthName = month.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -3581,7 +4023,13 @@ function showCalendar(page) {
       <aside class="day-panel" id="day-panel"></aside>
     </div>
   `;
-  page.querySelector('.page-head p').textContent = inMonth === 0
+  const eventsInMonth = events.filter(function (e) {
+    const d = toDate(e.date);
+    return d.getMonth() === month.getMonth() && d.getFullYear() === month.getFullYear();
+  }).length;
+  page.querySelector('.page-head p').textContent = !usesOrders()
+    ? (eventsInMonth ? eventsInMonth + (eventsInMonth === 1 ? ' event' : ' events') + ' in ' : 'Nothing planned in ') + month.toLocaleDateString('en-US', { month: 'long' }) + (eventsInMonth ? '' : ' yet')
+    : inMonth === 0
     ? 'Nothing due in ' + month.toLocaleDateString('en-US', { month: 'long' }) + ' yet'
     : inMonth + ' ' + (inMonth === 1 ? oneOrder() : w.orders.toLowerCase()) + ' due in ' + month.toLocaleDateString('en-US', { month: 'long' });
   page.querySelector('.month-name').textContent = monthName;
@@ -3622,25 +4070,37 @@ function showCalendar(page) {
     if (d.getMonth() !== month.getMonth()) cell.classList.add('other-month');
     if (day === today) cell.classList.add('today');
     if (day === calendarDay) cell.classList.add('picked');
-    if (open.length >= 3) cell.classList.add('busy');
+    if (open.length + (eventsByDay[day] || []).length >= 3) cell.classList.add('busy');
     cell.setAttribute('aria-label', d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) +
       (due.length ? ', ' + due.length + ' ' + (due.length === 1 ? oneOrder() : w.orders.toLowerCase()) : ''));
     cell.innerHTML = '<span class="cal-num"></span><span class="cal-pills"></span>';
     cell.querySelector('.cal-num').textContent = d.getDate();
 
+    // Little labels: events, then orders, then to-dos
     const pills = cell.querySelector('.cal-pills');
-    const showMax = due.length > 3 ? 2 : 3;
-    due.slice(0, showMax).forEach(function (o) {
+    const all = [];
+    (eventsByDay[day] || []).forEach(function (e) {
+      all.push({ cls: 'event', text: e.title, title: e.title + (e.time ? ' at ' + niceTime(e.time) : '') });
+    });
+    due.forEach(function (o) {
+      all.push({ cls: urgency(o) === 'late' ? 'late' : findStatus(o.status).color, text: o.customer.split(' ')[0],
+        title: o.customer + ': ' + o.item + (o.time ? ' at ' + niceTime(o.time) : '') });
+    });
+    (tasksByDay[day] || []).forEach(function (t) {
+      all.push({ cls: 'todo', text: t.text, title: 'To-do: ' + t.text });
+    });
+    const showMax = all.length > 3 ? 2 : 3;
+    all.slice(0, showMax).forEach(function (thing) {
       const pill = document.createElement('span');
-      pill.className = 'cal-pill ' + (urgency(o) === 'late' ? 'late' : findStatus(o.status).color);
-      pill.textContent = o.customer.split(' ')[0];
-      pill.title = o.customer + ': ' + o.item + (o.time ? ' at ' + niceTime(o.time) : '');
+      pill.className = 'cal-pill ' + thing.cls;
+      pill.textContent = thing.text;
+      pill.title = thing.title;
       pills.appendChild(pill);
     });
-    if (due.length > showMax) {
+    if (all.length > showMax) {
       const more = document.createElement('span');
       more.className = 'cal-more';
-      more.textContent = '+' + (due.length - showMax) + ' more';
+      more.textContent = '+' + (all.length - showMax) + ' more';
       pills.appendChild(more);
     }
 
@@ -3663,25 +4123,39 @@ function showCalendar(page) {
     <p class="day-when"></p>
     <h2 class="day-title"></h2>
     <div class="day-orders"></div>
-    <button class="btn with-icon day-add">${icon('plus')}<span></span></button>
+    <button class="btn with-icon day-add">${icon('plus')}<span>Add</span></button>
   `;
   panel.querySelector('.day-when').textContent = when || picked.toLocaleDateString('en-US', { weekday: 'long' });
   panel.querySelector('.day-title').textContent = picked.toLocaleDateString('en-US',
     when ? { weekday: 'long', month: 'long', day: 'numeric' } : { month: 'long', day: 'numeric' });
-  panel.querySelector('.day-add span').textContent = 'New ' + oneOrder() + ' on this day';
-  panel.querySelector('.day-add').addEventListener('click', function () {
-    orderPrefill = { due: calendarDay };
-    openOrderForm('new');
-  });
+  panel.querySelector('.day-add').addEventListener('click', function () { openAddChooser(calendarDay); });
 
   const list = panel.querySelector('.day-orders');
-  if (!pickedOrders.length) {
+  const dayEvents = eventsByDay[calendarDay] || [];
+  const dayTasks = tasksByDay[calendarDay] || [];
+  if (!pickedOrders.length && !dayEvents.length && !dayTasks.length) {
     const none = document.createElement('p');
     none.className = 'day-free';
-    none.textContent = 'Nothing due. A free day!';
+    none.textContent = 'Nothing planned. A free day!';
     list.appendChild(none);
     return;
   }
+
+  // Events
+  dayEvents.forEach(function (e) {
+    const item = document.createElement('button');
+    item.className = 'day-order event-card';
+    item.innerHTML = '<span class="day-top"><span class="day-time"></span><span class="day-status">Event</span></span>' +
+      '<b class="day-name"></b><span class="day-item"></span>';
+    item.querySelector('.day-time').textContent = e.time ? niceTime(e.time) : 'All day';
+    item.querySelector('.day-name').textContent = e.title;
+    const note = item.querySelector('.day-item');
+    if (e.where) note.textContent = e.where; else note.remove();
+    item.addEventListener('click', function () { editEvent(e); });
+    list.appendChild(item);
+  });
+
+  // Orders
   pickedOrders.forEach(function (o) {
     const item = document.createElement('button');
     item.className = 'day-order ' + (urgency(o) === 'late' ? 'late' : findStatus(o.status).color);
@@ -3693,6 +4167,200 @@ function showCalendar(page) {
     item.querySelector('.day-status').textContent = urgency(o) === 'late' ? 'Late' : findStatus(o.status).label;
     item.addEventListener('click', function () { openOrderForm(o.id); });
     list.appendChild(item);
+  });
+
+  // To-dos, with a box to check off
+  if (dayTasks.length) {
+    const todo = document.createElement('div');
+    todo.className = 'day-todos';
+    dayTasks.forEach(function (t) {
+      const row = document.createElement('div');
+      row.className = 'day-todo';
+      row.innerHTML = '<button class="task-check" role="checkbox" aria-checked="false">' + icon('tick') + '</button><span></span>';
+      row.querySelector('span').textContent = t.text;
+      row.querySelector('button').setAttribute('aria-label', 'Done: ' + t.text);
+      row.querySelector('button').addEventListener('click', function () {
+        t.done = true;
+        t.doneAt = new Date().toISOString();
+        saveTasks();
+        showPage();
+        showUndo('Checked off', function () { t.done = false; t.doneAt = ''; saveTasks(); showPage(); });
+      });
+      todo.appendChild(row);
+    });
+    list.appendChild(todo);
+  }
+}
+
+// ---------- Adding to a day: an Event or a To-do, like Google or Apple Calendar ----------
+let lastAddKind = 'event';
+
+function openAddChooser(day) {
+  let kind = lastAddKind;
+  const box = document.createElement('dialog');
+  box.className = 'task-dialog';
+  box.innerHTML = `
+    <form method="dialog" class="task-dialog-inner">
+      <div class="dialog-head">
+        <div class="kind-switch" role="tablist" aria-label="What to add">
+          <button type="button" role="tab" data-kind="event">${icon('calendar')}<span>Event</span></button>
+          <button type="button" role="tab" data-kind="todo">${icon('check')}<span>To-do</span></button>
+        </div>
+        <button type="button" class="dialog-close" aria-label="Close">${icon('plus')}</button>
+      </div>
+
+      <input class="input title-input" id="add-title" autocomplete="off" aria-label="Title">
+      <p class="error" id="add-error" role="alert"></p>
+
+      <label class="label" for="add-date">Day</label>
+      <input class="input" id="add-date" type="date">
+
+      <div class="for-event">
+        <div class="two-fields">
+          <div>
+            <label class="label" for="add-time">Time <span class="label-hint">(optional)</span></label>
+            <input class="input" id="add-time" type="time">
+          </div>
+          <div>
+            <label class="label" for="add-where">Where <span class="label-hint">(optional)</span></label>
+            <input class="input" id="add-where" autocomplete="off" placeholder="Main Street park">
+          </div>
+        </div>
+      </div>
+
+      <div class="for-todo">
+        <button type="button" class="flag-toggle" id="add-flag" aria-pressed="false">
+          ${icon('flag')}<span><b>Important</b><small>Flag it so it stays at the top</small></span>
+        </button>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn" id="add-save">Save</button>
+        <button type="button" class="btn secondary" id="add-cancel">Cancel</button>
+      </div>
+    </form>
+  `;
+  document.body.appendChild(box);
+
+  const title = box.querySelector('#add-title');
+  const date = box.querySelector('#add-date');
+  date.value = day || todayText();
+  fancyDate(date);
+
+  function drawKind() {
+    box.querySelectorAll('[data-kind]').forEach(function (b) {
+      b.setAttribute('aria-selected', b.dataset.kind === kind ? 'true' : 'false');
+    });
+    box.querySelector('.for-event').hidden = kind !== 'event';
+    box.querySelector('.for-todo').hidden = kind !== 'todo';
+    title.placeholder = kind === 'event' ? 'Add a title, like Farmers market' : 'What do you need to do?';
+  }
+  box.querySelectorAll('[data-kind]').forEach(function (b) {
+    b.addEventListener('click', function () { kind = b.dataset.kind; drawKind(); title.focus(); });
+  });
+  drawKind();
+
+  const flag = box.querySelector('#add-flag');
+  flag.addEventListener('click', function () {
+    flag.setAttribute('aria-pressed', flag.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+  });
+  title.addEventListener('input', function () { box.querySelector('#add-error').textContent = ''; });
+
+  function close() { box.close(); box.remove(); }
+  box.querySelector('.dialog-close').addEventListener('click', close);
+  box.querySelector('#add-cancel').addEventListener('click', close);
+  box.addEventListener('cancel', function (e) { e.preventDefault(); close(); });
+  box.addEventListener('click', function (e) { if (e.target === box) close(); });
+
+  box.querySelector('form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const text = title.value.trim();
+    if (!text) {
+      box.querySelector('#add-error').textContent = kind === 'event' ? 'Give it a title.' : 'Type what you need to do.';
+      title.focus();
+      return;
+    }
+    const when = date.value || todayText();
+    lastAddKind = kind;
+    let undo;
+    if (kind === 'event') {
+      const ev = { id: newId('e'), title: text, date: when, time: box.querySelector('#add-time').value, where: box.querySelector('#add-where').value.trim() };
+      events.push(ev);
+      saveEvents();
+      undo = function () { events = events.filter(function (x) { return x !== ev; }); saveEvents(); showPage(); };
+    } else {
+      const t = { id: 't' + Date.now(), text: text, due: when, done: false, flagged: flag.getAttribute('aria-pressed') === 'true', created: new Date().toISOString() };
+      tasks.push(t);
+      saveTasks();
+      undo = function () { tasks = tasks.filter(function (x) { return x !== t; }); saveTasks(); showPage(); };
+    }
+    close();
+    showPage();
+    showUndo(kind === 'event' ? 'Event added' : 'To-do added', undo);
+  });
+
+  box.showModal();
+  title.focus();
+}
+
+// =========================================
+// EVENTS: things on the calendar that aren't orders
+// Each: { id, title, date, time, where }
+// =========================================
+const EVENTS_KEY = 'bizStudio.events';
+let events = loadList(EVENTS_KEY);
+function saveEvents() { saveList(EVENTS_KEY, events); }
+
+function editEvent(event, day) {
+  const isNew = !event;
+  openWindow({
+    title: isNew ? 'New event' : 'Edit event',
+    saveLabel: isNew ? 'Add event' : 'Save changes',
+    html: `
+      <label class="label" for="ev-title">What's happening?</label>
+      <input class="input" id="ev-title" autocomplete="off" placeholder="Farmers market">
+      <label class="label" for="ev-date">What day?</label>
+      <input class="input" id="ev-date" type="date">
+      <label class="label" for="ev-time">What time? <span class="label-hint">(you can skip this)</span></label>
+      <input class="input" id="ev-time" type="time">
+      <label class="label" for="ev-where">Where? <span class="label-hint">(you can skip this)</span></label>
+      <input class="input" id="ev-where" autocomplete="off" placeholder="Main Street park">
+      <button type="button" class="link-btn delete-btn" id="ev-delete" hidden>${icon('trash')}<span>Delete this event</span></button>
+    `,
+    fill: function (box) {
+      const date = box.querySelector('#ev-date');
+      date.value = event ? event.date : (day || todayText());
+      fancyDate(date);
+      if (event) {
+        box.querySelector('#ev-title').value = event.title;
+        box.querySelector('#ev-time').value = event.time || '';
+        box.querySelector('#ev-where').value = event.where || '';
+        const del = box.querySelector('#ev-delete');
+        del.hidden = false;
+        del.addEventListener('click', function () {
+          events = events.filter(function (x) { return x !== event; });
+          saveEvents();
+          box.close();
+          box.remove();
+          showPage();
+          showUndo('Event deleted', function () { events.push(event); saveEvents(); showPage(); });
+        });
+      }
+    },
+    onSave: function (box) {
+      const title = box.querySelector('#ev-title').value.trim();
+      if (!title) { box.problem('Type what\'s happening.'); return false; }
+      const values = {
+        title: title,
+        date: box.querySelector('#ev-date').value || todayText(),
+        time: box.querySelector('#ev-time').value,
+        where: box.querySelector('#ev-where').value.trim(),
+      };
+      if (event) Object.assign(event, values);
+      else events.push(Object.assign({ id: newId('e') }, values));
+      saveEvents();
+      showPage();
+    },
   });
 }
 
@@ -3776,7 +4444,7 @@ function showTodo(page) {
       : todayCount + (todayCount === 1 ? ' thing' : ' things') + ' to do today';
 
   // ----- Adding a task opens its own window -----
-  page.querySelector('#open-add-task').addEventListener('click', openAddTask);
+  page.querySelector('#open-add-task').addEventListener('click', function () { openAddTask(); });
 
   // ----- The groups -----
   const groupsBox = page.querySelector('#task-groups');
@@ -3784,8 +4452,9 @@ function showTodo(page) {
     const empty = document.createElement('div');
     empty.className = 'empty sky';
     empty.innerHTML = '<span class="empty-icon">' + icon('check') + '</span><h3>All caught up</h3><p></p>';
-    empty.querySelector('p').textContent = 'Add a task above. When you have ' + w.orders.toLowerCase() +
-      ' coming up, tasks for them show up here on their own.';
+    empty.querySelector('p').textContent = usesOrders()
+      ? 'Add a task above. When you have ' + w.orders.toLowerCase() + ' coming up, tasks for them show up here on their own.'
+      : 'Add a task above to get started.';
     groupsBox.appendChild(empty);
   }
   // Flagged tasks go at the very top, in their own box
@@ -3859,7 +4528,7 @@ function showTodo(page) {
 }
 
 // The "New task" window that pops up over the page: what to do, and which day
-function openAddTask() {
+function openAddTask(day) {
   const box = document.createElement('dialog');
   box.className = 'task-dialog';
   box.innerHTML = `
@@ -3890,7 +4559,7 @@ function openAddTask() {
 
   const text = box.querySelector('#new-task');
   const dateBox = box.querySelector('#new-task-date');
-  dateBox.value = todayText();
+  dateBox.value = day || todayText();
   fancyDate(dateBox, { clearable: true, placeholder: 'No date' });
   const flagBtn = box.querySelector('#new-task-flag');
   flagBtn.addEventListener('click', function () {
@@ -4201,7 +4870,7 @@ function showProducts(page) {
     area.innerHTML = '<div class="empty pink"><span class="empty-icon">' + icon('box') + '</span><h3></h3><p></p></div>';
     area.querySelector('h3').textContent = 'No ' + w.products.toLowerCase() + ' yet';
     area.querySelector('p').textContent = 'Add what you make with its ' + w.supplies.toLowerCase() +
-      '. The app works out what it costs you and what to buy for your ' + w.orders.toLowerCase() + '.';
+      '. The app works out what it costs you' + (usesOrders() ? ' and what to buy for your ' + w.orders.toLowerCase() : '') + '.';
     return;
   }
 
@@ -4325,8 +4994,9 @@ function showProduct(page, p) {
 
   page.querySelector('#product-back').addEventListener('click', function () { productView = null; showPage(); });
   page.querySelector('#product-edit').addEventListener('click', function () { productEditing = true; showPage(); });
-  page.querySelector('#product-order span').textContent = 'New ' + oneOrder() + ' for this';
-  page.querySelector('#product-order').addEventListener('click', function () {
+  if (!usesOrders()) page.querySelector('.product-actions').remove();
+  else page.querySelector('#product-order span').textContent = 'New ' + oneOrder() + ' for this';
+  if (usesOrders()) page.querySelector('#product-order').addEventListener('click', function () {
     orderPrefill = { item: p.name, price: p.price || '' };
     openOrderForm('new');
   });
@@ -4503,8 +5173,8 @@ function editSupply(s, done) {
       <label class="label" for="sw-name">Name</label>
       <input class="input" id="sw-name" autocomplete="off" placeholder="Flour">
       <label class="label" for="sw-unit">You measure it in</label>
-      <input class="input" id="sw-unit" autocomplete="off" placeholder="cups" list="unit-ideas">
-      <datalist id="unit-ideas">${UNIT_IDEAS.map(function (u) { return '<option value="' + u + '">'; }).join('')}</datalist>
+      <input class="input" id="sw-unit" autocomplete="off" placeholder="cups">
+      <div class="unit-chips">${UNIT_IDEAS.map(function (u) { return '<button type="button" class="idea-btn" data-unit="' + u + '">' + u + '</button>'; }).join('')}</div>
       <p class="label">When you buy it</p>
       <div class="buy-line">
         <span>You get</span>
@@ -4520,6 +5190,9 @@ function editSupply(s, done) {
       const unit = box.querySelector('#sw-unit');
       function unitWords() { box.querySelector('.sw-unit-word').textContent = unit.value.trim() || 'units'; }
       unit.addEventListener('input', unitWords);
+      box.querySelectorAll('[data-unit]').forEach(function (chip) {
+        chip.addEventListener('click', function () { unit.value = chip.dataset.unit; unitWords(); });
+      });
       if (s) {
         box.querySelector('#sw-name').value = s.name;
         unit.value = s.unit;
@@ -4625,7 +5298,7 @@ function showSupplies(page) {
   const total = buy.reduce(function (sum, b) { return sum + b.cost; }, 0);
   page.querySelector('#shop-sub').textContent = buy.length
     ? 'For your ' + w.orders.toLowerCase() + ' in the next 2 weeks' + (total ? ', about ' + money(total) : '')
-    : 'Things for your ' + w.orders.toLowerCase() + ' show up here on their own';
+    : usesOrders() ? 'Things for your ' + w.orders.toLowerCase() + ' show up here on their own' : 'Things you need to buy';
 
   buy.forEach(function (b) {
     const row = document.createElement('div');
@@ -4918,12 +5591,18 @@ function showBookkeeping(page) {
       <div class="money-list" id="money-list"></div>
     </section>
   `;
-  page.querySelector('.page-head p').textContent = 'Paid ' + w.orders.toLowerCase() + ' count as money in on their due date';
+  page.querySelector('.page-head p').textContent = usesOrders()
+    ? 'Paid ' + w.orders.toLowerCase() + ' count as money in on their due date'
+    : 'Money in and money out, month by month';
   page.querySelector('.month-name').textContent = month.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   page.querySelector('#mt-in').textContent = money(totals.moneyIn);
   page.querySelector('#mt-out').textContent = money(totals.moneyOut);
   page.querySelector('#mt-kept').textContent = money(totals.moneyIn - totals.moneyOut);
   page.querySelector('#mt-wait').textContent = money(unpaidTotal);
+  if (!usesOrders()) {
+    page.querySelector('#mt-wait').parentNode.remove();
+    page.querySelector('.money-tiles').classList.add('three');
+  }
 
   page.querySelector('#bk-prev').addEventListener('click', function () { bookMonth = dateText(new Date(month.getFullYear(), month.getMonth() - 1, 1)); showPage(); });
   page.querySelector('#bk-next').addEventListener('click', function () { bookMonth = dateText(new Date(month.getFullYear(), month.getMonth() + 1, 1)); showPage(); });
@@ -5047,6 +5726,11 @@ function showPrintables(page) {
       <div class="paper-wrap"><div class="paper print-area" id="paper"></div></div>
     </div>
   `;
+  if (!usesOrders()) {
+    printTab = 'menu';
+    page.querySelector('.print-tabs').remove();
+    page.querySelector('h1').textContent = 'Menus';
+  }
   page.querySelectorAll('[data-tab]').forEach(function (b) {
     const on = b.dataset.tab === printTab;
     b.classList.toggle('on', on);
@@ -5210,7 +5894,7 @@ function showFinder(page) {
     </section>
   `;
   const input = page.querySelector('#finder-input');
-  input.placeholder = 'Search ' + [w.orders, w.customers, w.products, 'tasks'].map(function (x) { return x.toLowerCase(); }).join(', ');
+  input.placeholder = 'Search ' + (usesOrders() ? [w.orders, w.customers, w.products, 'tasks'] : [w.customers, w.products, 'tasks']).map(function (x) { return x.toLowerCase(); }).join(', ');
   input.value = finderText;
 
   const near = [
@@ -5282,6 +5966,37 @@ function showFinder(page) {
   input.focus();
 }
 
+// Events in the next week, for My Day
+function eventsComingUp() {
+  const box = document.createElement('section');
+  box.innerHTML = '<div class="section-head"><h2 class="tips-title">Coming up this week</h2><button class="link-btn">See all</button></div>';
+  box.querySelector('.link-btn').addEventListener('click', function () { goTo('calendar'); });
+  const soon = events.filter(function (e) { const d = daysUntil(e.date); return d >= 0 && d <= 7; })
+    .sort(function (a, b) { return (a.date + (a.time || '99')).localeCompare(b.date + (b.time || '99')); });
+  if (!soon.length) {
+    const none = document.createElement('p');
+    none.className = 'day-free';
+    none.textContent = 'No events this week. Add one on the Calendar.';
+    box.appendChild(none);
+    return box;
+  }
+  const list = document.createElement('div');
+  list.className = 'day-orders';
+  soon.slice(0, 5).forEach(function (e) {
+    const item = document.createElement('button');
+    item.className = 'day-order event-card';
+    item.innerHTML = '<span class="day-top"><span class="day-time"></span><span class="day-status">Event</span></span><b class="day-name"></b><span class="day-item"></span>';
+    const days = daysUntil(e.date);
+    item.querySelector('.day-time').textContent = (days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : niceDate(e.date)) + (e.time ? ' at ' + niceTime(e.time) : '');
+    item.querySelector('.day-name').textContent = e.title;
+    if (e.where) item.querySelector('.day-item').textContent = e.where; else item.querySelector('.day-item').remove();
+    item.addEventListener('click', function () { editEvent(e); });
+    list.appendChild(item);
+  });
+  box.appendChild(list);
+  return box;
+}
+
 // =========================================
 // MY DAY
 // The first page: today at a glance.
@@ -5302,7 +6017,9 @@ function showMyDay(page) {
   const tiles = document.createElement('div');
   tiles.className = 'day-tiles';
   [
-    { n: dueToday.length, label: (dueToday.length === 1 ? oneOrder() : w.orders.toLowerCase()) + ' due today', color: 'butter', go: 'calendar' },
+    usesOrders()
+      ? { n: dueToday.length, label: (dueToday.length === 1 ? oneOrder() : w.orders.toLowerCase()) + ' due today', color: 'butter', go: 'calendar' }
+      : { n: events.filter(function (e) { return e.date === today; }).length, label: events.filter(function (e) { return e.date === today; }).length === 1 ? 'event today' : 'events today', color: 'butter', go: 'calendar' },
     { n: todayTasks.length, label: todayTasks.length === 1 ? 'task for today' : 'tasks for today', color: 'sky', go: 'todo' },
     { n: money(thisMonth.moneyIn), label: 'paid to you this month', color: 'mint', go: 'bookkeeping' },
     { n: toBuy, label: toBuy === 1 ? 'thing to buy' : 'things to buy', color: 'peach', go: 'checklist' },
@@ -5349,6 +6066,11 @@ function showMyDay(page) {
 
   // Orders coming up this week
   const soon = sortedOrders().filter(function (o) { return isOpen(o) && daysUntil(o.due) <= 7; });
+  if (!usesOrders()) {
+    two.appendChild(eventsComingUp());
+    showGoalTips(page);
+    return;
+  }
   const orderBox = document.createElement('section');
   orderBox.innerHTML = '<div class="section-head"><h2 class="tips-title"></h2><button class="link-btn"></button></div>';
   orderBox.querySelector('h2').textContent = 'Coming up this week';
@@ -5378,6 +6100,95 @@ function showMyDay(page) {
   two.appendChild(orderBox);
 
   showGoalTips(page);
+}
+
+// =========================================
+// BACKUP
+// Everything the app saves (every business) goes into one .json file.
+// Loading that file puts it all back, on this computer or another one.
+// =========================================
+const LAST_BACKUP_KEY = 'bizStudio.lastBackup';
+
+function lastBackupText() {
+  let when = null;
+  try { when = localStorage.getItem(LAST_BACKUP_KEY); } catch (error) { /* fine */ }
+  if (!when) return 'You haven\'t saved one yet';
+  const days = Math.round((toDate(todayText()) - toDate(when.slice(0, 10))) / 86400000);
+  return 'Last saved ' + (days <= 0 ? 'today' : days === 1 ? 'yesterday' : days + ' days ago');
+}
+
+function saveBackup() {
+  const data = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key.startsWith('bizStudio.') && key !== LAST_BACKUP_KEY) data[key] = localStorage.getItem(key);
+  }
+  const backup = { app: 'Biz Studio', version: 1, saved: new Date().toISOString(), data: data };
+  const file = new Blob([JSON.stringify(backup)], { type: 'application/json' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(file);
+  link.download = 'biz-studio-backup-' + todayText() + '.json';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(function () { URL.revokeObjectURL(link.href); }, 2000);
+  try { localStorage.setItem(LAST_BACKUP_KEY, new Date().toISOString()); } catch (error) { /* fine */ }
+  showUndo('Backup saved to your Downloads folder', null);
+}
+
+// Picks a backup file, checks it, and asks before replacing everything
+function pickBackup() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json,application/json';
+  input.addEventListener('change', function () {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function () {
+      let backup = null;
+      try { backup = JSON.parse(String(reader.result)); } catch (error) { /* not JSON */ }
+      if (!backup || backup.app !== 'Biz Studio' || !backup.data) {
+        openWindow({
+          title: 'That\'s not a backup',
+          saveLabel: 'OK',
+          html: '<p class="help">Pick a file that starts with <b>biz-studio-backup</b>. It\'s made by Save a backup.</p>',
+          onSave: function () {},
+        });
+        return;
+      }
+      const names = [];
+      try {
+        JSON.parse(backup.data[BIZ_LIST_KEY] || '[]').forEach(function (b) { names.push(b.name); });
+      } catch (error) { /* fine */ }
+      const when = new Date(backup.saved).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      openWindow({
+        title: 'Load this backup?',
+        saveLabel: 'Yes, load it',
+        html: '<p class="help backup-note"></p><p class="backup-warn">What\'s in the app now will be replaced. Save a backup first if you want to keep it.</p>',
+        fill: function (box) {
+          box.querySelector('.backup-note').textContent = 'From ' + when +
+            (names.length ? ', with ' + names.join(', ') + '.' : '.');
+        },
+        onSave: function () {
+          // Clear what's here, then put the backup in
+          const old = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key.startsWith('bizStudio.')) old.push(key);
+          }
+          old.forEach(function (key) { localStorage.removeItem(key); });
+          Object.keys(backup.data).forEach(function (key) {
+            if (key.startsWith('bizStudio.')) localStorage.setItem(key, backup.data[key]);
+          });
+          localStorage.setItem(LAST_BACKUP_KEY, backup.saved);
+          location.reload();
+        },
+      });
+    };
+    reader.readAsText(file);
+  });
+  input.click();
 }
 
 // =========================================
@@ -5472,6 +6283,11 @@ function showSettings(page) {
         <span class="row-swatch"><i style="background: var(--ink)"></i><i style="background: var(--sun)"></i></span>
         <span class="row-arrow">${icon('chevron')}</span>
       </button>
+      <label class="settings-row butter helper-row">
+        <span class="nav-icon pip-mini">${pipDrawing()}</span>
+        <span class="row-text"><strong>Pip, your helper</strong><span class="row-value">Pops up with tips about your business</span></span>
+        <span class="toggle"><input type="checkbox" id="helper-toggle"><span class="toggle-track"></span></span>
+      </label>
     </div>
 
     <h2 class="settings-group" id="details-group"></h2>
@@ -5492,6 +6308,20 @@ function showSettings(page) {
       </button>
     </div>
 
+    <h2 class="settings-group">Backup</h2>
+    <div class="settings-list">
+      <button class="settings-row mint" id="backup-save">
+        <span class="nav-icon">${icon('download')}</span>
+        <span class="row-text"><strong>Save a backup</strong><span class="row-value" id="backup-when"></span></span>
+        <span class="row-arrow">${icon('chevron')}</span>
+      </button>
+      <button class="settings-row sky" id="backup-load">
+        <span class="nav-icon">${icon('upload')}</span>
+        <span class="row-text"><strong>Load a backup</strong><span class="row-value">Bring back everything from a backup file</span></span>
+        <span class="row-arrow">${icon('chevron')}</span>
+      </button>
+    </div>
+
     <button class="start-over" id="erase-btn"></button>
   `;
 
@@ -5499,7 +6329,7 @@ function showSettings(page) {
   box.querySelector('#hero-name').textContent = profile.businessName;
   box.querySelector('#hero-type').textContent = typeName;
   box.querySelector('#row-name').textContent = profile.businessName;
-  box.querySelector('#row-type').textContent = typeName + ': ' + [w.products, w.orders, w.customers, w.supplies].join(', ');
+  box.querySelector('#row-type').textContent = typeName + ': ' + (usesOrders() ? [w.products, w.orders, w.customers, w.supplies] : [w.products, w.customers, w.supplies]).join(', ');
   box.querySelector('#row-theme').textContent = profile.changeWithTime
     ? 'Changes with the time of day'
     : theme.label + ' with the ' + findFont(profile.font).label + ' font';
@@ -5512,6 +6342,11 @@ function showSettings(page) {
   box.querySelector('#row-details').textContent = profile.details.length
     ? profile.details.map(function (d) { return d.name; }).join(', ')
     : 'None yet. Add things like ' + (DETAIL_IDEAS[profile.businessType] || DETAIL_IDEAS.other)[0].name.toLowerCase() + '.';
+  if (!usesOrders()) {
+    const group = box.querySelector('#details-group');
+    group.nextElementSibling.remove();
+    group.remove();
+  }
 
   // The big picture: click the camera to change it
   box.querySelector('#hero-photo').prepend(avatar('lg'));
@@ -5538,6 +6373,22 @@ function showSettings(page) {
   });
 
   // Erasing asks twice, so nobody erases by accident
+  // Backup: save everything to a file, or load it back
+  box.querySelector('#backup-when').textContent = lastBackupText();
+  box.querySelector('#backup-save').addEventListener('click', function () {
+    saveBackup();
+    box.querySelector('#backup-when').textContent = lastBackupText();
+  });
+  box.querySelector('#backup-load').addEventListener('click', pickBackup);
+
+  const helperToggle = box.querySelector('#helper-toggle');
+  helperToggle.checked = !profile.helperOff;
+  helperToggle.addEventListener('change', function () {
+    profile.helperOff = !helperToggle.checked;
+    saveProfile();
+    updateHelper();
+  });
+
   const erase = box.querySelector('#erase-btn');
   erase.addEventListener('click', function () {
     if (erase.dataset.sure !== 'yes') {
@@ -5582,7 +6433,8 @@ function showGoalTips(page) {
 
   profile.goals.forEach(function (goalId) {
     const goal = findGoal(goalId);
-    const target = findSection(goal.focus[0]);
+    const hidden = hiddenSections();
+    const target = findSection(goal.focus.find(function (id) { return !hidden.includes(id); }) || 'myday');
     const card = document.createElement('div');
     card.className = 'tip-card ' + goal.color;
     card.innerHTML =

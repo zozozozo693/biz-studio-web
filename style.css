@@ -1954,7 +1954,7 @@ p.label { margin-top: 0; }
 }
 .date-button svg { width: 20px; height: 20px; flex-shrink: 0; color: var(--muted); }
 .date-button:hover svg, .date-field.open .date-button svg { color: var(--ink); }
-.date-button.empty .date-text { color: var(--muted); }
+.date-button.is-empty .date-text { color: var(--muted); }
 .date-field.open .date-button { border-color: var(--ink); box-shadow: 0 0 0 3px var(--sun-soft); }
 
 /* The little calendar that drops down */
@@ -2600,3 +2600,256 @@ p.label { margin-top: 0; }
 .biz-here { color: var(--muted); font-size: 13px; font-weight: 700; white-space: nowrap; }
 .biz-open { padding: 5px 12px; border-radius: 999px; background: var(--ink); color: #fff; }
 .setup-cancel { margin: 0 0 0 auto; }
+
+/* =========================================
+   CALENDAR: events, to-dos, and "Add something"
+   ========================================= */
+.cal-pill.event { --soft: var(--lilac-soft); --strong: var(--lilac); }
+.cal-pill.todo { --soft: var(--mint-soft); --strong: var(--mint); border-left-style: dotted; }
+.event-card { --soft: var(--lilac-soft); --strong: var(--lilac); }
+
+.day-todos {
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1.5px dashed var(--mint);
+}
+.day-todo { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-top: 1px solid var(--line); }
+.day-todo:first-child { border-top: none; }
+.day-todo .task-check { width: 24px; height: 24px; }
+.day-todo .task-check svg { width: 14px; height: 14px; }
+.day-todo span { font-weight: 600; font-size: 15px; min-width: 0; overflow-wrap: anywhere; }
+
+/* Add: Event or To-do, like a calendar app */
+.kind-switch { display: inline-flex; padding: 4px; border-radius: 999px; background: var(--page); }
+.kind-switch button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+.kind-switch svg { width: 17px; height: 17px; }
+.kind-switch button:hover { color: var(--ink); }
+.kind-switch button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12); }
+.kind-switch button[data-kind="event"][aria-selected="true"] svg { color: var(--lilac); }
+.kind-switch button[data-kind="todo"][aria-selected="true"] svg { color: var(--mint); }
+.title-input {
+  padding: 10px 2px;
+  border: none;
+  border-bottom: 2px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  font-family: var(--font-head);
+  font-size: 22px;
+  font-weight: 700;
+  box-shadow: none;
+}
+.title-input:focus { border-bottom-color: var(--ink); box-shadow: none; outline: none; }
+.two-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.for-event[hidden], .for-todo[hidden] { display: none; }
+@media (max-width: 500px) { .two-fields { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .kind-switch button { transition: none; } }
+
+
+/* =========================================
+   DROPDOWNS (match the rest of the app)
+   ========================================= */
+.select-hidden { display: none !important; }
+
+.pick-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  text-align: left;
+  cursor: pointer;
+}
+.pick-button.input { display: flex; width: 100%; }
+.pick-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pick-button.is-empty .pick-text { color: var(--muted); }
+.pick-arrow { width: 18px; height: 18px; flex-shrink: 0; color: var(--muted); transition: transform 0.15s ease; }
+.pick-button.open .pick-arrow { transform: rotate(180deg); color: var(--ink); }
+.pick-button.input.open { border-color: var(--ink); box-shadow: 0 0 0 3px var(--sun-soft); }
+
+/* The status pill in the order list */
+.pick-button.status-pick { gap: 4px; padding: 5px 8px 5px 12px; }
+.pick-button.status-pick .pick-arrow { width: 14px; height: 14px; color: var(--strong); }
+
+/* The list that pops up */
+.pick-list {
+  position: fixed;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 360px;
+  padding: 6px;
+  scroll-padding: 6px;
+  overflow-y: auto;
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.16);
+  animation: pop-in 0.15s ease;
+}
+.pick-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: none;
+  border-radius: 10px;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.pick-label { flex: 1; }
+.pick-option:hover, .pick-option:focus-visible { background: var(--sun-soft); outline: none; }
+.pick-option.blank { color: var(--muted); font-weight: 500; }
+.pick-tick { width: 16px; height: 16px; flex-shrink: 0; color: var(--ink); opacity: 0; }
+.pick-option[aria-selected="true"] { background: color-mix(in srgb, var(--sun-soft) 60%, white); }
+.pick-option[aria-selected="true"] .pick-tick { opacity: 1; }
+.pick-dot { width: 10px; height: 10px; flex-shrink: 0; border-radius: 50%; background: var(--strong); }
+.pick-group {
+  padding: 10px 12px 4px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Unit ideas in the ingredient window */
+.unit-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.unit-chips .idea-btn { padding: 4px 10px; font-size: 13px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pick-list { animation: none; }
+  .pick-arrow { transition: none; }
+}
+.pick-option { flex-shrink: 0; }
+
+/* =========================================
+   PIP, THE HELPER
+   ========================================= */
+.pip {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 60;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  pointer-events: none;
+}
+.pip > * { pointer-events: auto; }
+
+.pip-buddy {
+  position: relative;
+  width: 86px;
+  height: 86px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  animation: pip-bob 3.2s ease-in-out infinite;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.15));
+}
+.pip-buddy:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; border-radius: 50%; }
+.pip-buddy:hover .pip-svg { transform: rotate(-8deg) scale(1.06); }
+.pip-svg { width: 100%; height: 100%; overflow: visible; transition: transform 0.2s ease; }
+.pip-body { fill: var(--sun); stroke: var(--ink); stroke-width: 3; stroke-linejoin: round; }
+.pip-eyes { fill: var(--ink); transform-origin: 50px 46px; animation: pip-blink 4.5s infinite; }
+.pip-shine { fill: #fff; }
+.pip-cheek { fill: #ff8fab; opacity: 0.55; }
+.pip-smile { fill: none; stroke: var(--ink); stroke-width: 2.8; stroke-linecap: round; }
+.pip.talking .pip-smile { d: path("M43 54.5c3.5 6 10.5 6 14 0z"); fill: var(--ink); }
+
+.pip-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 16px;
+  height: 16px;
+  border: 3px solid var(--surface);
+  border-radius: 50%;
+  background: var(--error);
+}
+
+.pip-bubble {
+  position: relative;
+  width: 280px;
+  margin-bottom: 40px;
+  padding: 16px 18px;
+  border-radius: 20px 20px 6px 20px;
+  background: var(--surface);
+  border: 2px solid var(--ink);
+  box-shadow: 4px 4px 0 var(--ink);
+  animation: pip-pop 0.2s ease;
+}
+.pip-bubble.urgent { border-color: var(--error); box-shadow: 4px 4px 0 var(--error); }
+.pip-name { display: block; color: var(--muted); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; }
+.pip-text { margin: 4px 0 0; font-size: 16px; font-weight: 600; line-height: 1.4; }
+.pip-actions { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+.pip-actions:not(:has(button:not([hidden]))) { display: none; }
+.pip-actions .link-btn { margin: 0; font-size: 14px; }
+.pip-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+.pip-close svg { width: 18px; height: 18px; transform: rotate(45deg); }
+.pip-close:hover { background: var(--page); color: var(--ink); }
+
+.pip-buddy.hop { animation: pip-hop 0.45s ease, pip-bob 3.2s ease-in-out 0.45s infinite; }
+
+@keyframes pip-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes pip-hop { 0% { transform: translateY(0); } 40% { transform: translateY(-16px) rotate(-6deg); } 100% { transform: translateY(0); } }
+@keyframes pip-blink { 0%, 94%, 100% { transform: scaleY(1); } 97% { transform: scaleY(0.1); } }
+@keyframes pip-pop { from { opacity: 0; transform: translateY(8px) scale(0.96); } to { opacity: 1; transform: none; } }
+
+/* Pip in the Settings row */
+.pip-mini { background: var(--sun-soft) !important; }
+.pip-mini svg { width: 30px; height: 30px; }
+.helper-row { cursor: pointer; }
+.helper-row .toggle { padding: 0; border: none; background: none; }
+
+/* Keep the bottom of pages clear of Pip */
+.content { padding-bottom: 120px; }
+
+@media (max-width: 860px) {
+  .pip { right: 12px; bottom: 12px; }
+  .pip-buddy { width: 60px; height: 60px; }
+  .pip-bubble { width: min(260px, calc(100vw - 100px)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pip-buddy, .pip-buddy.hop, .pip-eyes, .pip-bubble { animation: none; }
+  .pip-svg { transition: none; }
+}
+@media print { .pip { display: none; } }
+.money-tiles.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+/* Backup */
+.backup-warn { margin: 12px 0 0; padding: 10px 14px; border-radius: 12px; background: #ffe0e4; color: var(--error); font-weight: 600; font-size: 15px; }
