@@ -53,6 +53,10 @@ const store = {
   removeItem: function (k) { localStorage.removeItem(store.key(k)); },
 };
 
+// True when the app runs inside another page (like the online version on claude.ai).
+// There, printing, downloads and extra windows aren't allowed, so those buttons hide.
+const IN_FRAME = location.protocol !== 'file:' && (function () { try { return window.self !== window.top; } catch (error) { return true; } })();
+
 // Opens another business (the whole app reloads with its things)
 function switchBusiness(id) {
   try { localStorage.setItem(BIZ_CURRENT_KEY, id); } catch (error) { /* fine */ }
@@ -129,6 +133,8 @@ const ICONS = {
   camera2: '<path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
   star: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
   download: '<path d="M12 4v11M7 10l5 5 5-5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
+  expand: '<path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/>',
+  note: '<path d="M5 4h14a1 1 0 0 1 1 1v9l-6 6H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M14 20v-5a1 1 0 0 1 1-1h5"/>',
   popout: '<rect x="3" y="5" width="18" height="14" rx="2"/><rect x="11.5" y="10.5" width="7" height="6" rx="1.2"/>',
   upload: '<path d="M12 15V4M7 9l5-5 5 5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
   file: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
@@ -459,6 +465,9 @@ const SECTIONS = [
   { id: 'todo', icon: 'check', label: 'To-do list',
     emptyTitle: 'No tasks',
     emptyText: (w) => 'Tasks from your ' + w.orders.toLowerCase() + ', plus any you add, will be listed here with the most urgent first.' },
+  { id: 'notes', icon: 'note', label: 'Sticky notes',
+    emptyTitle: 'No sticky notes yet',
+    emptyText: 'Quick notes and reminders, in any color you like.' },
   { id: 'calendar', icon: 'calendar', label: 'Calendar',
     emptyTitle: 'Your calendar is clear',
     emptyText: (w) => w.orders + ' and events will show up on the day they are due.' },
@@ -497,7 +506,7 @@ function say(value) {
 // Settings sits at the bottom on its own.
 const MENU_GROUPS = [
   { label: '', color: 'butter', items: ['myday'] },
-  { label: 'Work', color: 'sky', items: ['orders', 'todo', 'calendar'] },
+  { label: 'Work', color: 'sky', items: ['orders', 'todo', 'notes', 'calendar'] },
   { label: 'Business', color: 'pink', items: ['customers', 'products', 'checklist'] },
   { label: 'Money', color: 'mint', items: ['pricing', 'bookkeeping'] },
   { label: 'Grow', color: 'lilac', items: ['finder', 'printables'] },
@@ -1590,6 +1599,7 @@ function showPage() {
   if (section.id === 'customers') showCustomers(page);
   if (section.id === 'calendar') showCalendar(page);
   if (section.id === 'todo') showTodo(page);
+  if (section.id === 'notes') showNotesPage(page);
   if (section.id === 'settings') showSettings(page);
   updateHelper();
 }
@@ -1688,7 +1698,7 @@ function helperTips(sectionId) {
   let lastBackup = null;
   try { lastBackup = localStorage.getItem(LAST_BACKUP_KEY); } catch (error) { /* fine */ }
   const backupDays = lastBackup ? Math.round((Date.now() - new Date(lastBackup)) / 86400000) : null;
-  if ((backupDays === null && (orders.length || products.length || tasks.length)) || backupDays >= 7) {
+  if (!IN_FRAME && ((backupDays === null && (orders.length || products.length || tasks.length)) || backupDays >= 7)) {
     add('It\'s been a while since your last backup. Save one in Settings so nothing gets lost!', { go: 'settings', page: 'settings' });
   }
   if (!profile.photo) add('Add a picture for your business in Settings. It goes on your receipts too!', { go: 'settings', page: 'settings' });
@@ -5764,6 +5774,7 @@ function showPrintables(page) {
   printBtn.className = 'btn with-icon print-btn';
   printBtn.innerHTML = icon('printer') + '<span>Print</span>';
   printBtn.addEventListener('click', function () { window.print(); });
+  if (IN_FRAME) printBtn.hidden = true;
 
   if (printTab === 'receipt') {
     const choices = sortedOrders();
@@ -6108,87 +6119,253 @@ function showMyDay(page) {
 
 // =========================================
 // STICKY NOTES
-// Little colorful notes on My Day. Type right on them; they save as you go.
-// Each: { id, text, color, created }
+// Like Microsoft Sticky Notes: simple colored notes with a bar on top.
+// Each one can pop out into its own little window you can move anywhere on your screen.
+// Each note: { id, text, color, created }
 // =========================================
 const NOTES_KEY = 'bizStudio.notes';
 let notes = loadList(NOTES_KEY);
-// fromFloating: the change came from the notes window, so don't redraw it while they type
-function saveNotes(fromFloating) {
+const NOTE_COLORS = ['butter', 'peach', 'pink', 'lilac', 'sky', 'mint', 'lime', 'sand'];
+// Soft pastel sticky note colors (the same in every theme, like real paper)
+const NOTE_HEX = {
+  butter: '#fff1a8', peach: '#ffd8bd', pink: '#ffd3e2', lilac: '#e4d7ff',
+  sky: '#cde7ff', mint: '#c9f0dc', lime: '#e3f3c2', sand: '#efe6da',
+};
+const NOTE_COLOR_NAMES = {
+  butter: 'Yellow', peach: 'Peach', pink: 'Pink', lilac: 'Lavender',
+  sky: 'Blue', mint: 'Mint', lime: 'Lime', sand: 'Sand',
+};
+// A note's color: one of the pastels above, or any color they picked (like "#a0e8ff")
+function noteColor(c) { return NOTE_HEX[c] || (/^#[0-9a-f]{6}$/i.test(c || '') ? c : NOTE_HEX.butter); }
+const noteWindows = {}; // note id -> its popped-out window
+
+// fromId: which note's window made the change, so that one isn't redrawn while typing
+function saveNotes(fromId) {
   saveList(NOTES_KEY, notes);
-  if (!fromFloating) drawFloatingNotes();
+  syncNoteWindows(fromId);
 }
-const NOTE_COLORS = ['butter', 'pink', 'mint', 'sky', 'lilac', 'peach'];
-let focusNote = null; // a new note to start typing in
 
-function stickyBoard() {
-  const box = document.createElement('section');
-  box.className = 'sticky-section';
-  box.innerHTML = '<div class="section-head"><h2 class="tips-title">Sticky notes</h2>' +
-    '<button class="btn secondary small with-icon" id="float-notes">' + icon('popout') + '<span>Put on my screen</span></button></div>' +
-    '<div class="sticky-board"></div>';
-  box.querySelector('#float-notes').addEventListener('click', openFloatingNotes);
-  if (floatWin && !floatWin.closed) {
-    box.querySelector('#float-notes span').textContent = 'On your screen';
-    box.querySelector('#float-notes').classList.add('is-on');
+function addNote(after, color) {
+  const used = after ? after.color : (notes.length ? notes[notes.length - 1].color : 'sand');
+  const next = NOTE_COLORS[(NOTE_COLORS.indexOf(used) + 1) % NOTE_COLORS.length] || 'butter';
+  const note = {
+    id: newId('n'),
+    text: '',
+    color: color || next,
+    created: new Date().toISOString(),
+  };
+  notes.push(note);
+  saveList(NOTES_KEY, notes);
+  return note;
+}
+
+function deleteNote(note) {
+  const index = notes.indexOf(note);
+  notes = notes.filter(function (n) { return n !== note; });
+  saveList(NOTES_KEY, notes);
+  const win = noteWindows[note.id];
+  if (win && !win.closed) win.close();
+  if (currentSection === 'myday' || currentSection === 'notes') showPage();
+  if (note.text.trim()) {
+    showUndo('Note deleted', function () {
+      notes.splice(Math.max(0, index), 0, note);
+      saveNotes();
+      showPage();
+    });
   }
-  const board = box.querySelector('.sticky-board');
+}
 
-  notes.forEach(function (note, i) { board.appendChild(stickyNote(note, i)); });
-
-  // The "+" note for adding one
-  const add = document.createElement('button');
-  add.className = 'sticky-add';
-  add.innerHTML = icon('plus') + '<span>Add a note</span>';
-  add.addEventListener('click', function () {
-    const used = notes.length ? notes[notes.length - 1].color : 'peach';
-    const color = NOTE_COLORS[(NOTE_COLORS.indexOf(used) + 1) % NOTE_COLORS.length];
-    const note = { id: newId('n'), text: '', color: color, created: new Date().toISOString() };
-    notes.push(note);
-    saveNotes();
-    focusNote = note.id;
-    showPage();
+// A row of pastel colors, plus a rainbow circle to pick any color
+function colorPicker(doc, current, onPick) {
+  const row = doc.createElement('div');
+  row.className = 'note-menu-colors';
+  NOTE_COLORS.forEach(function (c) {
+    const dot = doc.createElement('button');
+    dot.className = 'note-dot';
+    dot.title = NOTE_COLOR_NAMES[c];
+    dot.setAttribute('aria-label', NOTE_COLOR_NAMES[c]);
+    dot.setAttribute('aria-pressed', c === current ? 'true' : 'false');
+    dot.dataset.color = c;
+    dot.style.background = NOTE_HEX[c];
+    dot.addEventListener('click', function () { onPick(c); });
+    row.appendChild(dot);
   });
-  board.appendChild(add);
-
-  if (focusNote) {
-    const typing = board.querySelector('[data-note="' + focusNote + '"] textarea');
-    focusNote = null;
-    if (typing) setTimeout(function () { typing.focus(); }, 0);
+  // Any color at all
+  const custom = doc.createElement('label');
+  custom.className = 'note-dot custom';
+  custom.title = 'Pick any color';
+  custom.innerHTML = '<input type="color" aria-label="Pick any color">';
+  const input = custom.querySelector('input');
+  input.value = /^#[0-9a-f]{6}$/i.test(current || '') ? current : '#ffd3e2';
+  if (/^#/.test(current || '')) {
+    custom.setAttribute('aria-pressed', 'true');
+    custom.style.setProperty('--picked', current);
   }
+  input.addEventListener('change', function () { onPick(input.value.toLowerCase()); });
+  row.appendChild(custom);
+  return row;
+}
+
+// The little "..." menu: colors and Delete
+function noteMenu(doc, note, onColor, onDelete) {
+  const menu = doc.createElement('div');
+  menu.className = 'note-menu';
+  menu.hidden = true;
+  const title = doc.createElement('p');
+  title.className = 'note-menu-title';
+  title.textContent = 'Color';
+  function picked(c) {
+    onColor(c);
+    menu.hidden = true;
+    menu.replaceChild(colorPicker(doc, c, picked), menu.querySelector('.note-menu-colors'));
+  }
+  const del = doc.createElement('button');
+  del.className = 'note-menu-delete';
+  del.innerHTML = icon('trash') + '<span>Delete note</span>';
+  del.addEventListener('click', function () { menu.hidden = true; onDelete(); });
+  menu.append(title, colorPicker(doc, note.color, picked), del);
+  return menu;
+}
+
+// ---------- The notes on My Day, and on the Sticky notes page ----------
+// Pastel square notes, like sticky note widgets. Each one can pop off the page into its own window.
+function stickyBoard(big) {
+  const box = document.createElement('section');
+  box.className = 'notes-panel' + (big ? ' big' : '');
+  box.innerHTML = `
+    <div class="notes-head">
+      <h2 class="tips-title">Sticky notes</h2>
+      <div class="notes-add-wrap">
+        <button class="notes-plus" id="note-plus" title="New note" aria-label="New note" aria-expanded="false">${icon('plus')}</button>
+        <div class="note-menu notes-pick" hidden>
+          <p class="note-menu-title">Pick a color for your note</p>
+        </div>
+      </div>
+    </div>
+    <div class="notes-grid"></div>
+  `;
+  if (big) box.querySelector('.notes-head h2').remove();
+  const grid = box.querySelector('.notes-grid');
+  if (!notes.length) {
+    grid.innerHTML = '<p class="notes-empty">No notes yet. Click <b>+</b> to add one.</p>';
+  }
+  notes.forEach(function (note) { grid.appendChild(noteCard(note)); });
+
+  // + shows the colors; picking one makes the note
+  const plus = box.querySelector('#note-plus');
+  const pick = box.querySelector('.notes-pick');
+  pick.appendChild(colorPicker(document, null, function (c) {
+    pick.hidden = true;
+    const note = addNote(null, c);
+    showPage();
+    focusNoteNow(note);
+  }));
+  plus.addEventListener('click', function () {
+    pick.hidden = !pick.hidden;
+    plus.setAttribute('aria-expanded', pick.hidden ? 'false' : 'true');
+  });
+  const wrap = box.querySelector('.notes-add-wrap');
+  wrap.addEventListener('focusout', function (e) {
+    if (!wrap.contains(e.relatedTarget)) pick.hidden = true;
+  });
   return box;
 }
 
-// ---------- Notes in their own little window, on top of your other apps ----------
-let floatWin = null;
-let floatPinned = false;
-let floatRefresh = null;
+// The Sticky notes page: all your notes, bigger
+function showNotesPage(page) {
+  page.innerHTML = '<header class="page-head with-button"><div><h1>Sticky notes</h1><p></p></div></header>';
+  page.querySelector('.page-head p').textContent = notes.length
+    ? notes.length + (notes.length === 1 ? ' note' : ' notes') + '. Point at a note to pop it out onto your screen.'
+    : 'Quick notes and reminders, in any color you like';
+  const board = stickyBoard(true);
+  page.querySelector('.page-head').appendChild(board.querySelector('.notes-add-wrap'));
+  page.appendChild(board);
+}
 
-async function openFloatingNotes() {
-  if (floatWin && !floatWin.closed) { floatWin.focus(); return; }
+// Puts the cursor in a note on My Day, ready to type
+function focusNoteNow(note) {
+  const typing = document.querySelector('.note[data-note="' + note.id + '"] textarea');
+  if (typing) typing.focus();
+}
+
+function noteCard(note) {
+  const card = document.createElement('div');
+  card.className = 'note';
+  card.dataset.note = note.id;
+  card.style.setProperty('--note', noteColor(note.color));
+  card.innerHTML = `
+    <textarea class="note-text" aria-label="Sticky note" placeholder="Write here..."></textarea>
+    <div class="note-tools">
+      <button class="note-tool" data-act="pop" title="Pop out onto your screen" aria-label="Pop out onto your screen">${icon('popout')}</button>
+      <button class="note-tool" data-act="more" title="Color and delete" aria-label="Color and delete">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg>
+      </button>
+    </div>
+    <span class="note-fold" aria-hidden="true"></span>
+  `;
+  const text = card.querySelector('textarea');
+  text.value = note.text;
+  const popped = noteWindows[note.id] && !noteWindows[note.id].closed;
+  if (popped) card.classList.add('popped');
+
+  let timer = null;
+  text.addEventListener('input', function () {
+    note.text = text.value;
+    note.changed = new Date().toISOString();
+    clearTimeout(timer);
+    timer = setTimeout(function () { saveNotes(); }, 250);
+  });
+  text.addEventListener('blur', function () {
+    clearTimeout(timer);
+    note.text = text.value;
+    if (!note.text.trim() && !(noteWindows[note.id] && !noteWindows[note.id].closed)) {
+      // An empty note just goes away
+      notes = notes.filter(function (n) { return n !== note; });
+      saveList(NOTES_KEY, notes);
+      setTimeout(function () { if (!card.contains(document.activeElement)) card.remove(); }, 150);
+      return;
+    }
+    saveNotes();
+  });
+
+  const menu = noteMenu(document, note, function (c) {
+    note.color = c;
+    card.style.setProperty('--note', noteColor(c));
+    saveNotes();
+  }, function () { deleteNote(note); });
+  card.appendChild(menu);
+
+  card.querySelector('[data-act="more"]').addEventListener('click', function () { menu.hidden = !menu.hidden; });
+  card.querySelector('[data-act="pop"]').addEventListener('click', function () {
+    note.text = text.value;
+    saveList(NOTES_KEY, notes);
+    popOutNote(note);
+  });
+  card.addEventListener('focusout', function (e) {
+    if (!card.contains(e.relatedTarget)) menu.hidden = true;
+  });
+  return card;
+}
+
+// ---------- A note in its own window ----------
+function popOutNote(note) {
+  const open = noteWindows[note.id];
+  if (open && !open.closed) { open.focus(); return; }
+
+  const count = Object.keys(noteWindows).filter(function (id) { return noteWindows[id] && !noteWindows[id].closed; }).length;
+  const left = (window.screenX || 0) + 80 + count * 36;
+  const top = (window.screenY || 0) + 90 + count * 36;
   let win = null;
-  floatPinned = false;
-
-  // Best: a window that stays on top of everything (Chrome and Edge)
-  if ('documentPictureInPicture' in window) {
-    try {
-      win = await window.documentPictureInPicture.requestWindow({ width: 340, height: 520 });
-      floatPinned = true;
-    } catch (error) { win = null; }
-  }
-  // Otherwise: a small separate window you can move anywhere
+  try {
+    win = window.open('', 'bizNote_' + note.id, 'popup,width=300,height=300,left=' + left + ',top=' + top);
+  } catch (error) { win = null; }
   if (!win) {
-    try { win = window.open('', 'bizStudioNotes', 'popup,width=360,height=560'); } catch (error) { win = null; }
-  }
-  if (!win) {
-    showUndo('Your browser blocked the notes window. Allow pop-ups and try again.', null);
+    showUndo('Your browser blocked the note window. Allow pop-ups for this site and try again.', null);
     return;
   }
-  floatWin = win;
-
-  // The new window gets its own copy of the look (colors, fonts), since it can't load style.css
+  noteWindows[note.id] = win;
   const doc = win.document;
-  doc.title = 'Sticky notes';
+  doc.title = 'Sticky note';
   doc.head.innerHTML = '<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">';
   const fonts = document.querySelector('link[href*="fonts.googleapis.com/css2"]');
   if (fonts) {
@@ -6198,226 +6375,116 @@ async function openFloatingNotes() {
     doc.head.appendChild(link);
   }
   const style = doc.createElement('style');
-  style.textContent = floatingStyles();
+  style.textContent = noteWindowStyles();
   doc.head.appendChild(style);
-  doc.body.className = 'float-body';
+  drawNoteWindow(note);
 
   win.addEventListener('pagehide', function () {
-    floatWin = null;
-    if (currentSection === 'myday') showPage();
-  });
-  drawFloatingNotes(true);
-  if (currentSection === 'myday') showPage();
-}
-
-// The styles for the floating window, using the app's current colors
-function floatingStyles() {
-  const root = getComputedStyle(document.documentElement);
-  const v = function (name) { return root.getPropertyValue(name).trim(); };
-  const colors = NOTE_COLORS.map(function (c) {
-    const probe = document.createElement('span');
-    probe.className = c;
-    document.body.appendChild(probe);
-    const cs = getComputedStyle(probe);
-    const soft = cs.getPropertyValue('--soft').trim();
-    const strong = cs.getPropertyValue('--strong').trim();
-    probe.remove();
-    return '.float-note.' + c + ' { background: color-mix(in srgb, ' + soft + ' 70%, ' + strong + ' 12%); }';
-  }).join('\n');
-  return `
-    * { box-sizing: border-box; }
-    body.float-body { margin: 0; padding: 0 12px 18px; min-height: 100vh; background: ${v('--page')}; color: ${v('--ink')};
-      font-family: ${v('--font-body')}; font-size: 15px; line-height: 1.5; }
-    svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-    .float-head { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between;
-      margin: 0 -12px 14px; padding: 10px 12px; background: ${v('--page')}; border-bottom: 1px solid ${v('--line')}; }
-    .float-head b { display: block; font-family: ${v('--font-head')}; font-size: 16px; }
-    .float-head span { color: ${v('--muted')}; font-size: 12px; font-weight: 600; }
-    .float-add { display: grid; place-items: center; width: 34px; height: 34px; border: none; border-radius: 50%;
-      background: ${v('--ink')}; color: #fff; cursor: pointer; }
-    .float-list { display: flex; flex-direction: column; gap: 12px; }
-    .float-empty { margin: 30px 0; color: ${v('--muted')}; text-align: center; }
-    .float-note { position: relative; padding: 12px 34px 12px 14px; border-radius: 4px 4px 14px 4px;
-      box-shadow: 0 6px 12px -6px rgba(0, 0, 0, 0.25); transform: rotate(var(--tilt, 0deg)); }
-    .float-note:focus-within { transform: none; }
-    ${colors}
-    .float-note textarea { display: block; width: 100%; min-height: 54px; padding: 0; border: none; background: transparent;
-      color: ${v('--ink')}; font-family: ${v('--font-head')}; font-size: 16px; font-weight: 600; line-height: 1.4;
-      resize: none; overflow: hidden; outline: none; }
-    .float-delete { position: absolute; top: 6px; right: 6px; display: grid; place-items: center; width: 24px; height: 24px;
-      padding: 0; border: none; border-radius: 50%; background: transparent; color: ${v('--ink')}; opacity: 0.35; cursor: pointer; }
-    .float-delete svg { width: 16px; height: 16px; transform: rotate(45deg); }
-    .float-note:hover .float-delete, .float-delete:focus-visible { opacity: 1; background: rgba(255, 255, 255, 0.6); }
-  `;
-}
-
-// Draws the notes in the floating window
-function drawFloatingNotes(force) {
-  if (!floatWin || floatWin.closed) return;
-  const doc = floatWin.document;
-  // If they were typing in a note there, put the cursor back after redrawing
-  const active = doc.activeElement && doc.activeElement.tagName === 'TEXTAREA' ? doc.activeElement : null;
-  const keep = active ? { id: active.closest('.float-note').dataset.note, start: active.selectionStart, end: active.selectionEnd } : null;
-  doc.body.innerHTML = `
-    <header class="float-head">
-      <div><b>Sticky notes</b><span></span></div>
-      <button class="float-add" aria-label="Add a note" title="Add a note">${icon('plus')}</button>
-    </header>
-    <div class="float-list"></div>
-  `;
-  doc.querySelector('.float-head span').textContent = profile.businessName;
-  const list = doc.querySelector('.float-list');
-
-  if (!notes.length) {
-    const none = doc.createElement('p');
-    none.className = 'float-empty';
-    none.textContent = 'No notes yet. Click + to add one.';
-    list.appendChild(none);
-  }
-
-  notes.forEach(function (note, i) {
-    const card = doc.createElement('div');
-    card.className = 'float-note ' + note.color;
-    card.dataset.note = note.id;
-    card.style.setProperty('--tilt', [-1.2, 1, -0.6, 1.2][i % 4] + 'deg');
-    card.innerHTML = '<textarea aria-label="Sticky note" placeholder="Write something..."></textarea>' +
-      '<button class="float-delete" aria-label="Delete note" title="Delete">' + icon('plus') + '</button>';
-    const text = card.querySelector('textarea');
-    text.value = note.text;
-    function fit() {
-      text.style.height = 'auto';
-      text.style.height = Math.max(54, text.scrollHeight) + 'px';
-    }
-    floatWin.setTimeout(fit, 0);
-    text.addEventListener('input', function () {
-      fit();
-      note.text = text.value;
-      saveNotes(true);
-      refreshMainSoon();
-    });
-    text.addEventListener('blur', function () {
-      if (!note.text.trim()) {
-        notes = notes.filter(function (n) { return n !== note; });
-        saveNotes(true);
-        refreshMainSoon();
-        floatWin.setTimeout(function () { drawFloatingNotes(); }, 50);
-      }
-    });
-    card.querySelector('.float-delete').addEventListener('click', function () {
+    delete noteWindows[note.id];
+    if (!note.text.trim()) {
       notes = notes.filter(function (n) { return n !== note; });
-      saveNotes(true);
-      refreshMainSoon();
-      drawFloatingNotes(true);
-    });
-    list.appendChild(card);
-  });
-
-  doc.querySelector('.float-add').addEventListener('click', function () {
-    const used = notes.length ? notes[notes.length - 1].color : 'peach';
-    const note = { id: newId('n'), text: '', color: NOTE_COLORS[(NOTE_COLORS.indexOf(used) + 1) % NOTE_COLORS.length], created: new Date().toISOString() };
-    notes.push(note);
-    saveNotes(true);
-    drawFloatingNotes(true);
-    const boxes = doc.querySelectorAll('textarea');
-    boxes[boxes.length - 1].focus();
-  });
-
-  if (keep && !force) {
-    const again = doc.querySelector('.float-note[data-note="' + keep.id + '"] textarea');
-    if (again) {
-      again.focus();
-      again.setSelectionRange(keep.start, keep.end);
+      saveList(NOTES_KEY, notes);
     }
-  }
+    if (currentSection === 'myday' || currentSection === 'notes') showPage();
+  });
+  if (currentSection === 'myday' || currentSection === 'notes') showPage();
 }
 
-// Keeps My Day in step with the floating window
-function refreshMainSoon() {
-  clearTimeout(floatRefresh);
-  floatRefresh = setTimeout(function () {
-    if (currentSection === 'myday' && !(document.activeElement && document.activeElement.closest && document.activeElement.closest('.sticky'))) showPage();
+function drawNoteWindow(note) {
+  const win = noteWindows[note.id];
+  if (!win || win.closed) return;
+  const doc = win.document;
+  doc.body.className = 'note-window';
+  doc.body.style.setProperty('--note', noteColor(note.color));
+  doc.body.innerHTML = `
+    <div class="note-bar">
+      <button class="note-btn" data-act="new" title="New note" aria-label="New note">${icon('plus')}</button>
+      <span class="note-bar-space"></span>
+      <button class="note-btn" data-act="menu" title="Color and delete" aria-label="Color and delete">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+      </button>
+      <button class="note-btn" data-act="close" title="Close" aria-label="Close">${icon('plus')}</button>
+    </div>
+    <textarea class="note-text" aria-label="Sticky note" placeholder="Write here..."></textarea>
+  `;
+  const text = doc.querySelector('textarea');
+  text.value = note.text;
+  text.addEventListener('input', function () {
+    note.text = text.value;
+    saveNotes(note.id);
+    refreshBoardSoon();
+  });
+
+  const menu = noteMenu(doc, note, function (c) {
+    note.color = c;
+    doc.body.style.setProperty('--note', noteColor(c));
+    saveNotes(note.id);
+    refreshBoardSoon();
+  }, function () { deleteNote(note); });
+  doc.body.appendChild(menu);
+
+  doc.querySelector('[data-act="new"]').addEventListener('click', function () { popOutNote(addNote(note)); refreshBoardSoon(); });
+  doc.querySelector('[data-act="menu"]').addEventListener('click', function () { menu.hidden = !menu.hidden; });
+  doc.querySelector('[data-act="close"]').addEventListener('click', function () { win.close(); });
+  text.addEventListener('focus', function () { menu.hidden = true; });
+  win.setTimeout(function () { text.focus(); text.setSelectionRange(text.value.length, text.value.length); }, 0);
+}
+
+// Changes made on My Day show up in the note windows (but not the one being typed in)
+function syncNoteWindows(fromId) {
+  notes.forEach(function (note) {
+    const win = noteWindows[note.id];
+    if (!win || win.closed || note.id === fromId) return;
+    const text = win.document.querySelector('textarea');
+    if (text && text.value !== note.text) text.value = note.text;
+    win.document.body.style.setProperty('--note', noteColor(note.color));
+  });
+}
+
+let boardRefresh = null;
+function refreshBoardSoon() {
+  clearTimeout(boardRefresh);
+  boardRefresh = setTimeout(function () {
+    if ((currentSection === 'myday' || currentSection === 'notes') && !(document.activeElement && document.activeElement.closest && document.activeElement.closest('.note'))) showPage();
   }, 400);
 }
 
-function stickyNote(note, i) {
-  const card = document.createElement('div');
-  card.className = 'sticky ' + note.color;
-  card.dataset.note = note.id;
-  card.style.setProperty('--tilt', [-2, 1.5, -1, 2, -1.5, 1][i % 6] + 'deg');
-  card.innerHTML = `
-    <span class="sticky-tape" aria-hidden="true"></span>
-    <textarea class="sticky-text" aria-label="Sticky note" placeholder="Write something..."></textarea>
-    <div class="sticky-tools">
-      <div class="sticky-colors"></div>
-      <button class="sticky-delete" aria-label="Delete note" title="Delete">${icon('trash')}</button>
-    </div>
+// The note window can't load style.css, so it gets its own styles here
+function noteWindowStyles() {
+  const ink = '#2b2b2b';
+  return `
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body.note-window { display: flex; flex-direction: column; background: var(--note); color: ${ink};
+      font-family: Figtree, 'Segoe UI', sans-serif; }
+    svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .note-bar { display: flex; align-items: center; gap: 2px; height: 32px; padding: 0 4px;
+      background: rgba(0, 0, 0, 0.06); opacity: 0.35; transition: opacity 0.15s ease; }
+    body:hover .note-bar, .note-bar:focus-within { opacity: 1; }
+    .note-bar-space { flex: 1; }
+    .note-btn { display: grid; place-items: center; width: 30px; height: 26px; padding: 0; border: none; border-radius: 5px;
+      background: transparent; color: ${ink}; cursor: pointer; }
+    .note-btn:hover, .note-btn:focus-visible { background: rgba(0, 0, 0, 0.1); outline: none; }
+    .note-btn[data-act="menu"] svg { fill: currentColor; stroke: none; }
+    .note-btn[data-act="close"] svg { transform: rotate(45deg); }
+    .note-text { flex: 1; width: 100%; padding: 10px 16px 16px; border: none; background: transparent; color: ${ink};
+      font-family: Caveat, 'Segoe Print', 'Comic Sans MS', cursive; font-size: 30px; font-weight: 600; line-height: 1.15;
+      resize: none; outline: none; }
+    .note-text::placeholder { color: rgba(0, 0, 0, 0.35); }
+    .note-menu { position: absolute; top: 34px; right: 6px; z-index: 5; width: 240px; padding: 6px; border-radius: 10px;
+      background: #fff; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); }
+    .note-menu[hidden] { display: none; }
+    .note-menu-title { margin: 4px 6px 6px; color: #777; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+    .note-menu-colors { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; padding: 0 4px 8px; border-bottom: 1px solid #eee; }
+    .note-dot { position: relative; width: 20px; height: 20px; padding: 0; border: 1px solid rgba(0, 0, 0, 0.15); border-radius: 50%; cursor: pointer; }
+    .note-dot[aria-pressed="true"] { box-shadow: 0 0 0 2px #fff, 0 0 0 4px ${ink}; }
+    .note-dot.custom { background: conic-gradient(#ffb3b3, #ffe6a3, #c9f0b0, #b3e6ff, #d9c2ff, #ffb3e6, #ffb3b3); overflow: hidden; }
+    .note-dot.custom[aria-pressed="true"] { background: var(--picked); }
+    .note-dot.custom input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; border: 0; padding: 0; }
+    .note-menu-delete { display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 4px; padding: 8px; border: none;
+      border-radius: 6px; background: none; color: ${ink}; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; text-align: left; }
+    .note-menu-delete:hover { background: #f4f4f4; color: #c62a3f; }
   `;
-  const text = card.querySelector('textarea');
-  text.value = note.text;
-
-  // Grows to fit what's written
-  function fit() {
-    text.style.height = 'auto';
-    text.style.height = Math.max(96, text.scrollHeight) + 'px';
-  }
-  setTimeout(fit, 0);
-
-  let timer = null;
-  text.addEventListener('input', function () {
-    fit();
-    clearTimeout(timer);
-    timer = setTimeout(function () { note.text = text.value; saveNotes(); }, 300);
-  });
-  text.addEventListener('blur', function () {
-    clearTimeout(timer);
-    note.text = text.value;
-    // An empty note just goes away
-    if (!note.text.trim()) {
-      notes = notes.filter(function (n) { return n !== note; });
-      saveNotes();
-      setTimeout(function () { if (!card.contains(document.activeElement)) card.remove(); }, 150);
-      return;
-    }
-    saveNotes();
-  });
-
-  // Color dots
-  const colors = card.querySelector('.sticky-colors');
-  NOTE_COLORS.forEach(function (c) {
-    const dot = document.createElement('button');
-    dot.className = 'sticky-dot ' + c;
-    dot.setAttribute('aria-label', 'Make it ' + c);
-    dot.setAttribute('aria-pressed', c === note.color ? 'true' : 'false');
-    dot.addEventListener('mousedown', function (e) { e.preventDefault(); }); // keep typing
-    dot.addEventListener('click', function () {
-      card.classList.remove(note.color);
-      note.color = c;
-      card.classList.add(c);
-      colors.querySelectorAll('.sticky-dot').forEach(function (d) {
-        d.setAttribute('aria-pressed', d.classList.contains(c) ? 'true' : 'false');
-      });
-      if (!notes.includes(note) && note.text.trim()) notes.push(note);
-      saveNotes();
-    });
-    colors.appendChild(dot);
-  });
-
-  card.querySelector('.sticky-delete').addEventListener('mousedown', function (e) { e.preventDefault(); });
-  card.querySelector('.sticky-delete').addEventListener('click', function () {
-    note.text = text.value;
-    const index = notes.indexOf(note);
-    notes = notes.filter(function (n) { return n !== note; });
-    saveNotes();
-    card.remove();
-    if (note.text.trim()) {
-      showUndo('Note deleted', function () {
-        notes.splice(Math.max(0, index), 0, note);
-        saveNotes();
-        showPage();
-      });
-    }
-  });
-  return card;
 }
 
 // =========================================
@@ -6693,6 +6760,7 @@ function showSettings(page) {
   // Erasing asks twice, so nobody erases by accident
   // Backup: save everything to a file, or load it back
   box.querySelector('#backup-when').textContent = lastBackupText();
+  if (IN_FRAME) box.querySelector('#backup-save').hidden = true;
   box.querySelector('#backup-save').addEventListener('click', function () {
     saveBackup();
     box.querySelector('#backup-when').textContent = lastBackupText();
