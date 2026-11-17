@@ -138,6 +138,7 @@ const ICONS = {
   popout: '<rect x="3" y="5" width="18" height="14" rx="2"/><rect x="11.5" y="10.5" width="7" height="6" rx="1.2"/>',
   upload: '<path d="M12 15V4M7 9l5-5 5 5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
   file: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
+  globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9s1.3-6.4 3.8-9z"/>',
   sparkle: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/>',
 };
 
@@ -522,6 +523,193 @@ function sectionColor(id) {
 // PROFILE SETUP
 // =========================================
 
+// =========================================
+// LANGUAGE
+// The app is written in English. When another language is picked, every bit of text
+// on the screen is swapped for its translation as it shows up (see LANG_ES at the bottom).
+// Numbers, prices, dates and the business's own words are kept and put back in.
+// The language is saved on this computer, for every business.
+// =========================================
+const LANGUAGES = [
+  { id: 'en', label: 'English' },
+  { id: 'es', label: 'Español' },
+];
+let appLanguage = 'en';
+try { appLanguage = localStorage.getItem('bizStudio.language') || 'en'; } catch (error) { /* fine */ }
+if (!LANGUAGES.some(function (l) { return l.id === appLanguage; })) appLanguage = 'en';
+
+// For dates and times: "Tuesday, November 17" or "martes, 17 de noviembre"
+function appLocale() {
+  if (appLanguage === 'es') return typeof myCountry === 'function' && myCountry() === 'MX' ? 'es-MX' : 'es-US';
+  return 'en-US';
+}
+
+function setLanguage(id) {
+  appLanguage = id;
+  try { localStorage.setItem('bizStudio.language', id); } catch (error) { /* fine */ }
+  document.documentElement.lang = id;
+  // Draw everything again in the new language
+  if (!document.getElementById('app').hidden) { showMenu(); showPage(); }
+  else showSetup();
+}
+
+// The business's own words in other languages (Recipes, Orders...)
+const WORDS_ES = {
+  'Recipes': 'Recetas', 'Recipe': 'Receta', 'Orders': 'Pedidos', 'Order': 'Pedido',
+  'Customers': 'Clientes', 'Customer': 'Cliente', 'Ingredients': 'Ingredientes', 'Ingredient': 'Ingrediente',
+  'Classes': 'Clases', 'Class': 'Clase', 'Sessions': 'Sesiones', 'Session': 'Sesión',
+  'Clients': 'Clientes', 'Client': 'Cliente', 'Equipment': 'Equipo', 'Lessons': 'Clases', 'Lesson': 'Clase',
+  'Bookings': 'Reservas', 'Booking': 'Reserva', 'Students': 'Alumnos', 'Student': 'Alumno',
+  'Materials': 'Materiales', 'Material': 'Material', 'Menu items': 'Platillos', 'Menu item': 'Platillo',
+  'Packages': 'Paquetes', 'Package': 'Paquete', 'Events': 'Eventos', 'Event': 'Evento',
+  'Shoots': 'Sesiones de fotos', 'Shoot': 'Sesión de fotos', 'Gear': 'Equipo',
+  'Pieces': 'Piezas', 'Piece': 'Pieza', 'Commissions': 'Encargos', 'Commission': 'Encargo',
+  'Art supplies': 'Materiales de arte', 'Art supply': 'Material de arte',
+  'Products': 'Productos', 'Product': 'Producto', 'Supplies': 'Insumos', 'Supply': 'Insumo',
+  'Services': 'Servicios', 'Service': 'Servicio', 'Appointments': 'Citas', 'Appointment': 'Cita',
+  'Pet owners': 'Dueños de mascotas', 'Pet owner': 'Dueño de mascota', 'Jobs': 'Trabajos', 'Job': 'Trabajo',
+};
+function translateWord(word) {
+  if (appLanguage !== 'es') return word;
+  if (WORDS_ES[word]) return WORDS_ES[word];
+  const cap = word.charAt(0).toUpperCase() + word.slice(1);
+  if (WORDS_ES[cap]) return WORDS_ES[cap].toLowerCase();
+  return word;
+}
+
+// Month and day names (English and Spanish), so whole dates can be kept as they are
+const DATE_NAMES = '(?:January|February|March|April|May|June|July|August|September|October|November|December|' +
+  'Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sept|Sep|Oct|Nov|Dec|' +
+  'Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sun|Mon|Tue|Wed|Thu|Fri|Sat|' +
+  'enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre|' +
+  'ene|feb|mar|abr|jun|jul|ago|sept|sep|oct|nov|dic|' +
+  'domingo|lunes|martes|miércoles|jueves|viernes|sábado|dom|lun|mié|jue|vie|sáb)';
+const DATE_PART = '(?:' + DATE_NAMES + '\\.?|\\d{1,4}|de|del)';
+const DATE_RUN = new RegExp('(?<![\\wáéíóúñ])' + DATE_PART + '(?:[\\s,]+' + DATE_PART + ')*(?![\\wáéíóúñ])', 'g');
+const HAS_DATE_NAME = new RegExp('(?<![\\wáéíóúñ])' + DATE_NAMES + '(?![\\wáéíóúñ])');
+
+function escapeRegex(text) { return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+// Turns "3 things planned this week" into "{n} things planned this week", keeping the 3
+function textKey(text) {
+  let key = text.replace(/\s+/g, ' ').trim();
+  const values = [];
+  // The business name
+  if (profile.businessName && profile.businessName.length > 1) {
+    key = key.split(profile.businessName).join('{B}');
+  }
+  // The business's own words, longest first
+  const w = words();
+  const list = [];
+  [['P', w.products], ['O', w.orders], ['C', w.customers], ['S', w.supplies]].forEach(function (pair) {
+    const many = pair[1] || '';
+    const one = singular(many);
+    list.push([many, '{' + pair[0] + '}'], [many.toLowerCase(), '{' + pair[0].toLowerCase() + '}'],
+      [one, '{' + pair[0] + 'a}'], [one.toLowerCase(), '{' + pair[0].toLowerCase() + 'a}']);
+  });
+  list.sort(function (a, b) { return b[0].length - a[0].length; }).forEach(function (pair) {
+    if (pair[0].length < 2) return;
+    key = key.replace(new RegExp('(?<![\\w{])' + escapeRegex(pair[0]) + '(?![\\w}])', 'g'), pair[1]);
+  });
+  // Dates (whole runs like "Tue, Nov 17" or "17 de noviembre")
+  key = key.replace(DATE_RUN, function (run) {
+    if (!HAS_DATE_NAME.test(run)) return run;
+    values.push(['d', run]);
+    return '{d}';
+  });
+  // Times like 3:30 PM
+  key = key.replace(/\b\d{1,2}:\d{2}\s?(?:AM|PM|a\. ?m\.|p\. ?m\.)/gi, function (t) { values.push(['t', t]); return '{t}'; });
+  // Money, then other numbers
+  key = key.replace(/-?\$\d[\d,]*(?:\.\d+)?/g, function (m) { values.push(['m', m]); return '{m}'; });
+  key = key.replace(/(?<![{\w])\d+(?:[.,]\d+)*%?/g, function (n) { values.push(['n', n]); return '{n}'; });
+  return { key: key, values: values };
+}
+
+// Puts the kept values back into the translated text
+function fillKey(template, values) {
+  const queues = { d: [], t: [], m: [], n: [] };
+  values.forEach(function (v) { queues[v[0]].push(v[1]); });
+  const w = words();
+  const own = {
+    P: w.products, O: w.orders, C: w.customers, S: w.supplies,
+  };
+  return template
+    .replace(/\{([dtmn])\}/g, function (all, kind) { return queues[kind].length ? queues[kind].shift() : ''; })
+    .replace(/\{B\}/g, profile.businessName || '')
+    .replace(/\{([POCSpocs])(a?)\}/g, function (all, letter, one) {
+      let word = own[letter.toUpperCase()] || '';
+      if (one) word = singular(word);
+      word = translateWord(word);
+      return letter === letter.toLowerCase() ? word.toLowerCase() : word;
+    });
+}
+
+function translateText(text) {
+  if (appLanguage !== 'es' || !text || !/[A-Za-z]/.test(text)) return null;
+  const dict = LANG_ES;
+  const trimmed = text.trim();
+  if (Object.prototype.hasOwnProperty.call(dict, trimmed)) return text.replace(trimmed, dict[trimmed]);
+  const k = textKey(trimmed);
+  if (Object.prototype.hasOwnProperty.call(dict, k.key)) return text.replace(trimmed, fillKey(dict[k.key], k.values));
+  // "Tuesday, Christmas" and lists like "Goal one, Goal two"
+  const dated = k.key.match(/^\{d\}, (.+)$/);
+  if (dated && Object.prototype.hasOwnProperty.call(dict, dated[1])) return text.replace(trimmed, fillKey('{d}, ' + dict[dated[1]], k.values));
+  if (k.key.indexOf(', ') > 0 && k.values.length === 0) {
+    const parts = k.key.split(', ');
+    if (parts.every(function (part) { return Object.prototype.hasOwnProperty.call(dict, part); })) {
+      return text.replace(trimmed, fillKey(parts.map(function (part) { return dict[part]; }).join(', '), []));
+    }
+  }
+  // Sentences with names in them
+  for (let i = 0; i < LANG_ES_PATTERNS.length; i++) {
+    const rule = LANG_ES_PATTERNS[i];
+    if (rule[0].test(k.key)) return text.replace(trimmed, fillKey(k.key.replace(rule[0], rule[1]), k.values));
+  }
+  // A word on its own, like a business's own word in the menu
+  if (/^[A-Z][a-z ]+$/.test(trimmed) && WORDS_ES[trimmed]) return text.replace(trimmed, WORDS_ES[trimmed]);
+  return null;
+}
+
+const SKIP_TAGS = { SCRIPT: 1, STYLE: 1, TEXTAREA: 1, INPUT: 1, OPTION: 0, CODE: 1 };
+const TRANSLATE_ATTRS = ['placeholder', 'title', 'aria-label'];
+
+function translateNode(node) {
+  if (appLanguage === 'en') return;
+  if (node.nodeType === 3) {
+    const parent = node.parentNode;
+    if (!parent || SKIP_TAGS[parent.nodeName] || (parent.closest && parent.closest('[data-own-words], .day-sticky'))) return;
+    const out = translateText(node.nodeValue);
+    if (out !== null && out !== node.nodeValue) node.nodeValue = out;
+    return;
+  }
+  if (node.nodeType !== 1 || SKIP_TAGS[node.nodeName] === 1 && node.nodeName !== 'INPUT' && node.nodeName !== 'TEXTAREA') return;
+  TRANSLATE_ATTRS.forEach(function (attr) {
+    const value = node.getAttribute && node.getAttribute(attr);
+    if (!value) return;
+    const out = translateText(value);
+    if (out !== null && out !== value) node.setAttribute(attr, out);
+  });
+  if (node.nodeName === 'INPUT' && (node.type === 'button' || node.type === 'submit') && node.value) {
+    const out = translateText(node.value);
+    if (out !== null) node.value = out;
+  }
+  if (SKIP_TAGS[node.nodeName] === 1) return;
+  for (let child = node.firstChild; child; child = child.nextSibling) translateNode(child);
+}
+
+// Watch the page and translate anything new
+const languageWatcher = new MutationObserver(function (changes) {
+  if (appLanguage === 'en') return;
+  changes.forEach(function (change) {
+    if (change.type === 'characterData') translateNode(change.target);
+    else if (change.type === 'attributes') translateNode(change.target);
+    else change.addedNodes.forEach(translateNode);
+  });
+});
+languageWatcher.observe(document.documentElement, {
+  childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: TRANSLATE_ATTRS,
+});
+
 // The pages of Profile Setup
 const SETUP_STEPS = ['Business type', 'Your business', 'Look', 'Goals'];
 
@@ -529,6 +717,7 @@ const SETUP_STEPS = ['Business type', 'Your business', 'Look', 'Goals'];
 const profile = {
   businessName: '',
   businessType: '',
+  country: '',       // where they're based, for the holidays on the calendar
   otherType: '',     // what they typed for "Something else"
   customWords: { products: 'Products', orders: 'Orders', customers: 'Customers', supplies: 'Supplies' },
   theme: 'classic',
@@ -690,6 +879,7 @@ function showSetupSteps() {
 function showSetup() {
   document.getElementById('app').hidden = true;
   document.getElementById('setup').hidden = false;
+  showSetupLanguage();
   showSetupSteps();
   showSetupCancel();
 
@@ -702,6 +892,24 @@ function showSetup() {
   if (setupStep === 1) showNamePage();
   if (setupStep === 2) showLookPage();
   if (setupStep === 3) showGoalsPage();
+}
+
+// A language picker at the top of setup, so it can be changed from the very first page
+function showSetupLanguage() {
+  if (document.getElementById('setup-lang')) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'setup-lang';
+  wrap.innerHTML = icon('globe') + '<select id="setup-lang" class="input" aria-label="Language"></select>';
+  const select = wrap.querySelector('select');
+  LANGUAGES.forEach(function (l) {
+    const o = document.createElement('option');
+    o.value = l.id;
+    o.textContent = l.label;
+    select.appendChild(o);
+  });
+  select.value = appLanguage;
+  select.addEventListener('change', function () { setLanguage(select.value); });
+  document.querySelector('.setup-top').appendChild(wrap);
 }
 
 // When adding another business, a way back to the one they came from
@@ -1037,6 +1245,10 @@ function showNamePage() {
     <input id="business-name" class="input" autocomplete="off">
     <p id="setup-error" class="error" role="alert"></p>
 
+    <label class="label" for="business-country">Where are you based?</label>
+    <select id="business-country" class="input"></select>
+    <p class="field-hint">We'll put your country's holidays on your calendar.</p>
+
     <p class="label photo-label">Profile picture (optional)</p>
     <div class="photo-picker" id="photo-picker"></div>
 
@@ -1046,6 +1258,16 @@ function showNamePage() {
     </div>
   `;
   showPhotoPicker();
+
+  const countryBox = document.getElementById('business-country');
+  COUNTRIES.forEach(function (c) {
+    const option = document.createElement('option');
+    option.value = c.id;
+    option.textContent = c.label;
+    countryBox.appendChild(option);
+  });
+  countryBox.value = myCountry();
+  countryBox.addEventListener('change', function () { profile.country = countryBox.value; });
 
   const nameBox = document.getElementById('business-name');
   nameBox.placeholder = exampleName(); // a sample name that fits their business
@@ -1120,6 +1342,7 @@ function saveName() {
   }
 
   profile.businessName = name;
+  profile.country = document.getElementById('business-country').value;
   if (editing) return finishSetup();
   setupStep = 2;
   showSetup();
@@ -1300,7 +1523,7 @@ function showLookPreview() {
         </div>
         <div class="mini-main">
           <h3>${greeting()}!</h3>
-          <p class="mini-date">${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+          <p class="mini-date">${new Date().toLocaleDateString(appLocale(), { weekday: 'long', month: 'long', day: 'numeric' })}</p>
 
           <div class="mini-stats">
             <div class="mini-stat sky"><strong>3</strong><span class="mini-stat-label"></span></div>
@@ -1328,7 +1551,7 @@ function showLookPreview() {
   const items = preview.querySelectorAll('.mini-item');
   items[0].textContent = samples[0];
   items[1].textContent = samples[1];
-  preview.querySelector('.mini-btn').textContent = '+ New ' + w.orders.toLowerCase().replace(/s$/, '');
+  preview.querySelector('.mini-btn').textContent = '+ New ' + singular(w.orders.toLowerCase());
 }
 
 // ---------- Page 4: goals ----------
@@ -1559,7 +1782,7 @@ function showPage() {
   let subtitle = '';
   if (section.id === 'myday') {
     title = greeting();
-    subtitle = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+    subtitle = new Date().toLocaleDateString(appLocale(), { weekday: 'long', month: 'long', day: 'numeric' });
   }
 
   page.innerHTML = `
@@ -2016,7 +2239,7 @@ function fancyDate(input, options) {
     if (!v) { text.textContent = options.placeholder || 'Pick a day'; return; }
     const d = toDate(v);
     const sameYear = d.getFullYear() === new Date().getFullYear();
-    text.textContent = d.toLocaleDateString('en-US',
+    text.textContent = d.toLocaleDateString(appLocale(),
       sameYear ? { weekday: 'long', month: 'long', day: 'numeric' } : { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
   }
   showText();
@@ -2069,7 +2292,7 @@ function fancyDate(input, options) {
       <div class="date-days"></div>
       <div class="date-pop-foot"></div>
     `;
-    pop.querySelector('b').textContent = month.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    pop.querySelector('b').textContent = month.toLocaleDateString(appLocale(), { month: 'long', year: 'numeric' });
     pop.querySelectorAll('[data-move]').forEach(function (b) {
       b.addEventListener('click', function () {
         month = new Date(month.getFullYear(), month.getMonth() + Number(b.dataset.move), 1);
@@ -2087,7 +2310,7 @@ function fancyDate(input, options) {
       cell.className = 'date-cell' + (day === today ? ' today' : '') + (day === input.value ? ' picked' : '') +
         (day < today ? ' past' : '');
       cell.textContent = n;
-      cell.setAttribute('aria-label', toDate(day).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }));
+      cell.setAttribute('aria-label', toDate(day).toLocaleDateString(appLocale(), { weekday: 'long', month: 'long', day: 'numeric' }));
       cell.addEventListener('click', function () {
         pick(day);
         close();
@@ -2534,12 +2757,12 @@ function showUndo(message, undo) {
 
 // "Orders" -> "order", "Appointments" -> "appointment"
 function oneOrder() {
-  return words().orders.replace(/s$/, '').toLowerCase();
+  return singular(words().orders).toLowerCase();
 }
 
 // $45.00 style money
 function money(amount) {
-  return Number(amount || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+  return Number(amount || 0).toLocaleString(appLocale(), { style: 'currency', currency: 'USD' });
 }
 
 // Turns "2026-11-14" into a date at midnight, in the owner's time zone
@@ -2573,7 +2796,7 @@ function dueText(order) {
 
 // "Sat, Nov 14"
 function niceDate(text) {
-  return toDate(text).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  return toDate(text).toLocaleDateString(appLocale(), { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
 // How urgent an order is, for its color: late, soon, later or finished
@@ -2714,7 +2937,7 @@ function orderRow(order) {
     <button class="order-main" title="Edit">
       <span class="date-block">
         <b>${date.getDate()}</b>
-        <span>${date.toLocaleDateString('en-US', { month: 'short' })}</span>
+        <span>${date.toLocaleDateString(appLocale(), { month: 'short' })}</span>
       </span>
       <span class="order-text">
         <strong class="order-name"></strong>
@@ -2778,7 +3001,7 @@ function niceTime(text) {
   const parts = text.split(':').map(Number);
   const d = new Date();
   d.setHours(parts[0], parts[1]);
-  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  return d.toLocaleTimeString(appLocale(), { hour: 'numeric', minute: '2-digit' });
 }
 
 // ---------- Adding and editing an order ----------
@@ -2873,7 +3096,7 @@ function showOrderForm(page) {
   // Words that fit the business
   page.querySelector('#order-back span').textContent = 'Back to ' + w.orders;
   page.querySelector('h1').textContent = isNew ? 'New ' + oneOrder() : 'Edit ' + oneOrder();
-  page.querySelector('label[for="o-customer"]').textContent = w.customers.replace(/s$/, '') + ' name';
+  page.querySelector('label[for="o-customer"]').textContent = singular(w.customers) + ' name';
   page.querySelector('label[for="o-item"]').textContent = 'What they want';
   page.querySelector('#o-item').placeholder = findType(profile.businessType).samples[0];
   page.querySelector('#o-save').textContent = isNew ? 'Add ' + oneOrder() : 'Save changes';
@@ -2968,7 +3191,7 @@ function showOrderForm(page) {
     fields.forEach(function (name) { values[name] = page.querySelector('#o-' + name).value.trim(); });
 
     const missing = [];
-    if (!values.customer) missing.push(w.customers.replace(/s$/, '').toLowerCase() + ' name');
+    if (!values.customer) missing.push(singular(w.customers).toLowerCase() + ' name');
     if (!values.item) missing.push('what they want');
     if (!values.due) missing.push('due date');
     if (missing.length > 0) {
@@ -3095,7 +3318,7 @@ function matchChoices() {
   const w = words();
   const choices = [
     { id: '', label: 'Leave it out' },
-    { id: 'customer', label: w.customers.replace(/s$/, '') + ' name' },
+    { id: 'customer', label: singular(w.customers) + ' name' },
     { id: 'contact', label: 'Phone or email' },
     { id: 'item', label: 'What they want' },
     { id: 'due', label: 'Due date' },
@@ -3425,7 +3648,7 @@ function showImport(page) {
   page.querySelector('#import-go').addEventListener('click', function () {
     const error = page.querySelector('#import-error');
     if (!matches.includes('customer')) {
-      error.textContent = 'Pick which question has the ' + w.customers.replace(/s$/, '').toLowerCase() + '\'s name.';
+      error.textContent = 'Pick which question has the ' + singular(w.customers).toLowerCase() + '\'s name.';
       return;
     }
     if (!matches.includes('item')) {
@@ -3543,7 +3766,7 @@ function personColor(key) {
 }
 
 function oneCustomer() {
-  return words().customers.replace(/s$/, '').toLowerCase();
+  return singular(words().customers).toLowerCase();
 }
 
 // Everyone, with their orders and totals
@@ -3594,7 +3817,7 @@ function findCustomer(key) {
 
 // "Nov 14, 2026" (no weekday)
 function shortDate(text) {
-  return toDate(text).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return toDate(text).toLocaleDateString(appLocale(), { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 function showCustomers(page) {
@@ -3985,15 +4208,248 @@ function dateText(d) {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
 
+// Day, Week, Month or Year (remembered on this computer)
+const CAL_VIEWS = [['day', 'Day'], ['week', 'Week'], ['month', 'Month'], ['year', 'Year']];
+let calendarView = 'month';
+try { calendarView = localStorage.getItem('bizStudio.calendarView') || 'month'; } catch (error) { /* fine */ }
+if (!CAL_VIEWS.some(function (v) { return v[0] === calendarView; })) calendarView = 'month';
+
+function setCalendarView(view) {
+  calendarView = view;
+  try { localStorage.setItem('bizStudio.calendarView', view); } catch (error) { /* fine */ }
+  if (view === 'month') {
+    const d = toDate(calendarDay);
+    calendarMonth = dateText(new Date(d.getFullYear(), d.getMonth(), 1));
+  }
+  showPage();
+}
+
+function addDays(text, n) {
+  const d = toDate(text);
+  return dateText(new Date(d.getFullYear(), d.getMonth(), d.getDate() + n));
+}
+
+// The Sunday that starts a day's week
+function weekStart(text) {
+  return addDays(text, -toDate(text).getDay());
+}
+
+// ---------- Holidays: worked out for any year, for the country they picked in setup ----------
+const COUNTRIES = [
+  { id: 'US', label: 'United States' },
+  { id: 'CA', label: 'Canada' },
+  { id: 'MX', label: 'Mexico' },
+  { id: 'GB', label: 'United Kingdom' },
+  { id: 'IE', label: 'Ireland' },
+  { id: 'AU', label: 'Australia' },
+  { id: 'NZ', label: 'New Zealand' },
+  { id: 'none', label: 'Somewhere else (no holidays)' },
+];
+function findCountry(id) {
+  return COUNTRIES.find(function (c) { return c.id === id; }) || COUNTRIES[0];
+}
+// A good first guess, from the computer's language setting (like "en-CA")
+function guessCountry() {
+  let region = '';
+  try { region = ((navigator.languages && navigator.languages[0]) || navigator.language || '').split('-')[1] || ''; } catch (error) { /* fine */ }
+  region = region.toUpperCase();
+  if (region === 'UK') region = 'GB';
+  return COUNTRIES.some(function (c) { return c.id === region; }) ? region : 'US';
+}
+function myCountry() {
+  return profile.country || guessCountry();
+}
+
+const holidayCache = {};
+function holidaysFor(year, country) {
+  country = country || myCountry();
+  const cacheKey = country + year;
+  if (holidayCache[cacheKey]) return holidayCache[cacheKey];
+  const list = {};
+  function put(month, day, name) {
+    const key = dateText(new Date(year, month, day));
+    list[key] = (list[key] ? list[key] + ' · ' : '') + name;
+  }
+  // The nth weekday of a month (weekday 0 = Sunday). n = -1 means the last one.
+  function nth(month, weekday, n) {
+    if (n === -1) {
+      const last = new Date(year, month + 1, 0);
+      return last.getDate() - ((last.getDay() - weekday + 7) % 7);
+    }
+    const first = new Date(year, month, 1).getDay();
+    return 1 + ((weekday - first + 7) % 7) + (n - 1) * 7;
+  }
+  // Easter Sunday
+  const a = year % 19, b = Math.floor(year / 100), c = year % 100, d = Math.floor(b / 4), e = b % 4;
+  const f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const em = Math.floor((h + l - 7 * m + 114) / 31) - 1;
+  const ed = ((h + l - 7 * m + 114) % 31) + 1;
+  function easter(plus, name) { put(em, ed + plus, name); }
+
+  if (country === 'US') {
+    const thanksgiving = nth(10, 4, 4);
+    put(0, 1, 'New Year\'s Day');
+    put(0, nth(0, 1, 3), 'Martin Luther King Jr. Day');
+    put(1, 14, 'Valentine\'s Day');
+    put(1, nth(1, 1, 3), 'Presidents\' Day');
+    put(2, 17, 'St. Patrick\'s Day');
+    easter(0, 'Easter');
+    put(4, nth(4, 0, 2), 'Mother\'s Day');
+    put(4, nth(4, 1, -1), 'Memorial Day');
+    put(5, nth(5, 0, 3), 'Father\'s Day');
+    put(5, 19, 'Juneteenth');
+    put(6, 4, 'Independence Day');
+    put(8, nth(8, 1, 1), 'Labor Day');
+    put(9, nth(9, 1, 2), 'Indigenous Peoples\' Day');
+    put(9, 31, 'Halloween');
+    put(10, 11, 'Veterans Day');
+    put(10, thanksgiving, 'Thanksgiving');
+    put(10, thanksgiving + 1, 'Black Friday');
+    put(10, thanksgiving + 2, 'Small Business Saturday');
+    put(11, 24, 'Christmas Eve');
+    put(11, 25, 'Christmas');
+    put(11, 31, 'New Year\'s Eve');
+  }
+  if (country === 'CA') {
+    const may24 = new Date(year, 4, 24);
+    put(0, 1, 'New Year\'s Day');
+    put(1, nth(1, 1, 3), 'Family Day');
+    put(1, 14, 'Valentine\'s Day');
+    put(2, 17, 'St. Patrick\'s Day');
+    easter(-2, 'Good Friday');
+    easter(0, 'Easter');
+    put(4, nth(4, 0, 2), 'Mother\'s Day');
+    put(4, 24 - ((may24.getDay() + 6) % 7), 'Victoria Day');
+    put(5, nth(5, 0, 3), 'Father\'s Day');
+    put(6, 1, 'Canada Day');
+    put(7, nth(7, 1, 1), 'Civic Holiday');
+    put(8, nth(8, 1, 1), 'Labour Day');
+    put(8, 30, 'Truth and Reconciliation Day');
+    put(9, nth(9, 1, 2), 'Thanksgiving');
+    put(9, 31, 'Halloween');
+    put(10, 11, 'Remembrance Day');
+    put(11, 24, 'Christmas Eve');
+    put(11, 25, 'Christmas');
+    put(11, 26, 'Boxing Day');
+    put(11, 31, 'New Year\'s Eve');
+  }
+  if (country === 'MX') {
+    put(0, 1, 'New Year\'s Day');
+    put(0, 6, 'Three Kings Day');
+    put(1, nth(1, 1, 1), 'Constitution Day');
+    put(1, 14, 'Valentine\'s Day');
+    put(2, nth(2, 1, 3), 'Benito Juárez\'s Birthday');
+    easter(-3, 'Holy Thursday');
+    easter(-2, 'Good Friday');
+    easter(0, 'Easter');
+    put(3, 30, 'Children\'s Day');
+    put(4, 1, 'Labor Day');
+    put(4, 5, 'Cinco de Mayo');
+    put(4, 10, 'Mother\'s Day');
+    put(5, nth(5, 0, 3), 'Father\'s Day');
+    put(8, 16, 'Independence Day');
+    put(10, 1, 'Day of the Dead');
+    put(10, 2, 'Day of the Dead');
+    put(10, nth(10, 1, 3), 'Revolution Day');
+    put(11, 12, 'Day of the Virgin of Guadalupe');
+    put(11, 24, 'Christmas Eve');
+    put(11, 25, 'Christmas');
+    put(11, 31, 'New Year\'s Eve');
+  }
+  if (country === 'GB') {
+    put(0, 1, 'New Year\'s Day');
+    put(1, 14, 'Valentine\'s Day');
+    easter(-21, 'Mother\'s Day');
+    easter(-2, 'Good Friday');
+    easter(0, 'Easter Sunday');
+    easter(1, 'Easter Monday');
+    put(4, nth(4, 1, 1), 'Early May bank holiday');
+    put(4, nth(4, 1, -1), 'Spring bank holiday');
+    put(5, nth(5, 0, 3), 'Father\'s Day');
+    put(7, nth(7, 1, -1), 'Summer bank holiday');
+    put(9, 31, 'Halloween');
+    put(10, 5, 'Bonfire Night');
+    put(10, nth(10, 0, 2), 'Remembrance Sunday');
+    put(11, 24, 'Christmas Eve');
+    put(11, 25, 'Christmas Day');
+    put(11, 26, 'Boxing Day');
+    put(11, 31, 'New Year\'s Eve');
+  }
+  if (country === 'IE') {
+    put(0, 1, 'New Year\'s Day');
+    put(1, nth(1, 1, 1), 'St. Brigid\'s Day bank holiday');
+    put(1, 14, 'Valentine\'s Day');
+    easter(-21, 'Mother\'s Day');
+    put(2, 17, 'St. Patrick\'s Day');
+    easter(-2, 'Good Friday');
+    easter(0, 'Easter Sunday');
+    easter(1, 'Easter Monday');
+    put(4, nth(4, 1, 1), 'May bank holiday');
+    put(5, nth(5, 1, 1), 'June bank holiday');
+    put(5, nth(5, 0, 3), 'Father\'s Day');
+    put(7, nth(7, 1, 1), 'August bank holiday');
+    put(9, nth(9, 1, -1), 'October bank holiday');
+    put(9, 31, 'Halloween');
+    put(11, 24, 'Christmas Eve');
+    put(11, 25, 'Christmas Day');
+    put(11, 26, 'St. Stephen\'s Day');
+    put(11, 31, 'New Year\'s Eve');
+  }
+  if (country === 'AU') {
+    put(0, 1, 'New Year\'s Day');
+    put(0, 26, 'Australia Day');
+    put(1, 14, 'Valentine\'s Day');
+    easter(-2, 'Good Friday');
+    easter(0, 'Easter Sunday');
+    easter(1, 'Easter Monday');
+    put(3, 25, 'Anzac Day');
+    put(4, nth(4, 0, 2), 'Mother\'s Day');
+    put(5, nth(5, 1, 2), 'King\'s Birthday');
+    put(8, nth(8, 0, 1), 'Father\'s Day');
+    put(9, 31, 'Halloween');
+    put(11, 24, 'Christmas Eve');
+    put(11, 25, 'Christmas Day');
+    put(11, 26, 'Boxing Day');
+    put(11, 31, 'New Year\'s Eve');
+  }
+  if (country === 'NZ') {
+    put(0, 1, 'New Year\'s Day');
+    put(0, 2, 'Day after New Year\'s');
+    put(1, 6, 'Waitangi Day');
+    put(1, 14, 'Valentine\'s Day');
+    easter(-2, 'Good Friday');
+    easter(0, 'Easter Sunday');
+    easter(1, 'Easter Monday');
+    put(3, 25, 'Anzac Day');
+    put(4, nth(4, 0, 2), 'Mother\'s Day');
+    put(5, nth(5, 1, 1), 'King\'s Birthday');
+    put(8, nth(8, 0, 1), 'Father\'s Day');
+    put(9, nth(9, 1, 4), 'Labour Day');
+    put(9, 31, 'Halloween');
+    put(11, 25, 'Christmas Day');
+    put(11, 26, 'Boxing Day');
+    put(11, 31, 'New Year\'s Eve');
+  }
+  holidayCache[cacheKey] = list;
+  return list;
+}
+function holidayOn(day) {
+  return holidaysFor(toDate(day).getFullYear())[day] || '';
+}
+
 function showCalendar(page) {
   const w = words();
   const today = todayText();
+  if (!calendarDay) calendarDay = today;
+  const view = calendarView;
   const month = calendarMonth ? toDate(calendarMonth) : new Date(toDate(today).getFullYear(), toDate(today).getMonth(), 1);
 
-  // Orders, events and to-dos by day
+  // Orders, events, to-dos and sticky notes by day
   const byDay = {};
   const eventsByDay = {};
   const tasksByDay = {};
+  const notesByDay = {};
   orders.forEach(function (o) {
     if (!o.due) return;
     (byDay[o.due] = byDay[o.due] || []).push(o);
@@ -4002,206 +4458,396 @@ function showCalendar(page) {
   tasks.forEach(function (t) {
     if (t.due && !t.done) (tasksByDay[t.due] = tasksByDay[t.due] || []).push(t);
   });
+  notes.forEach(function (n) { if (n.date) (notesByDay[n.date] = notesByDay[n.date] || []).push(n); });
   [byDay, eventsByDay].forEach(function (lists) {
     Object.keys(lists).forEach(function (day) {
       lists[day].sort(function (a, b) { return (a.time || '99').localeCompare(b.time || '99'); });
     });
   });
 
-  const monthName = month.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-  const inMonth = orders.filter(function (o) {
-    const d = toDate(o.due);
-    return d.getMonth() === month.getMonth() && d.getFullYear() === month.getFullYear();
-  }).length;
+  // Everything on one day, as little labels: events, then orders, then to-dos, then notes
+  function itemsFor(day, withHoliday) {
+    const all = [];
+    const holiday = withHoliday === false ? '' : holidayOn(day);
+    if (holiday) all.push({ cls: 'holiday', text: holiday, title: holiday, open: function () { calendarDay = day; setCalendarView('day'); } });
+    (eventsByDay[day] || []).forEach(function (e) {
+      all.push({ cls: 'event', text: e.title, time: e.time, title: e.title + (e.time ? ' at ' + niceTime(e.time) : ''),
+        open: function () { editEvent(e); } });
+    });
+    (byDay[day] || []).forEach(function (o) {
+      all.push({ cls: urgency(o) === 'late' ? 'late' : findStatus(o.status).color, text: o.customer.split(' ')[0],
+        long: o.customer + ': ' + o.item, time: o.time,
+        title: o.customer + ': ' + o.item + (o.time ? ' at ' + niceTime(o.time) : ''),
+        open: function () { openOrderForm(o.id); } });
+    });
+    (tasksByDay[day] || []).forEach(function (t) {
+      all.push({ cls: 'todo', text: t.text, title: 'To-do: ' + t.text,
+        open: function () { calendarDay = day; setCalendarView('day'); } });
+    });
+    (notesByDay[day] || []).forEach(function (n) {
+      all.push({ cls: 'sticky', text: firstLine(n.text), title: 'Sticky note: ' + n.text, color: noteColor(n.color),
+        open: function () { goTo('notes'); focusNoteNow(n); } });
+    });
+    return all;
+  }
+
+  function pill(thing, tag) {
+    const el = document.createElement(tag || 'span');
+    el.className = 'cal-pill ' + thing.cls;
+    el.textContent = thing.text;
+    el.title = thing.title;
+    if (thing.color) el.style.setProperty('--note', thing.color);
+    return el;
+  }
 
   page.innerHTML = `
-    <header class="page-head with-button">
+    <header class="page-head with-button cal-head">
       <div>
         <h1>Calendar</h1>
         <p></p>
       </div>
-      <div class="month-nav">
-        <button class="btn secondary small" id="cal-today">Today</button>
-        <button class="round-btn" id="cal-prev" aria-label="Last month">${icon('back')}</button>
-        <h2 class="month-name"></h2>
-        <button class="round-btn" id="cal-next" aria-label="Next month">${icon('chevron')}</button>
+      <div class="cal-controls">
+        <div class="view-switch" role="tablist" aria-label="Calendar view"></div>
+        <div class="month-nav">
+          <button class="btn secondary small" id="cal-today">Today</button>
+          <button class="round-btn" id="cal-prev">${icon('back')}</button>
+          <h2 class="month-name"></h2>
+          <button class="round-btn" id="cal-next">${icon('chevron')}</button>
+        </div>
       </div>
     </header>
-    <div class="calendar-layout">
-      <div class="calendar">
-        <div class="cal-weekdays"></div>
-        <div class="cal-grid"></div>
-      </div>
-      <aside class="day-panel" id="day-panel"></aside>
-    </div>
+    <div class="cal-body cal-view-${view}"></div>
   `;
-  const eventsInMonth = events.filter(function (e) {
-    const d = toDate(e.date);
-    return d.getMonth() === month.getMonth() && d.getFullYear() === month.getFullYear();
-  }).length;
-  page.querySelector('.page-head p').textContent = !usesOrders()
-    ? (eventsInMonth ? eventsInMonth + (eventsInMonth === 1 ? ' event' : ' events') + ' in ' : 'Nothing planned in ') + month.toLocaleDateString('en-US', { month: 'long' }) + (eventsInMonth ? '' : ' yet')
-    : inMonth === 0
-    ? 'Nothing due in ' + month.toLocaleDateString('en-US', { month: 'long' }) + ' yet'
-    : inMonth + ' ' + (inMonth === 1 ? oneOrder() : w.orders.toLowerCase()) + ' due in ' + month.toLocaleDateString('en-US', { month: 'long' });
-  page.querySelector('.month-name').textContent = monthName;
+  const body = page.querySelector('.cal-body');
+  const sub = page.querySelector('.page-head p');
+  const title = page.querySelector('.month-name');
 
-  function goMonth(change) {
-    const next = new Date(month.getFullYear(), month.getMonth() + change, 1);
-    calendarMonth = dateText(next);
+  // Day | Week | Month | Year
+  const switcher = page.querySelector('.view-switch');
+  CAL_VIEWS.forEach(function (v) {
+    const b = document.createElement('button');
+    b.setAttribute('role', 'tab');
+    b.setAttribute('aria-selected', v[0] === view ? 'true' : 'false');
+    b.textContent = v[1];
+    b.addEventListener('click', function () { if (v[0] !== view) setCalendarView(v[0]); });
+    switcher.appendChild(b);
+  });
+
+  // Back and forward move by a day, a week, a month or a year
+  const names = { day: ['Day before', 'Next day'], week: ['Last week', 'Next week'], month: ['Last month', 'Next month'], year: ['Last year', 'Next year'] };
+  page.querySelector('#cal-prev').setAttribute('aria-label', names[view][0]);
+  page.querySelector('#cal-next').setAttribute('aria-label', names[view][1]);
+  function move(change) {
+    if (view === 'day') calendarDay = addDays(calendarDay, change);
+    if (view === 'week') calendarDay = addDays(calendarDay, change * 7);
+    if (view === 'month') calendarMonth = dateText(new Date(month.getFullYear(), month.getMonth() + change, 1));
+    if (view === 'year') {
+      const d = toDate(calendarDay);
+      calendarDay = dateText(new Date(d.getFullYear() + change, d.getMonth(), 1));
+    }
     showPage();
   }
-  page.querySelector('#cal-prev').addEventListener('click', function () { goMonth(-1); });
-  page.querySelector('#cal-next').addEventListener('click', function () { goMonth(1); });
+  page.querySelector('#cal-prev').addEventListener('click', function () { move(-1); });
+  page.querySelector('#cal-next').addEventListener('click', function () { move(1); });
   page.querySelector('#cal-today').addEventListener('click', function () {
     calendarMonth = null;
     calendarDay = today;
     showPage();
   });
 
-  ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(function (name) {
-    const cell = document.createElement('span');
-    cell.textContent = name;
-    page.querySelector('.cal-weekdays').appendChild(cell);
-  });
+  if (view === 'day') drawDayView();
+  else if (view === 'week') drawWeekView();
+  else if (view === 'year') drawYearView();
+  else drawMonthView();
 
-  // Start on the Sunday before the 1st, and fill whole weeks
-  const grid = page.querySelector('.cal-grid');
-  const start = new Date(month.getFullYear(), month.getMonth(), 1 - month.getDay());
-  const lastOfMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0);
-  const weeks = Math.ceil((month.getDay() + lastOfMonth.getDate()) / 7);
+  // ---------- Month ----------
+  function drawMonthView() {
+    title.textContent = month.toLocaleDateString(appLocale(), { month: 'long', year: 'numeric' });
+    const monthWord = month.toLocaleDateString(appLocale(), { month: 'long' });
+    const inMonth = orders.filter(function (o) {
+      const d = toDate(o.due);
+      return o.due && d.getMonth() === month.getMonth() && d.getFullYear() === month.getFullYear();
+    }).length;
+    const eventsInMonth = events.filter(function (e) {
+      const d = toDate(e.date);
+      return d.getMonth() === month.getMonth() && d.getFullYear() === month.getFullYear();
+    }).length;
+    sub.textContent = !usesOrders()
+      ? (eventsInMonth ? eventsInMonth + (eventsInMonth === 1 ? ' event' : ' events') + ' in ' : 'Nothing planned in ') + monthWord + (eventsInMonth ? '' : ' yet')
+      : inMonth === 0
+      ? 'Nothing due in ' + monthWord + ' yet'
+      : inMonth + ' ' + (inMonth === 1 ? oneOrder() : w.orders.toLowerCase()) + ' due in ' + monthWord;
 
-  for (let i = 0; i < weeks * 7; i++) {
-    const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
-    const day = dateText(d);
-    const due = byDay[day] || [];
-    const open = due.filter(isOpen);
+    body.innerHTML = `
+      <div class="calendar-layout">
+        <div class="calendar">
+          <div class="cal-weekdays"></div>
+          <div class="cal-grid"></div>
+        </div>
+        <aside class="day-panel" id="day-panel"></aside>
+      </div>
+    `;
+    ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(function (name) {
+      const cell = document.createElement('span');
+      cell.textContent = name;
+      body.querySelector('.cal-weekdays').appendChild(cell);
+    });
 
-    const cell = document.createElement('button');
-    cell.className = 'cal-day';
-    if (d.getMonth() !== month.getMonth()) cell.classList.add('other-month');
-    if (day === today) cell.classList.add('today');
-    if (day === calendarDay) cell.classList.add('picked');
-    if (open.length + (eventsByDay[day] || []).length >= 3) cell.classList.add('busy');
-    cell.setAttribute('aria-label', d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) +
-      (due.length ? ', ' + due.length + ' ' + (due.length === 1 ? oneOrder() : w.orders.toLowerCase()) : ''));
-    cell.innerHTML = '<span class="cal-num"></span><span class="cal-pills"></span>';
-    cell.querySelector('.cal-num').textContent = d.getDate();
+    // Start on the Sunday before the 1st, and fill whole weeks
+    const grid = body.querySelector('.cal-grid');
+    const start = new Date(month.getFullYear(), month.getMonth(), 1 - month.getDay());
+    const lastOfMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0);
+    const weeks = Math.ceil((month.getDay() + lastOfMonth.getDate()) / 7);
+    body.style.setProperty('--weeks', weeks);
 
-    // Little labels: events, then orders, then to-dos
-    const pills = cell.querySelector('.cal-pills');
-    const all = [];
-    (eventsByDay[day] || []).forEach(function (e) {
-      all.push({ cls: 'event', text: e.title, title: e.title + (e.time ? ' at ' + niceTime(e.time) : '') });
-    });
-    due.forEach(function (o) {
-      all.push({ cls: urgency(o) === 'late' ? 'late' : findStatus(o.status).color, text: o.customer.split(' ')[0],
-        title: o.customer + ': ' + o.item + (o.time ? ' at ' + niceTime(o.time) : '') });
-    });
-    (tasksByDay[day] || []).forEach(function (t) {
-      all.push({ cls: 'todo', text: t.text, title: 'To-do: ' + t.text });
-    });
-    const showMax = all.length > 3 ? 2 : 3;
-    all.slice(0, showMax).forEach(function (thing) {
-      const pill = document.createElement('span');
-      pill.className = 'cal-pill ' + thing.cls;
-      pill.textContent = thing.text;
-      pill.title = thing.title;
-      pills.appendChild(pill);
-    });
-    if (all.length > showMax) {
-      const more = document.createElement('span');
-      more.className = 'cal-more';
-      more.textContent = '+' + (all.length - showMax) + ' more';
-      pills.appendChild(more);
+    for (let i = 0; i < weeks * 7; i++) {
+      const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+      const day = dateText(d);
+      const due = byDay[day] || [];
+      const all = itemsFor(day);
+
+      const cell = document.createElement('button');
+      cell.className = 'cal-day';
+      if (d.getMonth() !== month.getMonth()) cell.classList.add('other-month');
+      if (day === today) cell.classList.add('today');
+      if (day === calendarDay) cell.classList.add('picked');
+      if (due.filter(isOpen).length + (eventsByDay[day] || []).length >= 3) cell.classList.add('busy');
+      cell.setAttribute('aria-label', d.toLocaleDateString(appLocale(), { weekday: 'long', month: 'long', day: 'numeric' }) +
+        (due.length ? ', ' + due.length + ' ' + (due.length === 1 ? oneOrder() : w.orders.toLowerCase()) : ''));
+      cell.innerHTML = '<span class="cal-num"></span><span class="cal-pills"></span>';
+      cell.querySelector('.cal-num').textContent = d.getDate();
+
+      const pills = cell.querySelector('.cal-pills');
+      const showMax = all.length > 3 ? 2 : 3;
+      all.slice(0, showMax).forEach(function (thing) { pills.appendChild(pill(thing)); });
+      if (all.length > showMax) {
+        const more = document.createElement('span');
+        more.className = 'cal-more';
+        more.textContent = '+' + (all.length - showMax) + ' more';
+        pills.appendChild(more);
+      }
+
+      cell.addEventListener('click', function () {
+        calendarDay = day;
+        if (d.getMonth() !== month.getMonth()) calendarMonth = dateText(new Date(d.getFullYear(), d.getMonth(), 1));
+        showPage();
+      });
+      grid.appendChild(cell);
     }
 
-    cell.addEventListener('click', function () {
-      calendarDay = day;
-      if (d.getMonth() !== month.getMonth()) calendarMonth = dateText(new Date(d.getFullYear(), d.getMonth(), 1));
-      showPage();
-    });
-    grid.appendChild(cell);
+    drawDay(body.querySelector('#day-panel'), calendarDay);
   }
 
-  // The picked day, on the side
-  const panel = page.querySelector('#day-panel');
-  const picked = toDate(calendarDay);
-  const pickedOrders = byDay[calendarDay] || [];
-  const days = daysUntil(calendarDay);
-  const when = days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : days === -1 ? 'Yesterday' : '';
+  // ---------- Week: seven days side by side ----------
+  function drawWeekView() {
+    const first = weekStart(calendarDay);
+    const last = addDays(first, 6);
+    const a = toDate(first);
+    const b = toDate(last);
+    title.textContent = a.getMonth() === b.getMonth()
+      ? a.toLocaleDateString(appLocale(), { month: 'short' }) + ' ' + a.getDate() + ' – ' + b.getDate() + ', ' + b.getFullYear()
+      : a.toLocaleDateString(appLocale(), { month: 'short', day: 'numeric' }) + ' – ' + b.toLocaleDateString(appLocale(), { month: 'short', day: 'numeric' }) + ', ' + b.getFullYear();
 
-  panel.innerHTML = `
-    <p class="day-when"></p>
-    <h2 class="day-title"></h2>
-    <div class="day-orders"></div>
-    <button class="btn with-icon day-add">${icon('plus')}<span>Add</span></button>
-  `;
-  panel.querySelector('.day-when').textContent = when || picked.toLocaleDateString('en-US', { weekday: 'long' });
-  panel.querySelector('.day-title').textContent = picked.toLocaleDateString('en-US',
-    when ? { weekday: 'long', month: 'long', day: 'numeric' } : { month: 'long', day: 'numeric' });
-  panel.querySelector('.day-add').addEventListener('click', function () { openAddChooser(calendarDay); });
+    let count = 0;
+    body.innerHTML = '<div class="week-grid"></div>';
+    const grid = body.querySelector('.week-grid');
+    for (let i = 0; i < 7; i++) {
+      const day = addDays(first, i);
+      const d = toDate(day);
+      const all = itemsFor(day);
+      count += itemsFor(day, false).length;
 
-  const list = panel.querySelector('.day-orders');
-  const dayEvents = eventsByDay[calendarDay] || [];
-  const dayTasks = tasksByDay[calendarDay] || [];
-  if (!pickedOrders.length && !dayEvents.length && !dayTasks.length) {
-    const none = document.createElement('p');
-    none.className = 'day-free';
-    none.textContent = 'Nothing planned. A free day!';
-    list.appendChild(none);
-    return;
-  }
+      const col = document.createElement('section');
+      col.className = 'week-col' + (day === today ? ' today' : '');
+      col.innerHTML = `
+        <button class="week-day" title="See this day">
+          <span class="week-name"></span><span class="week-num"></span>
+        </button>
+        <div class="week-items"></div>
+        <button class="week-add" title="Add to this day">${icon('plus')}</button>
+      `;
+      col.querySelector('.week-name').textContent = d.toLocaleDateString(appLocale(), { weekday: 'short' });
+      col.querySelector('.week-num').textContent = d.getDate();
+      col.querySelector('.week-add').setAttribute('aria-label', 'Add to ' + d.toLocaleDateString(appLocale(), { weekday: 'long', month: 'long', day: 'numeric' }));
+      col.querySelector('.week-day').addEventListener('click', function () { calendarDay = day; setCalendarView('day'); });
+      col.querySelector('.week-add').addEventListener('click', function () { openAddChooser(day); });
 
-  // Events
-  dayEvents.forEach(function (e) {
-    const item = document.createElement('button');
-    item.className = 'day-order event-card';
-    item.innerHTML = '<span class="day-top"><span class="day-time"></span><span class="day-status">Event</span></span>' +
-      '<b class="day-name"></b><span class="day-item"></span>';
-    item.querySelector('.day-time').textContent = e.time ? niceTime(e.time) : 'All day';
-    item.querySelector('.day-name').textContent = e.title;
-    const note = item.querySelector('.day-item');
-    if (e.where) note.textContent = e.where; else note.remove();
-    item.addEventListener('click', function () { editEvent(e); });
-    list.appendChild(item);
-  });
-
-  // Orders
-  pickedOrders.forEach(function (o) {
-    const item = document.createElement('button');
-    item.className = 'day-order ' + (urgency(o) === 'late' ? 'late' : findStatus(o.status).color);
-    item.innerHTML = '<span class="day-top"><span class="day-time"></span><span class="day-status"></span></span>' +
-      '<b class="day-name"></b><span class="day-item"></span>';
-    item.querySelector('.day-time').textContent = o.time ? niceTime(o.time) : 'Any time';
-    item.querySelector('.day-name').textContent = o.customer;
-    item.querySelector('.day-item').textContent = o.item;
-    item.querySelector('.day-status').textContent = urgency(o) === 'late' ? 'Late' : findStatus(o.status).label;
-    item.addEventListener('click', function () { openOrderForm(o.id); });
-    list.appendChild(item);
-  });
-
-  // To-dos, with a box to check off
-  if (dayTasks.length) {
-    const todo = document.createElement('div');
-    todo.className = 'day-todos';
-    dayTasks.forEach(function (t) {
-      const row = document.createElement('div');
-      row.className = 'day-todo';
-      row.innerHTML = '<button class="task-check" role="checkbox" aria-checked="false">' + icon('tick') + '</button><span></span>';
-      row.querySelector('span').textContent = t.text;
-      row.querySelector('button').setAttribute('aria-label', 'Done: ' + t.text);
-      row.querySelector('button').addEventListener('click', function () {
-        t.done = true;
-        t.doneAt = new Date().toISOString();
-        saveTasks();
-        showPage();
-        showUndo('Checked off', function () { t.done = false; t.doneAt = ''; saveTasks(); showPage(); });
+      const list = col.querySelector('.week-items');
+      all.forEach(function (thing) {
+        const item = pill(Object.assign({}, thing, { text: thing.long || thing.text }), 'button');
+        item.classList.add('week-item');
+        if (thing.time) {
+          const t = document.createElement('small');
+          t.textContent = niceTime(thing.time);
+          item.prepend(t);
+        }
+        item.addEventListener('click', thing.open);
+        list.appendChild(item);
       });
-      todo.appendChild(row);
-    });
-    list.appendChild(todo);
+      grid.appendChild(col);
+    }
+    sub.textContent = count ? count + (count === 1 ? ' thing' : ' things') + ' planned this week' : 'Nothing planned this week yet';
   }
+
+  // ---------- Day: one day, big ----------
+  function drawDayView() {
+    const d = toDate(calendarDay);
+    title.textContent = d.toLocaleDateString(appLocale(), { month: 'long', day: 'numeric', year: 'numeric' });
+    const n = itemsFor(calendarDay, false).length;
+    sub.textContent = n ? n + (n === 1 ? ' thing' : ' things') + ' planned' : 'Nothing planned yet';
+    body.innerHTML = '<div class="day-panel big" id="day-panel"></div>';
+    drawDay(body.querySelector('#day-panel'), calendarDay);
+  }
+
+  // ---------- Year: all 12 months small ----------
+  function drawYearView() {
+    const year = toDate(calendarDay).getFullYear();
+    title.textContent = String(year);
+    sub.textContent = 'Dots show planned days. Holidays are in yellow.';
+    body.innerHTML = '<div class="year-grid"></div>';
+    const grid = body.querySelector('.year-grid');
+    for (let m = 0; m < 12; m++) {
+      const first = new Date(year, m, 1);
+      const box = document.createElement('section');
+      box.className = 'year-month';
+      box.innerHTML = '<button class="year-name" title="See this month"></button><div class="year-week"></div><div class="year-days"></div>';
+      box.querySelector('.year-name').textContent = first.toLocaleDateString(appLocale(), { month: 'long' });
+      box.querySelector('.year-name').addEventListener('click', function () {
+        calendarDay = dateText(first);
+        setCalendarView('month');
+      });
+      ['S', 'M', 'T', 'W', 'T', 'F', 'S'].forEach(function (letter) {
+        const s = document.createElement('span');
+        s.textContent = letter;
+        box.querySelector('.year-week').appendChild(s);
+      });
+      const days = box.querySelector('.year-days');
+      for (let blank = 0; blank < first.getDay(); blank++) days.appendChild(document.createElement('span'));
+      const count = new Date(year, m + 1, 0).getDate();
+      for (let i = 1; i <= count; i++) {
+        const day = dateText(new Date(year, m, i));
+        const has = itemsFor(day, false).length;
+        const holiday = holidayOn(day);
+        const b = document.createElement('button');
+        b.className = 'year-day' + (day === today ? ' today' : '') + (has ? ' has' : '') + (holiday ? ' holiday' : '');
+        b.textContent = i;
+        if (holiday) b.title = holiday;
+        b.setAttribute('aria-label', new Date(year, m, i).toLocaleDateString(appLocale(), { weekday: 'long', month: 'long', day: 'numeric' }) +
+          (holiday ? ', ' + holiday : '') + (has ? ', ' + has + (has === 1 ? ' thing' : ' things') : ''));
+        b.addEventListener('click', function () { calendarDay = day; setCalendarView('day'); });
+        days.appendChild(b);
+      }
+      grid.appendChild(box);
+    }
+  }
+
+  // ---------- The list for one day (beside the month, or big in Day view) ----------
+  function drawDay(panel, day) {
+    const picked = toDate(day);
+    const pickedOrders = byDay[day] || [];
+    const days = daysUntil(day);
+    const when = days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : days === -1 ? 'Yesterday' : '';
+
+    panel.innerHTML = `
+      <p class="day-when"></p>
+      <h2 class="day-title"></h2>
+      <div class="day-orders"></div>
+      <button class="btn with-icon day-add">${icon('plus')}<span>Add</span></button>
+    `;
+    panel.querySelector('.day-when').textContent = when || picked.toLocaleDateString(appLocale(), { weekday: 'long' });
+    panel.querySelector('.day-title').textContent = picked.toLocaleDateString(appLocale(),
+      when ? { weekday: 'long', month: 'long', day: 'numeric' } : { month: 'long', day: 'numeric' });
+    panel.querySelector('.day-add').addEventListener('click', function () { openAddChooser(day); });
+    const holiday = holidayOn(day);
+    if (holiday) {
+      const tag = document.createElement('p');
+      tag.className = 'day-holiday';
+      tag.innerHTML = icon('star') + '<span></span>';
+      tag.querySelector('span').textContent = holiday;
+      panel.querySelector('.day-title').after(tag);
+    }
+
+    const list = panel.querySelector('.day-orders');
+    const dayEvents = eventsByDay[day] || [];
+    const dayTasks = tasksByDay[day] || [];
+    const dayNotes = notesByDay[day] || [];
+    if (!pickedOrders.length && !dayEvents.length && !dayTasks.length && !dayNotes.length) {
+      const none = document.createElement('p');
+      none.className = 'day-free';
+      none.textContent = 'Nothing planned. A free day!';
+      list.appendChild(none);
+      return;
+    }
+
+    // Events
+    dayEvents.forEach(function (e) {
+      const item = document.createElement('button');
+      item.className = 'day-order event-card';
+      item.innerHTML = '<span class="day-top"><span class="day-time"></span><span class="day-status">Event</span></span>' +
+        '<b class="day-name"></b><span class="day-item"></span>';
+      item.querySelector('.day-time').textContent = e.time ? niceTime(e.time) : 'All day';
+      item.querySelector('.day-name').textContent = e.title;
+      const where = item.querySelector('.day-item');
+      if (e.where) where.textContent = e.where; else where.remove();
+      item.addEventListener('click', function () { editEvent(e); });
+      list.appendChild(item);
+    });
+
+    // Orders
+    pickedOrders.forEach(function (o) {
+      const item = document.createElement('button');
+      item.className = 'day-order ' + (urgency(o) === 'late' ? 'late' : findStatus(o.status).color);
+      item.innerHTML = '<span class="day-top"><span class="day-time"></span><span class="day-status"></span></span>' +
+        '<b class="day-name"></b><span class="day-item"></span>';
+      item.querySelector('.day-time').textContent = o.time ? niceTime(o.time) : 'Any time';
+      item.querySelector('.day-name').textContent = o.customer;
+      item.querySelector('.day-item').textContent = o.item;
+      item.querySelector('.day-status').textContent = urgency(o) === 'late' ? 'Late' : findStatus(o.status).label;
+      item.addEventListener('click', function () { openOrderForm(o.id); });
+      list.appendChild(item);
+    });
+
+    // To-dos, with a box to check off
+    if (dayTasks.length) {
+      const todo = document.createElement('div');
+      todo.className = 'day-todos';
+      dayTasks.forEach(function (t) {
+        const row = document.createElement('div');
+        row.className = 'day-todo';
+        row.innerHTML = '<button class="task-check" role="checkbox" aria-checked="false">' + icon('tick') + '</button><span></span>';
+        row.querySelector('span').textContent = t.text;
+        row.querySelector('button').setAttribute('aria-label', 'Done: ' + t.text);
+        row.querySelector('button').addEventListener('click', function () {
+          t.done = true;
+          t.doneAt = new Date().toISOString();
+          saveTasks();
+          showPage();
+          showUndo('Checked off', function () { t.done = false; t.doneAt = ''; saveTasks(); showPage(); });
+        });
+        todo.appendChild(row);
+      });
+      list.appendChild(todo);
+    }
+
+    // Sticky notes on this day, in their own colors
+    dayNotes.forEach(function (n) {
+      const item = document.createElement('button');
+      item.className = 'day-sticky';
+      item.style.setProperty('--note', noteColor(n.color));
+      item.title = 'Open in Sticky notes';
+      item.textContent = n.text;
+      item.addEventListener('click', function () {
+        goTo('notes');
+        focusNoteNow(n);
+      });
+      list.appendChild(item);
+    });
+  }
+}
+
+// The first line of some text (for small labels)
+function firstLine(text) {
+  return (text || '').split('\n').map(function (l) { return l.trim(); }).filter(Boolean)[0] || 'Note';
 }
 
 // ---------- Adding to a day: an Event or a To-do, like Google or Apple Calendar ----------
@@ -4508,7 +5154,7 @@ function showTodo(page) {
     section.innerHTML = '<h2><span class="group-dot"></span><span class="group-date"></span>' +
       '<span class="group-tag"></span><b class="group-count"></b></h2><div class="task-list"></div>';
     section.querySelector('.group-date').textContent = day
-      ? toDate(day).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+      ? toDate(day).toLocaleDateString(appLocale(), { weekday: 'long', month: 'long', day: 'numeric' })
       : 'No date';
     const tagBox = section.querySelector('.group-tag');
     if (tag) tagBox.textContent = tag; else tagBox.remove();
@@ -4733,8 +5379,17 @@ function saveList(key, list) {
 function newId(start) {
   return start + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
-function oneProduct() { return words().products.replace(/s$/, '').toLowerCase(); }
-function oneSupply() { return words().supplies.replace(/s$/, '').toLowerCase(); }
+function oneProduct() { return singular(words().products).toLowerCase(); }
+function oneSupply() { return singular(words().supplies).toLowerCase(); }
+
+// One of something: Supplies -> Supply, Classes -> Class, Recipes -> Recipe, Lashes -> Lash
+function singular(word) {
+  word = String(word || '');
+  if (/ies$/i.test(word)) return word.slice(0, -3) + (word.slice(-3) === 'IES' ? 'Y' : 'y');
+  if (/(ss|sh|ch|x)es$/i.test(word)) return word.slice(0, -2);
+  if (/ss$/i.test(word)) return word;
+  return word.replace(/s$/i, '');
+}
 
 // Rounds to at most 2 decimals and drops trailing zeros: 1.50 -> "1.5", 2 -> "2"
 function niceNumber(n) {
@@ -5277,7 +5932,10 @@ function showSupplies(page) {
   page.innerHTML = `
     <header class="page-head with-button">
       <div><h1></h1><p></p></div>
-      <button class="btn with-icon" id="new-supply">${icon('plus')}<span></span></button>
+      <div class="head-buttons">
+        <button class="btn secondary with-icon" id="from-picture">${icon('camera')}<span>Add from a picture</span></button>
+        <button class="btn with-icon" id="new-supply">${icon('plus')}<span></span></button>
+      </div>
     </header>
     <div class="supplies-layout">
       <section class="shop-box">
@@ -5303,6 +5961,7 @@ function showSupplies(page) {
     : 'You have what you need';
   page.querySelector('#new-supply span').textContent = 'New ' + oneSupply();
   page.querySelector('#new-supply').addEventListener('click', function () { editSupply(null); });
+  page.querySelector('#from-picture').addEventListener('click', openPictureImport);
   page.querySelector('.have-box h2').textContent = 'What you have';
 
   // ----- Shopping list -----
@@ -5420,6 +6079,353 @@ function showSupplies(page) {
 }
 
 // =========================================
+// ADD FROM A PICTURE
+// Take a screenshot (or photo) of a receipt or a list. The app reads it,
+// shows what it found so you can fix anything, then adds it to your list.
+// Reading pictures uses Tesseract.js, a free tool that loads from the internet the first time.
+// =========================================
+const OCR_SCRIPT = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+
+function loadOcr() {
+  return new Promise(function (resolve, reject) {
+    if (window.Tesseract) return resolve(window.Tesseract);
+    const script = document.createElement('script');
+    script.src = OCR_SCRIPT;
+    script.onload = function () { window.Tesseract ? resolve(window.Tesseract) : reject(new Error('no reader')); };
+    script.onerror = function () { reject(new Error('could not load the reader')); };
+    document.head.appendChild(script);
+  });
+}
+
+// Reads the words in a picture. onProgress gets a number from 0 to 1.
+async function readPicture(file, onProgress) {
+  const T = await loadOcr();
+  const worker = await T.createWorker('eng', 1, {
+    logger: function (m) { if (m.status === 'recognizing text' && onProgress) onProgress(m.progress || 0); },
+  });
+  try {
+    const result = await worker.recognize(file);
+    return result.data.text || '';
+  } finally {
+    worker.terminate();
+  }
+}
+
+// Lines on a receipt that aren't things you bought
+const NOT_AN_ITEM = /\b(sub ?total|total|tax|balance|change|cash|visa|mastercard|amex|debit|credit|card|tender|savings|you saved|saved|discount|coupon|thank|receipt|store|tel|phone|www|\.com|items? sold|member|points|approved|auth|ref|cashier|register|order #|invoice|due|paid|payment|refund|return)\b/i;
+
+const UNIT_WORDS = [
+  [/^(lbs?|pounds?|#)$/i, 'lb'], [/^(oz|ounces?)$/i, 'oz'], [/^(fl ?oz)$/i, 'fl oz'],
+  [/^(g|grams?|gr)$/i, 'g'], [/^(kg|kilos?|kilograms?)$/i, 'kg'], [/^(ml|milliliters?)$/i, 'ml'],
+  [/^(l|liters?|litres?|ltr)$/i, 'l'], [/^(ct|count|pcs?|pieces?|ea|each)$/i, 'each'],
+  [/^(doz|dozen)$/i, 'dozen'], [/^(cups?)$/i, 'cups'], [/^(gal|gallons?)$/i, 'gal'], [/^(qt|quarts?)$/i, 'qt'],
+  [/^(pk|packs?|pkg)$/i, 'pack'], [/^(sticks?)$/i, 'sticks'], [/^(bags?)$/i, 'bags'], [/^(box|boxes)$/i, 'boxes'],
+  [/^(rolls?)$/i, 'rolls'], [/^(sheets?)$/i, 'sheets'], [/^(bottles?)$/i, 'bottles'], [/^(jars?)$/i, 'jars'], [/^(cans?)$/i, 'cans'],
+];
+function cleanUnit(word) {
+  for (let i = 0; i < UNIT_WORDS.length; i++) if (UNIT_WORDS[i][0].test(word)) return UNIT_WORDS[i][1];
+  return '';
+}
+const UNIT_PATTERN = /(\d+(?:[.,]\d+)?)\s*-?\s*(fl ?oz|lbs?|pounds?|ounces?|oz|grams?|gr|g|kilograms?|kilos?|kg|milliliters?|ml|liters?|litres?|ltr|l|count|ct|pcs?|pieces?|ea|each|dozen|doz|cups?|gallons?|gal|quarts?|qt|packs?|pkg|pk|sticks?|bags?|boxes|box|rolls?|sheets?|bottles?|jars?|cans?)\b/i;
+
+// Turns the words from a picture (or pasted text) into a list of things with amounts and prices
+function parseList(text) {
+  const found = [];
+  (text || '').split(/\r?\n/).forEach(function (raw) {
+    let line = raw.replace(/[|_~*]+/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!/[a-z]{2,}/i.test(line) || NOT_AN_ITEM.test(line)) return;
+
+    // The price: the last money amount on the line ("$4.50" or "4.50")
+    let price = '';
+    const prices = line.match(/\$?\s?\d{1,4}[.,]\d{2}(?!\d)/g);
+    if (prices) {
+      const last = prices[prices.length - 1];
+      price = last.replace(/[$\s]/g, '').replace(',', '.');
+      line = line.slice(0, line.lastIndexOf(last)) + line.slice(line.lastIndexOf(last) + last.length);
+    }
+
+    // How much: "5 lb", "16 oz", "12 ct"... or "2 @" / "x2" for how many
+    let amount = '';
+    let unit = '';
+    const size = line.match(UNIT_PATTERN);
+    if (size) {
+      amount = Number(size[1].replace(',', '.'));
+      unit = cleanUnit(size[2]);
+      line = line.replace(size[0], ' ');
+    }
+    let count = 1;
+    const times = line.match(/(?:^|\s)(?:(\d+)\s*@|x\s*(\d+)|(\d+)\s*x)(?=\s|$)/i);
+    if (times) {
+      count = Number(times[1] || times[2] || times[3]) || 1;
+      line = line.replace(times[0], ' ');
+      line = line.replace(/\$?\d+[.,]\d{2}/g, ' '); // the price for one, after the @
+    }
+    if (amount && count > 1) amount = amount * count;
+    if (!amount) { amount = count; unit = unit || 'each'; }
+
+    // The name: what's left, without codes, numbers and tax letters
+    let name = line
+      .replace(/\b\d{4,}\b/g, ' ')          // item numbers
+      .replace(/\$/g, ' ')
+      .replace(/(^|\s)[A-Z](?=\s|$)/g, ' ') // tax letters like "F" or "T"
+      .replace(/\s\d+(?=\s|$)/g, ' ')        // stray numbers
+      .replace(/[^A-Za-z0-9&'%\-\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (name.replace(/[^a-z]/gi, '').length < 2) return;
+    if (name === name.toUpperCase()) {
+      name = name.toLowerCase().replace(/\b[a-z]/g, function (c) { return c.toUpperCase(); });
+    }
+    found.push({ name: name, amount: amount, unit: unit || 'each', price: price, use: true });
+  });
+  // On a receipt, lines without a price are things like the store's name, so leave them out
+  const priced = found.filter(function (it) { return it.price; });
+  return priced.length ? priced : found;
+}
+
+// An ingredient you already have with the same name
+function sameSupply(name) {
+  const n = name.toLowerCase().trim();
+  return supplies.find(function (s) {
+    const m = s.name.toLowerCase().trim();
+    return m === n || (m.length > 3 && n.includes(m)) || (n.length > 3 && m.includes(n));
+  });
+}
+
+function openPictureImport() {
+  const w = words();
+  let items = [];
+  let picture = '';
+
+  const box = openWindow({
+    title: 'Add from a picture',
+    saveLabel: 'Add to ' + w.supplies,
+    wide: true,
+    html: `
+      <div class="import-start">
+        <p class="import-help">Take a screenshot of a receipt, an online order or a list of what you need. The app reads it and fills in the names, amounts and prices for you.</p>
+        <label class="import-drop" id="import-drop" tabindex="0">
+          <input type="file" accept="image/*" id="import-file" hidden>
+          <span class="import-drop-icon">${icon('camera')}</span>
+          <b>Paste a screenshot here</b>
+          <span>Press <kbd>Ctrl</kbd> + <kbd>V</kbd>, drop a picture, or click to choose one</span>
+          <small>Tip: <kbd>Windows</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> takes a screenshot</small>
+        </label>
+        <button type="button" class="link-btn import-type" id="import-type">Or type or paste the list as words</button>
+        <div class="import-text" hidden>
+          <textarea class="input" id="import-words" rows="6" placeholder="Flour 5 lb $4.50&#10;Sugar 4 lb $3.29&#10;Cake boxes 10 ct $8.99"></textarea>
+          <button type="button" class="btn secondary small" id="import-read-words">Read this list</button>
+        </div>
+      </div>
+      <div class="import-reading" hidden>
+        <img class="import-thumb" alt="Your picture">
+        <div>
+          <b>Reading your picture...</b>
+          <div class="import-bar"><span></span></div>
+          <small>This can take a few seconds. The first time, it also loads the reader from the internet.</small>
+        </div>
+      </div>
+      <div class="import-review" hidden>
+        <div class="import-review-head">
+          <img class="import-thumb small" alt="Your picture">
+          <p class="import-found"></p>
+        </div>
+        <div class="import-table">
+          <div class="import-row import-labels"><span></span><span>Name</span><span>Amount</span><span>Unit</span><span>Price</span></div>
+          <div id="import-rows"></div>
+        </div>
+        <button type="button" class="link-btn" id="import-add-row">${icon('plus')}<span>Add a line</span></button>
+        <button type="button" class="link-btn" id="import-again">Try a different picture</button>
+      </div>
+    `,
+    fill: function (box) {
+      box.querySelector('#window-save').hidden = true;
+    },
+    onSave: function (box) {
+      const chosen = items.filter(function (it) { return it.use && it.name.trim(); });
+      if (!chosen.length) { box.problem('Check at least one thing to add.'); return false; }
+      const added = [];
+      const changed = [];
+      chosen.forEach(function (it) {
+        const match = sameSupply(it.name);
+        const size = Number(it.amount) || 1;
+        const cost = Number(String(it.price).replace(/[$,]/g, '')) || 0;
+        if (match) {
+          changed.push({ supply: match, was: Object.assign({}, match) });
+          if (cost) { match.packPrice = cost; match.packSize = size; match.unit = it.unit || match.unit; }
+        } else {
+          const s = { id: newId('s'), name: it.name.trim(), unit: it.unit || 'each', packSize: size, packPrice: cost, have: size };
+          supplies.push(s);
+          added.push(s);
+        }
+      });
+      saveSupplies();
+      document.removeEventListener('paste', onPaste);
+      showPage();
+      const message = (added.length ? 'Added ' + added.length + ' to ' + w.supplies : '') +
+        (added.length && changed.length ? ' and updated ' : changed.length ? 'Updated ' : '') +
+        (changed.length ? changed.length + (changed.length === 1 ? ' price' : ' prices') : '');
+      showUndo(message, function () {
+        supplies = supplies.filter(function (s) { return added.indexOf(s) === -1; });
+        changed.forEach(function (c) { Object.assign(c.supply, c.was); });
+        saveSupplies();
+        showPage();
+      });
+    },
+  });
+
+  const start = box.querySelector('.import-start');
+  const reading = box.querySelector('.import-reading');
+  const review = box.querySelector('.import-review');
+  const save = box.querySelector('#window-save');
+  const fileInput = box.querySelector('#import-file');
+  const drop = box.querySelector('#import-drop');
+
+  function show(part) {
+    start.hidden = part !== start;
+    reading.hidden = part !== reading;
+    review.hidden = part !== review;
+    save.hidden = part !== review;
+    box.problem('');
+  }
+
+  // Ctrl + V anywhere in the window
+  function onPaste(e) {
+    if (!document.body.contains(box)) { document.removeEventListener('paste', onPaste); return; }
+    const files = Array.from((e.clipboardData && e.clipboardData.items) || [])
+      .filter(function (it) { return it.type.indexOf('image') === 0; })
+      .map(function (it) { return it.getAsFile(); });
+    if (files.length) { e.preventDefault(); usePicture(files[0]); }
+  }
+  document.addEventListener('paste', onPaste);
+  box.addEventListener('close', function () { document.removeEventListener('paste', onPaste); });
+
+  fileInput.addEventListener('change', function () { if (fileInput.files[0]) usePicture(fileInput.files[0]); });
+  drop.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); } });
+  drop.addEventListener('dragover', function (e) { e.preventDefault(); drop.classList.add('over'); });
+  drop.addEventListener('dragleave', function () { drop.classList.remove('over'); });
+  drop.addEventListener('drop', function (e) {
+    e.preventDefault();
+    drop.classList.remove('over');
+    const file = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (file && file.type.indexOf('image') === 0) usePicture(file);
+  });
+
+  box.querySelector('#import-type').addEventListener('click', function () {
+    box.querySelector('.import-text').hidden = false;
+    box.querySelector('#import-words').focus();
+  });
+  box.querySelector('#import-read-words').addEventListener('click', function () {
+    picture = '';
+    showReview(parseList(box.querySelector('#import-words').value));
+  });
+  box.querySelector('#import-again').addEventListener('click', function () {
+    fileInput.value = '';
+    show(start);
+  });
+  box.querySelector('#import-add-row').addEventListener('click', function () {
+    items.push({ name: '', amount: 1, unit: 'each', price: '', use: true });
+    drawRows();
+    const names = box.querySelectorAll('.import-name');
+    names[names.length - 1].focus();
+  });
+
+  async function usePicture(file) {
+    picture = URL.createObjectURL(file);
+    box.querySelectorAll('.import-thumb').forEach(function (img) { img.src = picture; });
+    show(reading);
+    const bar = box.querySelector('.import-bar span');
+    bar.style.width = '5%';
+    try {
+      const text = await readPicture(file, function (p) { bar.style.width = Math.max(5, Math.round(p * 100)) + '%'; });
+      if (!document.body.contains(box)) return;
+      const list = parseList(text);
+      if (!list.length) {
+        show(start);
+        box.querySelector('.import-text').hidden = false;
+        box.querySelector('#import-words').value = text.trim();
+        box.problem('We couldn\'t find any items with prices in that picture. Try a clearer screenshot, or fix the words below and click Read this list.');
+        return;
+      }
+      showReview(list);
+    } catch (error) {
+      if (!document.body.contains(box)) return;
+      show(start);
+      box.querySelector('.import-text').hidden = false;
+      box.problem('We couldn\'t read the picture. Reading pictures needs the internet the first time. You can type or paste the list below instead.');
+    }
+  }
+
+  function showReview(list) {
+    if (!list.length) { box.problem('Add at least one line, like "Flour 5 lb $4.50".'); return; }
+    items = list;
+    box.querySelectorAll('.import-thumb').forEach(function (img) { img.hidden = !picture; });
+    show(review);
+    drawRows();
+  }
+
+  function drawRows() {
+    const rows = box.querySelector('#import-rows');
+    rows.innerHTML = '';
+    items.forEach(function (it) {
+      const row = document.createElement('div');
+      row.className = 'import-row';
+      row.innerHTML = `
+        <button type="button" class="task-check" role="checkbox">${icon('tick')}</button>
+        <div class="import-name-cell"><input class="input import-name" aria-label="Name"><span class="import-tag" hidden>Updates the price</span></div>
+        <input class="input import-amount" type="number" min="0" step="any" aria-label="Amount">
+        <input class="input import-unit" list="import-units" aria-label="Unit">
+        <div class="money-box"><span>$</span><input class="input import-price" type="number" min="0" step="0.01" aria-label="Price"></div>
+      `;
+      const check = row.querySelector('.task-check');
+      function drawCheck() {
+        check.setAttribute('aria-checked', it.use ? 'true' : 'false');
+        check.setAttribute('aria-label', (it.use ? 'Skip ' : 'Add ') + (it.name || 'this line'));
+        row.classList.toggle('skipped', !it.use);
+      }
+      drawCheck();
+      check.addEventListener('click', function () { it.use = !it.use; drawCheck(); updateCount(); });
+
+      const name = row.querySelector('.import-name');
+      const tag = row.querySelector('.import-tag');
+      name.value = it.name;
+      function drawTag() { tag.hidden = !sameSupply(name.value || ' '); }
+      drawTag();
+      name.addEventListener('input', function () { it.name = name.value; drawTag(); });
+      const amount = row.querySelector('.import-amount');
+      amount.value = it.amount;
+      amount.addEventListener('input', function () { it.amount = amount.value; });
+      const unit = row.querySelector('.import-unit');
+      unit.value = it.unit;
+      unit.addEventListener('input', function () { it.unit = unit.value; });
+      const price = row.querySelector('.import-price');
+      price.value = it.price;
+      price.addEventListener('input', function () { it.price = price.value; });
+      rows.appendChild(row);
+    });
+    let units = document.getElementById('import-units');
+    if (!units) {
+      units = document.createElement('datalist');
+      units.id = 'import-units';
+      UNIT_IDEAS.concat(['pack', 'bags', 'boxes', 'rolls', 'gal']).forEach(function (u) {
+        const o = document.createElement('option');
+        o.value = u;
+        units.appendChild(o);
+      });
+      box.appendChild(units);
+    }
+    updateCount();
+  }
+
+  function updateCount() {
+    const n = items.filter(function (it) { return it.use; }).length;
+    box.querySelector('.import-found').textContent = 'We found ' + items.length + (items.length === 1 ? ' thing' : ' things') +
+      '. Check the names, amounts and prices, and fix anything that looks wrong. Uncheck anything you don\'t want.';
+    save.textContent = n ? 'Add ' + n + ' to ' + w.supplies : 'Add to ' + w.supplies;
+  }
+}
+
+// =========================================
 // PRICING AND PROFIT
 // True cost = ingredients + your time. Suggested price adds the profit you want.
 // =========================================
@@ -5431,7 +6437,10 @@ function showPricing(page) {
   const w = words();
   const set = pricingSettings();
   page.innerHTML = `
-    <header class="page-head"><h1>Pricing and profit</h1><p></p></header>
+    <header class="page-head with-button">
+      <div><h1>Pricing and profit</h1><p></p></div>
+      <button class="btn with-icon" id="from-picture">${icon('camera')}<span>Add from a picture</span></button>
+    </header>
     <div class="pricing-settings">
       <label><span>Pay yourself</span>
         <div class="money-box"><span>$</span><input class="input" id="pay-rate" type="number" min="0" step="0.5"></div>
@@ -5442,6 +6451,7 @@ function showPricing(page) {
     <div id="price-list"></div>
   `;
   page.querySelector('.page-head p').textContent = 'What each ' + oneProduct() + ' really costs you, and what to charge';
+  page.querySelector('#from-picture').addEventListener('click', openPictureImport);
   const pay = page.querySelector('#pay-rate');
   const extra = page.querySelector('#profit-rate');
   pay.value = set.hourly;
@@ -5606,7 +6616,7 @@ function showBookkeeping(page) {
   page.querySelector('.page-head p').textContent = usesOrders()
     ? 'Paid ' + w.orders.toLowerCase() + ' count as money in on their due date'
     : 'Money in and money out, month by month';
-  page.querySelector('.month-name').textContent = month.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  page.querySelector('.month-name').textContent = month.toLocaleDateString(appLocale(), { month: 'long', year: 'numeric' });
   page.querySelector('#mt-in').textContent = money(totals.moneyIn);
   page.querySelector('#mt-out').textContent = money(totals.moneyOut);
   page.querySelector('#mt-kept').textContent = money(totals.moneyIn - totals.moneyOut);
@@ -5635,7 +6645,7 @@ function showBookkeeping(page) {
     col.querySelector('.bar-out').style.height = (sums[i].moneyOut / top * 100) + '%';
     col.querySelector('.bar-in').title = 'In: ' + money(sums[i].moneyIn);
     col.querySelector('.bar-out').title = 'Out: ' + money(sums[i].moneyOut);
-    col.querySelector('.chart-label').textContent = m.toLocaleDateString('en-US', { month: 'short' });
+    col.querySelector('.chart-label').textContent = m.toLocaleDateString(appLocale(), { month: 'short' });
     chart.appendChild(col);
   });
 
@@ -5814,7 +6824,7 @@ function showPrintables(page) {
     `;
     body.querySelector('.r-name').textContent = o.customer;
     body.querySelector('.r-contact').textContent = o.contact || '';
-    body.querySelector('.r-date').textContent = toDate(o.due).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    body.querySelector('.r-date').textContent = toDate(o.due).toLocaleDateString(appLocale(), { month: 'long', day: 'numeric', year: 'numeric' });
     body.querySelector('.r-time').textContent = o.time ? niceTime(o.time) : '';
     const tr = document.createElement('tr');
     tr.innerHTML = '<td><b></b><span class="r-details"></span></td><td class="right"></td>';
@@ -6206,8 +7216,8 @@ function colorPicker(doc, current, onPick) {
   return row;
 }
 
-// The little "..." menu: colors and Delete
-function noteMenu(doc, note, onColor, onDelete) {
+// The little "..." menu: colors, calendar and Delete
+function noteMenu(doc, note, onColor, onDelete, onCalendar) {
   const menu = doc.createElement('div');
   menu.className = 'note-menu';
   menu.hidden = true;
@@ -6219,12 +7229,66 @@ function noteMenu(doc, note, onColor, onDelete) {
     menu.hidden = true;
     menu.replaceChild(colorPicker(doc, c, picked), menu.querySelector('.note-menu-colors'));
   }
+  const cal = doc.createElement('button');
+  cal.className = 'note-menu-delete note-menu-cal';
+  cal.innerHTML = icon('calendar') + '<span></span>';
+  cal.querySelector('span').textContent = note.date ? 'On calendar: ' + niceDate(note.date) : 'Add to calendar';
+  cal.addEventListener('click', function () { menu.hidden = true; onCalendar(); });
   const del = doc.createElement('button');
   del.className = 'note-menu-delete';
   del.innerHTML = icon('trash') + '<span>Delete note</span>';
   del.addEventListener('click', function () { menu.hidden = true; onDelete(); });
-  menu.append(title, colorPicker(doc, note.color, picked), del);
+  menu.append(title, colorPicker(doc, note.color, picked), cal, del);
   return menu;
+}
+
+// Puts a note on a day in the calendar (or takes it off)
+function pickNoteDay(note) {
+  window.focus();
+  openWindow({
+    title: note.date ? 'Move to another day' : 'Add to calendar',
+    saveLabel: note.date ? 'Save' : 'Add to calendar',
+    html: `
+      <label class="label" for="note-day">What day?</label>
+      <input class="input" id="note-day" type="date">
+      <button type="button" class="link-btn delete-btn" id="note-day-off" hidden>${icon('trash')}<span>Take it off the calendar</span></button>
+    `,
+    fill: function (box) {
+      const date = box.querySelector('#note-day');
+      date.value = note.date || todayText();
+      fancyDate(date);
+      if (note.date) {
+        const off = box.querySelector('#note-day-off');
+        off.hidden = false;
+        off.addEventListener('click', function () {
+          const was = note.date;
+          delete note.date;
+          saveNotes();
+          box.close();
+          box.remove();
+          showPage();
+          showUndo('Taken off the calendar', function () { note.date = was; saveNotes(); showPage(); });
+        });
+      }
+    },
+    onSave: function (box) {
+      const day = box.querySelector('#note-day').value;
+      if (!day) { box.problem('Pick a day.'); return false; }
+      if (!note.text.trim()) note.text = 'Note';
+      note.date = day;
+      saveNotes();
+      showPage();
+      showUndo('Added to the calendar on ' + niceDate(day), null);
+    },
+  });
+}
+
+// Opens the calendar on a note's day
+function showNoteOnCalendar(note) {
+  calendarDay = note.date;
+  const d = toDate(note.date);
+  calendarMonth = dateText(new Date(d.getFullYear(), d.getMonth(), 1));
+  goTo('calendar');
 }
 
 // ---------- The notes on My Day, and on the Sticky notes page ----------
@@ -6236,10 +7300,7 @@ function stickyBoard(big) {
     <div class="notes-head">
       <h2 class="tips-title">Sticky notes</h2>
       <div class="notes-add-wrap">
-        <button class="notes-plus" id="note-plus" title="New note" aria-label="New note" aria-expanded="false">${icon('plus')}</button>
-        <div class="note-menu notes-pick" hidden>
-          <p class="note-menu-title">Pick a color for your note</p>
-        </div>
+        <button class="notes-plus" id="note-plus" title="New note" aria-label="New note">${icon('plus')}</button>
       </div>
     </div>
     <div class="notes-grid"></div>
@@ -6251,22 +7312,11 @@ function stickyBoard(big) {
   }
   notes.forEach(function (note) { grid.appendChild(noteCard(note)); });
 
-  // + shows the colors; picking one makes the note
-  const plus = box.querySelector('#note-plus');
-  const pick = box.querySelector('.notes-pick');
-  pick.appendChild(colorPicker(document, null, function (c) {
-    pick.hidden = true;
-    const note = addNote(null, c);
+  // + makes a new note right away. Write first, then pick its color on the note.
+  box.querySelector('#note-plus').addEventListener('click', function () {
+    const note = addNote(null);
     showPage();
     focusNoteNow(note);
-  }));
-  plus.addEventListener('click', function () {
-    pick.hidden = !pick.hidden;
-    plus.setAttribute('aria-expanded', pick.hidden ? 'false' : 'true');
-  });
-  const wrap = box.querySelector('.notes-add-wrap');
-  wrap.addEventListener('focusout', function (e) {
-    if (!wrap.contains(e.relatedTarget)) pick.hidden = true;
   });
   return box;
 }
@@ -6305,6 +7355,34 @@ function noteCard(note) {
   `;
   const text = card.querySelector('textarea');
   text.value = note.text;
+
+  // Its day on the calendar, if it has one
+  if (note.date) {
+    const tag = document.createElement('button');
+    tag.className = 'note-date';
+    tag.title = 'See it on the calendar';
+    tag.innerHTML = icon('calendar') + '<span></span>';
+    tag.querySelector('span').textContent = niceDate(note.date);
+    tag.addEventListener('click', function () { showNoteOnCalendar(note); });
+    card.classList.add('has-date');
+    card.appendChild(tag);
+  }
+
+  // Color dots on the note, shown while you're writing in it
+  const swatches = document.createElement('div');
+  swatches.className = 'note-swatches';
+  function drawSwatches() {
+    swatches.innerHTML = '';
+    swatches.appendChild(colorPicker(document, note.color, function (c) {
+      note.color = c;
+      card.style.setProperty('--note', noteColor(c));
+      saveNotes();
+      drawSwatches();
+      text.focus();
+    }));
+  }
+  drawSwatches();
+  card.appendChild(swatches);
   const popped = noteWindows[note.id] && !noteWindows[note.id].closed;
   if (popped) card.classList.add('popped');
 
@@ -6315,8 +7393,9 @@ function noteCard(note) {
     clearTimeout(timer);
     timer = setTimeout(function () { saveNotes(); }, 250);
   });
-  text.addEventListener('blur', function () {
+  text.addEventListener('blur', function (e) {
     clearTimeout(timer);
+    if (e.relatedTarget && card.contains(e.relatedTarget)) { note.text = text.value; saveNotes(); return; }
     note.text = text.value;
     if (!note.text.trim() && !(noteWindows[note.id] && !noteWindows[note.id].closed)) {
       // An empty note just goes away
@@ -6332,7 +7411,10 @@ function noteCard(note) {
     note.color = c;
     card.style.setProperty('--note', noteColor(c));
     saveNotes();
-  }, function () { deleteNote(note); });
+  }, function () { deleteNote(note); }, function () {
+    note.text = text.value;
+    pickNoteDay(note);
+  });
   card.appendChild(menu);
 
   card.querySelector('[data-act="more"]').addEventListener('click', function () { menu.hidden = !menu.hidden; });
@@ -6420,7 +7502,7 @@ function drawNoteWindow(note) {
     doc.body.style.setProperty('--note', noteColor(c));
     saveNotes(note.id);
     refreshBoardSoon();
-  }, function () { deleteNote(note); });
+  }, function () { deleteNote(note); }, function () { pickNoteDay(note); });
   doc.body.appendChild(menu);
 
   doc.querySelector('[data-act="new"]').addEventListener('click', function () { popOutNote(addNote(note)); refreshBoardSoon(); });
@@ -6468,7 +7550,7 @@ function noteWindowStyles() {
     .note-btn[data-act="menu"] svg { fill: currentColor; stroke: none; }
     .note-btn[data-act="close"] svg { transform: rotate(45deg); }
     .note-text { flex: 1; width: 100%; padding: 10px 16px 16px; border: none; background: transparent; color: ${ink};
-      font-family: Caveat, 'Segoe Print', 'Comic Sans MS', cursive; font-size: 30px; font-weight: 600; line-height: 1.15;
+      font-family: Nunito, Figtree, 'Segoe UI', sans-serif; font-size: 21px; font-weight: 700; line-height: 1.3;
       resize: none; outline: none; }
     .note-text::placeholder { color: rgba(0, 0, 0, 0.35); }
     .note-menu { position: absolute; top: 34px; right: 6px; z-index: 5; width: 240px; padding: 6px; border-radius: 10px;
@@ -6484,6 +7566,9 @@ function noteWindowStyles() {
     .note-menu-delete { display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 4px; padding: 8px; border: none;
       border-radius: 6px; background: none; color: ${ink}; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; text-align: left; }
     .note-menu-delete:hover { background: #f4f4f4; color: #c62a3f; }
+    .note-menu-delete.note-menu-cal { margin-top: 6px; }
+    .note-menu-delete.note-menu-cal:hover { color: ${ink}; }
+    .note-menu-delete svg { width: 16px; height: 16px; flex: none; }
   `;
 }
 
@@ -6546,7 +7631,7 @@ function pickBackup() {
       try {
         JSON.parse(backup.data[BIZ_LIST_KEY] || '[]').forEach(function (b) { names.push(b.name); });
       } catch (error) { /* fine */ }
-      const when = new Date(backup.saved).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      const when = new Date(backup.saved).toLocaleDateString(appLocale(), { month: 'long', day: 'numeric', year: 'numeric' });
       openWindow({
         title: 'Load this backup?',
         saveLabel: 'Yes, load it',
@@ -6650,7 +7735,7 @@ function showSettings(page) {
     <div class="settings-list">
       <button class="settings-row pink" data-step="1">
         <span class="nav-icon">${icon('tag')}</span>
-        <span class="row-text"><strong>Business name</strong><span class="row-value" id="row-name"></span></span>
+        <span class="row-text"><strong>Business name and country</strong><span class="row-value" id="row-name"></span></span>
         <span class="row-arrow">${icon('chevron')}</span>
       </button>
       <button class="settings-row pink" data-step="0">
@@ -6668,6 +7753,11 @@ function showSettings(page) {
         <span class="row-swatch"><i style="background: var(--ink)"></i><i style="background: var(--sun)"></i></span>
         <span class="row-arrow">${icon('chevron')}</span>
       </button>
+      <div class="settings-row mint lang-row">
+        <span class="nav-icon">${icon('globe')}</span>
+        <span class="row-text"><strong>Language</strong><span class="row-value">English, Español</span></span>
+        <select id="lang-pick" class="input lang-select" aria-label="Language"></select>
+      </div>
       <label class="settings-row butter helper-row">
         <span class="nav-icon pip-mini">${pipDrawing()}</span>
         <span class="row-text"><strong>Pip, your helper</strong><span class="row-value">Pops up with tips about your business</span></span>
@@ -6713,7 +7803,7 @@ function showSettings(page) {
   // Text from the owner is added with textContent so it shows exactly as typed
   box.querySelector('#hero-name').textContent = profile.businessName;
   box.querySelector('#hero-type').textContent = typeName;
-  box.querySelector('#row-name').textContent = profile.businessName;
+  box.querySelector('#row-name').textContent = profile.businessName + ' · ' + (myCountry() === 'none' ? 'No holidays' : findCountry(myCountry()).label);
   box.querySelector('#row-type').textContent = typeName + ': ' + (usesOrders() ? [w.products, w.orders, w.customers, w.supplies] : [w.products, w.customers, w.supplies]).join(', ');
   box.querySelector('#row-theme').textContent = profile.changeWithTime
     ? 'Changes with the time of day'
@@ -6751,6 +7841,16 @@ function showSettings(page) {
   });
 
   // Clicking a row opens that setup page
+  const langPick = box.querySelector('#lang-pick');
+  LANGUAGES.forEach(function (l) {
+    const o = document.createElement('option');
+    o.value = l.id;
+    o.textContent = l.label;
+    langPick.appendChild(o);
+  });
+  langPick.value = appLanguage;
+  langPick.addEventListener('change', function () { setLanguage(langPick.value); });
+
   box.querySelectorAll('[data-step]').forEach(function (row) {
     row.addEventListener('click', function () {
       editProfile(Number(row.dataset.step));
@@ -6872,3 +7972,292 @@ if (newBusiness) {
 } else {
   showSetup();
 }
+
+// Spanish. Keys are the English text, with {n} numbers, {m} money, {d} dates, {t} times,
+// {B} the business name, and {P} {O} {C} {S} the business's own words ({oa} = one, lowercase).
+var LANG_ES = {
+  // Days of the week (calendar headers)
+  'Sun': 'Dom', 'Mon': 'Lun', 'Tue': 'Mar', 'Wed': 'Mié', 'Thu': 'Jue', 'Fri': 'Vie', 'Sat': 'Sáb',
+
+  // Menu
+  'My Day': 'Mi día', 'Picked for you': 'Elegido para ti', 'Calendar': 'Calendario', 'To-do list': 'Pendientes',
+  'Pricing and profit': 'Precios y ganancias', 'Bookkeeping': 'Contabilidad', 'Work': 'Trabajo', 'Sticky notes': 'Notas adhesivas',
+  'Business': 'Negocio', '{S} and shopping': '{S} y compras', 'Grow': 'Crecer', 'Finder': 'Buscador',
+  'Receipts and menus': 'Recibos y menús', 'Settings': 'Ajustes', 'Money': 'Dinero', 'Menu': 'Menú', 'Menus': 'Menús',
+
+  // My Day
+  'Good morning': 'Buenos días', 'Good afternoon': 'Buenas tardes', 'Good evening': 'Buenas noches', 'Good morning!': '¡Buenos días!',
+  '{o} due today': '{o} para hoy', '{oa} due today': '{oa} para hoy', 'tasks for today': 'pendientes para hoy', 'task for today': 'pendiente para hoy',
+  'paid to you this month': 'te pagaron este mes', 'things to buy': 'cosas por comprar', 'thing to buy': 'cosa por comprar',
+  '{n} {oa} is late. Tap to see.': '{n} {oa} va tarde. Toca para ver.', '{n} {o} are late. Tap to see.': '{n} {o} van tarde. Toca para ver.',
+  'To do today': 'Para hacer hoy', 'See all': 'Ver todo', 'Coming up this week': 'Esta semana', 'events today': 'eventos hoy', 'event today': 'evento hoy',
+  'Nothing for today. {n} coming up.': 'Nada para hoy. {n} más adelante.',
+  'Your focus': 'Tu enfoque', 'Close': 'Cerrar', 'Show me': 'Muéstrame', 'Next tip': 'Siguiente consejo', 'Tips from Pip': 'Consejos de Pip', 'Pip': 'Pip',
+
+  // Dates and due
+  'Today': 'Hoy', 'Tomorrow': 'Mañana', 'Yesterday': 'Ayer', 'Late': 'Tarde', 'No date': 'Sin fecha', 'Someday': 'Algún día',
+  'Late, was {d}': 'Tarde, era el {d}', '{Oa} due {d}': '{Oa} para el {d}', '{Oa} due {d} at {t}': '{Oa} para el {d} a las {t}',
+  '{n} days late': '{n} días tarde', '{n} day late': '{n} día tarde', 'Due today': 'Para hoy', 'Due tomorrow': 'Para mañana',
+  'Due tomorrow at {t}': 'Para mañana a las {t}', 'Due today at {t}': 'Para hoy a las {t}', 'Due in {n} days': 'En {n} días',
+  'Due in {n} days at {t}': 'En {n} días a las {t}', 'Due {d}': 'Para el {d}', 'Due {d} at {t}': 'Para el {d} a las {t}',
+  'Was due {d}': 'Era para el {d}', 'Was due {d} at {t}': 'Era para el {d} a las {t}', '{d} at {t}': '{d} a las {t}',
+
+  // Tasks
+  'Flag as important': 'Marcar como importante', 'Unflag': 'Quitar marca', 'Delete': 'Borrar', 'Done': 'Hecho', 'Not done': 'No hecho',
+  'Add a task': 'Agregar un pendiente', 'New task': 'Nuevo pendiente', 'What do you need to do?': '¿Qué necesitas hacer?',
+  'Buy more flour': 'Comprar más harina', 'Important': 'Importante', 'Flag it so it stays at the top': 'Márcalo para que se quede arriba',
+  'Add task': 'Agregar pendiente', 'Type what you need to do.': 'Escribe lo que necesitas hacer.', 'Clear done ({n})': 'Borrar hechos ({n})',
+  '{n} things to do today': '{n} cosas para hacer hoy', '{n} thing to do today': '{n} cosa para hacer hoy', 'Cleared {n} tasks': 'Se borraron {n} pendientes',
+  'Cleared {n} task': 'Se borró {n} pendiente', 'Nothing here right now.': 'Nada por aquí ahora.', 'Undo': 'Deshacer',
+  'No tasks': 'No hay pendientes', 'Nothing to do today': 'Nada que hacer hoy', 'All done!': '¡Todo listo!',
+
+  // Sticky notes
+  'New note': 'Nueva nota', 'Write here...': 'Escribe aquí...', 'Sticky note': 'Nota adhesiva', 'Pop out onto your screen': 'Sacar a tu pantalla',
+  'Color and delete': 'Color y borrar', 'See it on the calendar': 'Verla en el calendario', 'Yellow': 'Amarillo', 'Peach': 'Durazno',
+  'Pink': 'Rosa', 'Lavender': 'Lavanda', 'Blue': 'Azul', 'Mint': 'Menta', 'Lime': 'Lima', 'Sand': 'Arena', 'Pick any color': 'Elige cualquier color',
+  'Color': 'Color', 'On calendar: {d}': 'En el calendario: {d}', 'Delete note': 'Borrar nota', 'Add to calendar': 'Agregar al calendario',
+  'Open in Sticky notes': 'Abrir en Notas adhesivas', 'Move to another day': 'Pasar a otro día', 'What day?': '¿Qué día?',
+  'Take it off the calendar': 'Quitarla del calendario', 'Save': 'Guardar', 'Added to the calendar on {d}': 'Agregada al calendario el {d}',
+  'Taken off the calendar': 'Quitada del calendario', 'Note deleted': 'Nota borrada', 'Pick a day.': 'Elige un día.',
+  '{n} note. Point at a note to pop it out onto your screen.': '{n} nota. Pasa el mouse sobre una nota para sacarla a tu pantalla.',
+  '{n} notes. Point at a note to pop it out onto your screen.': '{n} notas. Pasa el mouse sobre una nota para sacarla a tu pantalla.',
+  'Quick notes and reminders, in any color you like': 'Notas y recordatorios rápidos, del color que quieras',
+  'No notes yet. Click + to add one.': 'Aún no hay notas. Haz clic en + para agregar una.',
+  'Your browser blocked the note window. Allow pop-ups for this site and try again.': 'Tu navegador bloqueó la ventana de la nota. Permite las ventanas emergentes para este sitio e inténtalo de nuevo.',
+
+  // Calendar
+  'Calendar view': 'Vista del calendario', 'Day': 'Día', 'Week': 'Semana', 'Month': 'Mes', 'Year': 'Año',
+  'Last month': 'Mes anterior', 'Next month': 'Mes siguiente', 'Day before': 'Día anterior', 'Next day': 'Día siguiente',
+  'Last week': 'Semana anterior', 'Next week': 'Semana siguiente', 'Last year': 'Año anterior', 'Next year': 'Año siguiente',
+  'Add': 'Agregar', 'See this day': 'Ver este día', 'Add to this day': 'Agregar a este día', 'Add to {d}': 'Agregar al {d}', 'See this month': 'Ver este mes',
+  '{n} things planned this week': '{n} cosas planeadas esta semana', '{n} thing planned this week': '{n} cosa planeada esta semana',
+  'Nothing planned this week yet': 'Nada planeado esta semana todavía', '{n} things planned': '{n} cosas planeadas', '{n} thing planned': '{n} cosa planeada',
+  'Nothing planned yet': 'Nada planeado todavía', 'Dots show planned days. Holidays are in yellow.': 'Los puntos marcan días con planes. Los días festivos están en amarillo.',
+  'Nothing due in {d} yet': 'Nada para {d} todavía', 'Nothing planned in {d} yet': 'Nada planeado en {d} todavía',
+  'Nothing planned. A free day!': 'Nada planeado. ¡Un día libre!', '{n} {o} due in {d}': '{n} {o} para {d}', '{n} {oa} due in {d}': '{n} {oa} para {d}',
+  '{n} event in {d}': '{n} evento en {d}', '{n} events in {d}': '{n} eventos en {d}', 'Event': 'Evento', 'To-do': 'Pendiente',
+  'Edit event': 'Editar evento', 'New event': 'Nuevo evento', "What's happening?": '¿Qué va a pasar?', 'What time?': '¿A qué hora?',
+  '(you can skip this)': '(puedes dejarlo en blanco)', 'What time? (you can skip this)': '¿A qué hora? (puedes dejarlo en blanco)',
+  'Where?': '¿Dónde?', 'Main Street park': 'Parque de la calle principal', 'Delete this event': 'Borrar este evento', 'Add event': 'Agregar evento',
+  'Event deleted': 'Evento borrado', "Type what's happening.": 'Escribe qué va a pasar.', 'All day': 'Todo el día', 'Any time': 'A cualquier hora',
+  'Farmers market': 'Mercado local', 'What to add': 'Qué agregar', 'Day': 'Día', 'Time': 'Hora', 'Where': 'Dónde', 'Title': 'Título',
+  '(optional)': '(opcional)', 'Checked off': 'Marcado como hecho',
+
+  // Holidays
+  "New Year's Day": 'Año Nuevo', 'Martin Luther King Jr. Day': 'Día de Martin Luther King Jr.', "Valentine's Day": 'Día de San Valentín',
+  "Presidents' Day": 'Día de los Presidentes', "St. Patrick's Day": 'Día de San Patricio', 'Easter': 'Pascua', 'Easter Sunday': 'Domingo de Pascua',
+  'Easter Monday': 'Lunes de Pascua', 'Good Friday': 'Viernes Santo', 'Holy Thursday': 'Jueves Santo', "Mother's Day": 'Día de las Madres',
+  'Memorial Day': 'Día de los Caídos', "Father's Day": 'Día del Padre', 'Juneteenth': 'Juneteenth', 'Independence Day': 'Día de la Independencia',
+  'Labor Day': 'Día del Trabajo', "Indigenous Peoples' Day": 'Día de los Pueblos Indígenas', 'Halloween': 'Halloween', 'Veterans Day': 'Día de los Veteranos',
+  'Thanksgiving': 'Día de Acción de Gracias', 'Black Friday': 'Black Friday', 'Small Business Saturday': 'Sábado de los Pequeños Negocios',
+  'Christmas Eve': 'Nochebuena', 'Christmas': 'Navidad', 'Christmas Day': 'Navidad', "New Year's Eve": 'Nochevieja', 'Boxing Day': 'Boxing Day',
+  'Family Day': 'Día de la Familia', 'Victoria Day': 'Día de Victoria', 'Canada Day': 'Día de Canadá', 'Civic Holiday': 'Día cívico',
+  'Labour Day': 'Día del Trabajo', 'Truth and Reconciliation Day': 'Día de la Verdad y la Reconciliación', 'Remembrance Day': 'Día del Recuerdo',
+  'Three Kings Day': 'Día de Reyes', 'Constitution Day': 'Día de la Constitución', "Benito Juárez's Birthday": 'Natalicio de Benito Juárez',
+  "Children's Day": 'Día del Niño', 'Cinco de Mayo': 'Cinco de Mayo', 'Day of the Dead': 'Día de Muertos', 'Revolution Day': 'Día de la Revolución',
+  'Day of the Virgin of Guadalupe': 'Día de la Virgen de Guadalupe', 'Australia Day': 'Día de Australia', 'Anzac Day': 'Día de Anzac',
+  "King's Birthday": 'Cumpleaños del Rey', 'Waitangi Day': 'Día de Waitangi', "Day after New Year's": 'Día después de Año Nuevo',
+  'Bonfire Night': 'Noche de las Hogueras', 'Remembrance Sunday': 'Domingo del Recuerdo', "St. Stephen's Day": 'Día de San Esteban',
+  'Early May bank holiday': 'Feriado de principios de mayo', 'Spring bank holiday': 'Feriado de primavera', 'Summer bank holiday': 'Feriado de verano',
+  "St. Brigid's Day bank holiday": 'Feriado de Santa Brígida', 'May bank holiday': 'Feriado de mayo', 'June bank holiday': 'Feriado de junio',
+  'August bank holiday': 'Feriado de agosto', 'October bank holiday': 'Feriado de octubre',
+
+  // Bookkeeping
+  'Paid {o} count as money in on their due date': 'Los {o} pagados cuentan como dinero recibido en su fecha',
+  'Money in and money out, month by month': 'Dinero que entra y que sale, mes por mes', 'Money in': 'Dinero que entra', 'Money out': 'Dinero que sale',
+  'You kept': 'Te quedaste con', 'Waiting to be paid': 'Por cobrar', 'Last {n} months': 'Últimos {n} meses', 'In: {m}': 'Entró: {m}', 'Out: {m}': 'Salió: {m}',
+  'This month': 'Este mes', 'Nothing this month yet.': 'Nada este mes todavía.', 'What you bought or paid': 'Lo que compraste o pagaste',
+  'Cake boxes, booth fee': 'Cajas para pastel, renta del puesto', 'How much': 'Cuánto', 'What day': 'Qué día', 'Delete this': 'Borrar esto',
+  'Add it': 'Agregarlo', 'Type how much it was.': 'Escribe cuánto fue.', 'What it was for': 'Para qué fue', 'Bake sale, tips': 'Venta de pasteles, propinas',
+  'Tip': 'Propina', 'No money tracked yet': 'Aún no hay dinero registrado',
+
+  // Shopping and supplies
+  '{n} things to buy': '{n} cosas por comprar', '{n} thing to buy': '{n} cosa por comprar', 'Add from a picture': 'Agregar desde una foto',
+  'New {sa}': 'Agregar {sa}', 'Shopping list': 'Lista de compras', 'For your {o} in the next {n} weeks, about {m}': 'Para tus {o} de las próximas {n} semanas, unos {m}',
+  'For your {o} in the next {n} weeks': 'Para tus {o} de las próximas {n} semanas',
+  'Things for your {o} show up here on their own': 'Lo que necesitas para tus {o} aparece aquí solo', 'Things you need to buy': 'Cosas que necesitas comprar',
+  'Add something to buy': 'Agrega algo por comprar', 'What you have': 'Lo que tienes', 'Less': 'Menos', 'More': 'Más',
+  'You have what you need': 'Tienes lo que necesitas', 'Nothing to buy right now.': 'Nada por comprar ahora.', 'No price yet': 'Sin precio todavía',
+  'You measure it in': 'Lo mides en', 'When you buy it': 'Cuando lo compras', 'You get': 'Te dan', 'How much you get': 'Cuánto te dan',
+  'units': 'unidades', 'for': 'por', 'How much you have now': 'Cuánto tienes ahora', 'Add {sa}': 'Agregar {sa}', 'Type its name.': 'Escribe su nombre.',
+  'cups': 'tazas', 'each': 'pieza', 'sticks': 'barras', 'dozen': 'docena', 'Name': 'Nombre', 'Amount': 'Cantidad', 'Unit': 'Unidad', 'Price': 'Precio',
+  'Edit {sa}': 'Editar {sa}', 'Flour': 'Harina', 'Sugar': 'Azúcar',
+
+  // Picture import
+  'Take a screenshot of a receipt, an online {oa} or a list of what you need. The app reads it and fills in the names, amounts and prices for you.':
+    'Toma una captura de pantalla de un recibo, una compra en línea o una lista de lo que necesitas. La app la lee y llena los nombres, cantidades y precios por ti.',
+  'Take a screenshot of a receipt, an online order or a list of what you need. The app reads it and fills in the names, amounts and prices for you.':
+    'Toma una captura de pantalla de un recibo, una compra en línea o una lista de lo que necesitas. La app la lee y llena los nombres, cantidades y precios por ti.',
+  'Paste a screenshot here': 'Pega una captura de pantalla aquí', 'Press': 'Presiona', ', drop a picture, or click to choose one': ', suelta una imagen o haz clic para elegir una',
+  'Tip:': 'Consejo:', 'takes a screenshot': 'toma una captura de pantalla', 'Or type or paste the list as words': 'O escribe o pega la lista como texto',
+  'Read this list': 'Leer esta lista', 'Reading your picture...': 'Leyendo tu imagen...',
+  'This can take a few seconds. The first time, it also loads the reader from the internet.': 'Puede tardar unos segundos. La primera vez también carga el lector desde internet.',
+  'Add a line': 'Agregar una línea', 'Try a different picture': 'Probar otra imagen', 'Add to {S}': 'Agregar a {S}',
+  'Check at least one thing to add.': 'Marca al menos una cosa para agregar.', 'Updates the price': 'Actualiza el precio', 'Your picture': 'Tu imagen',
+  "We couldn't read the picture. Reading pictures needs the internet the first time. You can type or paste the list below instead.":
+    'No pudimos leer la imagen. Leer imágenes necesita internet la primera vez. Puedes escribir o pegar la lista abajo.',
+  "We couldn't find any items with prices in that picture. Try a clearer screenshot, or fix the words below and click Read this list.":
+    'No encontramos artículos con precio en esa imagen. Prueba con una captura más clara, o corrige el texto abajo y haz clic en Leer esta lista.',
+
+  // Pricing
+  'What each {pa} really costs you, and what to charge': 'Lo que de verdad te cuesta cada {pa} y cuánto cobrar',
+  'Pay yourself': 'Págate', 'an hour': 'la hora', 'Profit on top': 'Ganancia extra', 'Your time': 'Tu tiempo', 'True cost': 'Costo real',
+  'You charge': 'Cobras', 'Suggested': 'Sugerido', 'Charge {m} instead': 'Cobra {m} mejor', 'No price set yet': 'Sin precio todavía', 'Not set': 'Sin definir',
+  'You make {m}, a little under your goal': 'Ganas {m}, un poco menos de tu meta', 'You make {m} each time': 'Ganas {m} cada vez',
+  'You lose {m} each time': 'Pierdes {m} cada vez', 'Use the suggested price': 'Usar el precio sugerido',
+  'True cost is your {s} plus your time. The suggested price adds the profit you picked on top, rounded up to the next dollar.':
+    'El costo real son tus {s} más tu tiempo. El precio sugerido le suma la ganancia que elegiste, redondeado al siguiente dólar.',
+  'Add your {p} first': 'Primero agrega tus {p}', 'Once you add what goes into each one, this page works out your costs and a fair price.':
+    'Cuando agregues lo que lleva cada uno, esta página calcula tus costos y un precio justo.', 'Go to {P}': 'Ir a {P}',
+
+  // Orders
+  '{n} open, {n} finished': '{n} abiertos, {n} terminados', 'From Google Form': 'Desde Google Forms', 'New {oa}': 'Agregar {oa}', '+ New {oa}': '+ Agregar {oa}',
+  'Open': 'Abiertos', 'All': 'Todos', 'New': 'Nuevo', 'In progress': 'En proceso', 'Paid': 'Pagado', 'Edit': 'Editar', 'Status': 'Estado',
+  'Clear finished {o} ({n})': 'Borrar {o} terminados ({n})', 'Back to My Day': 'Volver a Mi día', 'Edit {oa}': 'Editar {oa}',
+  '{Ca} name': 'Nombre del {ca}', 'Phone or email (optional)': 'Teléfono o correo (opcional)', '{n}-{n}-{n} or an email': '{n}-{n}-{n} o un correo',
+  'What they want': 'Lo que quieren', 'Due date': 'Fecha de entrega', 'Time (optional)': 'Hora (opcional)', 'No time': 'Sin hora', 'Extra details': 'Detalles extra',
+  'Cake flavor': 'Sabor del pastel', 'Want to ask something else on every {oa}?': '¿Quieres preguntar algo más en cada {oa}?',
+  'Message on the cake': 'Mensaje en el pastel', 'Allergies': 'Alergias', 'Pickup or delivery': 'Recoger o entregar', 'Something else': 'Otra cosa',
+  'Notes (optional)': 'Notas (opcional)', 'Anything else to remember': 'Algo más que recordar', 'Save changes': 'Guardar cambios', 'Cancel': 'Cancelar',
+  'Delete this {oa}': 'Borrar este {oa}', 'Back to {O}': 'Volver a {O}', 'Add {oa}': 'Agregar {oa}', '{n} {o} deleted': 'Se borraron {n} {o}',
+  'Bring in {o} from your Google Form': 'Trae los {o} de tu Google Form',
+  "Everyone who filled out your form shows up here as a new {oa}. You can do this again any time. Ones you already brought in won't be added twice.":
+    'Cada persona que llenó tu formulario aparece aquí como un {oa} nuevo. Puedes hacerlo cuando quieras. Los que ya trajiste no se agregan dos veces.',
+  'Download your answers': 'Descarga tus respuestas', 'Open your Google Form and click': 'Abre tu Google Form y haz clic en', 'Responses': 'Respuestas',
+  'Click': 'Haz clic en', 'View in Sheets': 'Ver en Hojas de cálculo', '(or': '(o', 'Link to Sheets': 'Vincular con Hojas de cálculo', 'the first time).': 'la primera vez).',
+  'In the sheet, click': 'En la hoja, haz clic en', 'File': 'Archivo', ', then': ', luego', 'Download': 'Descargar', 'Pick that file': 'Elige ese archivo',
+  'Choose your file': 'Elige tu archivo', 'or drag it here': 'o arrástralo aquí', 'Tell the app where each answer goes': 'Dile a la app dónde va cada respuesta',
+  'We made a guess for each question. Change any that look wrong.': 'Adivinamos cada pregunta. Cambia las que se vean mal.',
+  "Pick which question has the {ca}'s name.": 'Elige qué pregunta tiene el nombre del {ca}.', 'Nothing due today': 'Nada para hoy',
+
+  // Customers
+  '{n} person': '{n} persona', '{n} people': '{n} personas', 'Add a {ca}': 'Agregar un {ca}', 'Find someone': 'Buscar a alguien', 'Most recent': 'Más recientes',
+  'Most {o}': 'Más {o}', 'Spent the most': 'Gastaron más', 'A to Z': 'A a Z', 'No phone or email yet': 'Sin teléfono ni correo todavía', 'total': 'total',
+  'Add {ca}': 'Agregar {ca}', 'Never mind': 'Mejor no', 'Back to {C}': 'Volver a {C}', 'first {oa}': 'primer {oa}', 'Their {o}': 'Sus {o}',
+  'Everyone who orders from you, in one place': 'Todos los que te compran, en un solo lugar', 'No {c} yet': 'Aún no hay {c}',
+  "Add the people you work for, with their phone or email, so they're all in one place.": 'Agrega a las personas para las que trabajas, con su teléfono o correo, para tenerlas en un solo lugar.',
+  'Keep everyone you work for in one place.': 'Ten a todas las personas para las que trabajas en un solo lugar.',
+
+  // Products
+  '{n} {p}': '{n} {p}', 'New {pa}': 'Agregar {pa}', 'Makes {n}': 'Rinde {n}', '{n} {s}': '{n} {s}', 'Costs {m}': 'Cuesta {m}', 'No price': 'Sin precio',
+  'Back to {P}': 'Volver a {P}', 'What you charge': 'Lo que cobras', 'How much it makes': 'Cuánto rinde', '{n} cake, {n} cupcakes': '{n} pastel, {n} cupcakes',
+  'Hours it takes you': 'Horas que te toma', 'What goes in it': 'Lo que lleva', 'Nothing added yet. Pick from your {s} below, or add a new one.':
+    'Nada agregado todavía. Elige de tus {s} abajo, o agrega uno nuevo.', '+ New {sa}': '+ Agregar {sa}', 'Steps': 'Pasos', '(one per line)': '(uno por línea)',
+  'Add {pa}': 'Agregar {pa}', 'Give it a name to save it.': 'Ponle un nombre para guardarlo.', 'Ingredients for one batch cost': 'Los ingredientes de una tanda cuestan',
+
+  // Finder and printables
+  'Search everything in your app, or find places near you': 'Busca todo en tu app, o encuentra lugares cerca de ti',
+  'Search {o}, {c}, {p}, tasks': 'Busca {o}, {c}, {p}, pendientes', 'Search {c}, {p}, tasks': 'Busca {c}, {p}, pendientes', 'Search': 'Buscar',
+  'Find near you': 'Encuentra cerca de ti', 'Farmers markets': 'Mercados locales', 'Opens Google Maps': 'Abre Google Maps', 'Craft fairs': 'Ferias de artesanías',
+  '{S} stores': 'Tiendas de {s}', 'Places to sell': 'Lugares para vender', 'Make one, then print it or save it as a PDF': 'Haz uno y luego imprímelo o guárdalo como PDF',
+  'Receipt': 'Recibo', 'Which {oa}': 'Cuál {oa}', 'Print': 'Imprimir', 'For': 'Para', 'Date': 'Fecha', 'Item': 'Artículo', 'Total': 'Total',
+  'Not paid yet': 'Sin pagar todavía', 'Thank you for your {oa}!': '¡Gracias por tu {oa}!', 'A note at the bottom': 'Una nota al final',
+  '{Oa} {n} days ahead. Text {n}-{n}-{n}': 'Haz tu {oa} con {n} días de anticipación. Escribe al {n}-{n}-{n}',
+  'Order {n} days ahead. Text {n}-{n}-{n}': 'Pide con {n} días de anticipación. Escribe al {n}-{n}-{n}', 'No results': 'Sin resultados',
+
+  // Settings
+  'Change picture': 'Cambiar imagen', 'Remove picture': 'Quitar imagen', 'Your businesses': 'Tus negocios', 'Open now': 'Abierto ahora',
+  'Add another business': 'Agregar otro negocio', 'Your other businesses stay saved': 'Tus otros negocios se quedan guardados', 'This business': 'Este negocio',
+  'Business name and country': 'Nombre del negocio y país', '{B} · United States': '{B} · Estados Unidos', '{B} · Canada': '{B} · Canadá', '{B} · Mexico': '{B} · México',
+  '{B} · United Kingdom': '{B} · Reino Unido', '{B} · Ireland': '{B} · Irlanda', '{B} · Australia': '{B} · Australia', '{B} · New Zealand': '{B} · Nueva Zelanda',
+  '{B} · No holidays': '{B} · Sin días festivos', 'Business type and words': 'Tipo de negocio y palabras', 'Look': 'Apariencia', 'Colors and font': 'Colores y letra',
+  'Changes with the time of day': 'Cambia según la hora del día', 'Language': 'Idioma', 'English, Español': 'English, Español',
+  'Pip, your helper': 'Pip, tu ayudante', 'Pops up with tips about your business': 'Aparece con consejos sobre tu negocio', 'Goals': 'Metas',
+  'What you want help with': 'Con qué quieres ayuda', 'None picked yet': 'Ninguna elegida todavía', 'Backup': 'Copia de seguridad', 'Save a backup': 'Guardar una copia',
+  "You haven't saved one yet": 'Aún no has guardado una', 'Load a backup': 'Cargar una copia', 'Bring back everything from a backup file': 'Recupera todo desde un archivo de copia',
+  'Last saved today': 'Guardada hoy', 'Last saved yesterday': 'Guardada ayer', 'Last saved {n} days ago': 'Guardada hace {n} días',
+  'Delete {B}': 'Borrar {B}', 'Back to Settings': 'Volver a Ajustes', 'Extra details': 'Detalles extra',
+  'This deletes everything in {B}. Click again to delete it': 'Esto borra todo en {B}. Haz clic otra vez para borrarlo',
+
+  // Setup
+  'Business type': 'Tipo de negocio', 'Your business': 'Tu negocio', 'Colors': 'Colores', 'What kind of business is it?': '¿Qué tipo de negocio es?',
+  'Biz Studio uses the right words for your business, like {P} for a bakery or Appointments for a salon.': 'Biz Studio usa las palabras correctas para tu negocio, como {P} para una pastelería o Citas para un salón.',
+  'Home bakery': 'Pastelería en casa', 'Meals and catering': 'Comidas y banquetes', 'Candles and crafts': 'Velas y manualidades', 'Art and commissions': 'Arte y encargos',
+  'Sewing and clothing': 'Costura y ropa', 'Nails': 'Uñas', 'Hair': 'Cabello', 'Lashes and makeup': 'Pestañas y maquillaje', 'Tutoring': 'Clases particulares',
+  'Music and dance lessons': 'Clases de música y baile', 'Fitness coaching': 'Entrenamiento físico', 'Photography': 'Fotografía', 'Pet care': 'Cuidado de mascotas',
+  'Cleaning': 'Limpieza', 'Yard and garden': 'Jardinería', 'Parties and events': 'Fiestas y eventos', 'What kind of business?': '¿Qué tipo de negocio?',
+  'Bike repair, dog grooming, lemonade stand...': 'Reparar bicis, bañar perros, puesto de limonada...', 'Tell us what you do, and we will fill in words that fit.':
+    'Cuéntanos qué haces y llenaremos las palabras que encajen.', 'What you sell or offer': 'Lo que vendes u ofreces', 'What people book or {oa}': 'Lo que la gente reserva o pide',
+  'The people you work with': 'Las personas con quienes trabajas', 'What you use to do the work': 'Lo que usas para hacer el trabajo', 'Continue': 'Continuar',
+  "What's your business called?": '¿Cómo se llama tu negocio?', 'This name goes on your receipts, your menus and the top of your app. You can change it later.':
+    'Este nombre va en tus recibos, tus menús y arriba en tu app. Puedes cambiarlo después.', 'Business name': 'Nombre del negocio', 'Where are you based?': '¿Dónde estás?',
+  'United States': 'Estados Unidos', 'Canada': 'Canadá', 'Mexico': 'México', 'United Kingdom': 'Reino Unido', 'Ireland': 'Irlanda', 'Australia': 'Australia',
+  'New Zealand': 'Nueva Zelanda', 'Somewhere else (no holidays)': 'Otro lugar (sin días festivos)', "We'll put your country's holidays on your calendar.":
+    'Pondremos los días festivos de tu país en tu calendario.', 'Profile picture (optional)': 'Foto de perfil (opcional)', 'Add a picture or logo': 'Agregar una imagen o logo',
+  'If you skip this, your initials show instead.': 'Si no agregas una, se muestran tus iniciales.', 'Back': 'Atrás', 'Enter a business name to continue.': 'Escribe el nombre del negocio para continuar.',
+  'Make it yours': 'Hazlo tuyo', 'Pick your colors. Each one comes with a matching font, and the whole app changes as you click.': 'Elige tus colores. Cada uno viene con su tipo de letra, y toda la app cambia al hacer clic.',
+  'Simple': 'Sencillos', 'Classic': 'Clásico', 'Slate': 'Pizarra', 'Sage': 'Salvia', 'Cherry': 'Cereza', 'Sweet treats': 'Dulces', 'Strawberry': 'Fresa', 'Matcha': 'Matcha',
+  'Blueberry': 'Mora azul', 'Lemon': 'Limón', 'Caramel': 'Caramelo', 'Bubblegum': 'Chicle', 'Nature': 'Naturaleza', 'Ocean': 'Océano', 'Forest': 'Bosque',
+  'Sunset': 'Atardecer', 'Desert': 'Desierto', 'Sky': 'Cielo', 'Bold': 'Llamativos', 'Galaxy': 'Galaxia', 'Tropical': 'Tropical', 'Retro': 'Retro', 'Rainbow': 'Arcoíris',
+  'Custom': 'Personalizado', 'Main color': 'Color principal', 'Accent color': 'Color de acento', 'Change with the time of day': 'Cambiar según la hora del día',
+  'Warm in the morning, bright in the afternoon and calm at night.': 'Cálido en la mañana, brillante en la tarde y tranquilo en la noche.', 'Preview': 'Vista previa',
+  '{o} due': '{o} pendientes', 'this week': 'esta semana', 'Up next': 'Lo que sigue', 'Chocolate chip cookies': 'Galletas con chispas de chocolate',
+  'Friendly': 'Amigable', 'Rounded': 'Redonda', 'Playful': 'Divertida', 'Elegant': 'Elegante', 'Modern': 'Moderna', 'Font': 'Letra',
+  'What do you want help with?': '¿Con qué quieres ayuda?', 'Pick as many as you like. Biz Studio puts these first and gives you tips for them.':
+    'Elige las que quieras. Biz Studio las pone primero y te da consejos.', 'Something else? (optional)': '¿Algo más? (opcional)',
+  'I want to sell at the farmers market this summer': 'Quiero vender en el mercado local este verano', 'Skip for now': 'Saltar por ahora', 'Finish setup': 'Terminar',
+
+  // Goals and tips
+  'I forget {o} or due dates': 'Se me olvidan {o} o fechas de entrega', "I don't know how to price my work": 'No sé cuánto cobrar por mi trabajo',
+  'I run out of {s}': 'Se me acaban {s}', 'I want to grow my business': 'Quiero hacer crecer mi negocio', "I don't have enough time": 'No me alcanza el tiempo',
+  'My info is all over the place': 'Tengo mi información por todos lados', 'I want to track my money': 'Quiero llevar el control de mi dinero',
+  'I want my business to look professional': 'Quiero que mi negocio se vea profesional',
+  'Check your calendar each morning. You will get extra reminders before {o} are due.': 'Revisa tu calendario cada mañana. Te recordaremos antes de que se venzan tus {o}.',
+  'Add what you pay for {s} in Pricing and profit, and Biz Studio will suggest fair prices.': 'Agrega lo que pagas por tus {s} en Precios y ganancias, y Biz Studio te sugerirá precios justos.',
+  'Look at your {s} list a few days before busy days so you can shop ahead.': 'Revisa tu lista de {s} unos días antes de los días ocupados para comprar con tiempo.',
+  'Use the Finder to discover local markets and events where you can sell.': 'Usa el Buscador para descubrir mercados y eventos donde puedes vender.',
+  'Your to-do list puts the most urgent work first, so you always know what to do next.': 'Tu lista de pendientes pone primero lo más urgente, así siempre sabes qué sigue.',
+  'Keep every one of your {o} and {c} here instead of in texts and notes.': 'Guarda todos tus {o} y {c} aquí en vez de en mensajes y notas.',
+  'Keep your {c}, to-dos and events here instead of in texts and notes.': 'Guarda tus {c}, pendientes y eventos aquí en vez de en mensajes y notas.',
+  'Bookkeeping adds up what comes in and what goes out, so you can see your real profit.': 'Contabilidad suma lo que entra y lo que sale, para que veas tu ganancia real.',
+  'Make receipts, menus and price lists from your {p} in a few clicks.': 'Haz recibos, menús y listas de precios con tus {p} en unos clics.',
+  'Open calendar': 'Abrir calendario', 'Open pricing and profit': 'Abrir precios y ganancias', 'Open to-do list': 'Abrir pendientes', 'Open bookkeeping': 'Abrir contabilidad',
+  'Open finder': 'Abrir buscador', 'Open receipts and menus': 'Abrir recibos y menús',
+  'Heads up! {n} {o} are late.': '¡Ojo! {n} {o} van tarde.', 'You have {n} {o} due today. You can do it!': 'Tienes {n} {o} para hoy. ¡Tú puedes!',
+  '{n} {o} are due tomorrow. Time to get ready!': '{n} {o} son para mañana. ¡A prepararse!', 'You have {n} things on your to-do list for today.': 'Tienes {n} cosas en tus pendientes para hoy.',
+  'You have {n} thing on your to-do list for today.': 'Tienes {n} cosa en tus pendientes para hoy.', '{n} finished {o} are waiting to be paid.': '{n} {o} terminados esperan su pago.',
+  "Add your first {oa} and I'll help you keep track of it.": 'Agrega tu primer {oa} y te ayudo a darle seguimiento.',
+  'Add your {p} so I can work out what things cost you.': 'Agrega tus {p} para que pueda calcular lo que te cuestan.',
+  "Add what you pay for your {s}, and I'll make your shopping list.": 'Agrega lo que pagas por tus {s} y haré tu lista de compras.',
+  "It's been a while since your last backup. Save one in Settings so nothing gets lost!": 'Hace rato que no guardas una copia. ¡Guarda una en Ajustes para no perder nada!',
+  'Add a picture for your business in Settings. It goes on your receipts too!': 'Agrega una imagen para tu negocio en Ajustes. ¡También sale en tus recibos!',
+  'Click someone to see all their {o} in one place.': 'Haz clic en alguien para ver todos sus {o} en un solo lugar.',
+  'Click a day, then Add to put an event or a to-do on it.': 'Haz clic en un día y luego en Agregar para poner un evento o un pendiente.',
+  'Print a menu and bring it to your next market.': 'Imprime un menú y llévalo a tu próximo mercado.',
+  'Try searching for a name, a {pa}, or anything else.': 'Prueba buscar un nombre, un {pa}, o lo que sea.',
+  'Add money you spend with Money out, so you know what you really kept.': 'Agrega lo que gastas en Dinero que sale, para saber con cuánto te quedaste de verdad.',
+  "You're doing great. Keep it up!": 'Vas muy bien. ¡Sigue así!', 'Nothing urgent right now. Nice work!': 'Nada urgente ahora. ¡Buen trabajo!',
+  'All caught up! Maybe treat yourself to a snack.': '¡Todo al día! Date un gustito.',
+
+  // Empty pages
+  'Nothing on your list for today.': 'Nada en tu lista para hoy.', 'Add a task above to get started.': 'Agrega un pendiente arriba para empezar.',
+  'Add a task above. When you have {o} coming up, tasks for them show up here on their own.': 'Agrega un pendiente arriba. Cuando tengas {o} próximos, sus pendientes aparecerán aquí solos.',
+  'No sticky notes yet': 'Aún no hay notas adhesivas', 'Quick notes and reminders, in any color you like.': 'Notas y recordatorios rápidos, del color que quieras.',
+  'Your calendar is clear': 'Tu calendario está libre', 'Nothing on your list yet': 'Nada en tu lista todavía', 'Nothing to buy': 'Nada por comprar',
+  'No prices worked out yet': 'Aún no hay precios calculados', 'Find anything': 'Encuentra lo que sea', 'No printables yet': 'Nada para imprimir todavía',
+};
+
+// Sentences with names or things people typed in them: the part in ( ) is kept as it is
+var LANG_ES_PATTERNS = [
+  [/^Done: (.+)$/, 'Hecho: $1'], [/^Not done: (.+)$/, 'No hecho: $1'], [/^Flag as important: (.+)$/, 'Marcar como importante: $1'],
+  [/^Unflag (.+)$/, 'Quitar marca: $1'], [/^Delete (.+)$/, 'Borrar $1'], [/^Remove (.+)$/, 'Quitar $1'], [/^Edit (.+)$/, 'Editar $1'],
+  [/^To-do: (.+)$/, 'Pendiente: $1'], [/^Sticky note: (.+)$/, 'Nota adhesiva: $1'], [/^Bought (.+), added (\{m\}) to Bookkeeping$/, 'Compraste $1, se agregaron $2 a Contabilidad'],
+  [/^Bought (.+)$/, 'Compraste $1'], [/^(.+) is now (\{m\})$/, '$1 ahora cuesta $2'], [/^Last: (.+)$/, 'Último: $1'],
+  [/^New (\{oa\}) for (.+)$/, 'Agregar $1 para $2'], [/^(.+)'s (\{oa\}) marked (.+)$/, '$2 de $1 marcado como $3'],
+  [/^Make (.+) for (.+)$/, 'Hacer $1 para $2'], [/^(.+), buy (.+)$/, '$1, compra $2'], [/^Need (.+), have (.+)\. For (.+)$/, 'Necesitas $1, tienes $2. Para $3'],
+  [/^(\{m\}) for (\{n\}) (.+)$/, '$1 por $2 $3'], [/^(.+) at (\{t\})$/, '$1 a las $2'], [/^(.+) for ([A-Z][a-z]+(?: [A-Z][a-z]+)?)$/, '$1 para $2'],
+  [/^Heads up! (.+)'s (.+) is late\.$/, '¡Ojo! $2 de $1 va tarde.'], [/^(.+)'s (.+) is due today at (\{t\})\.$/, '$2 de $1 es para hoy a las $3.'],
+  [/^(.+)'s (.+) is due today\.$/, '$2 de $1 es para hoy.'], [/^Don't forget: (.+)'s (.+) is due tomorrow\.$/, 'No olvides: $2 de $1 es para mañana.'],
+  [/^Today: (.+) at (\{t\})\. Have fun!$/, 'Hoy: $1 a las $2. ¡Diviértete!'], [/^Today: (.+)\. Have fun!$/, 'Hoy: $1. ¡Diviértete!'],
+  [/^You flagged "(.+)" as important\. And (\{n\}) more\.$/, 'Marcaste "$1" como importante. Y $2 más.'], [/^You flagged "(.+)" as important\.$/, 'Marcaste "$1" como importante.'],
+  [/^You're running low on (.+) and (\{n\}) more for your upcoming (.+)\.$/, 'Te queda poco de $1 y $2 más para tus próximos $3.'],
+  [/^You're running low on (.+) for your upcoming (.+)\.$/, 'Te queda poco de $1 para tus próximos $2.'],
+  [/^(.+)'s (\{oa\}) is done but not paid yet\.$/, 'El $2 de $1 está listo pero sin pagar.'],
+  [/^Your (.+) costs more to make than you charge\. Let's fix that!$/, 'Hacer $1 te cuesta más de lo que cobras. ¡Arreglémoslo!'],
+  [/^You could charge a little more for your (.+)\.$/, 'Podrías cobrar un poco más por $1.'],
+  [/^(.+): (.+) \((\{d\})\)$/, '$1: $2 ($3)'], [/^Back to (.+)$/, 'Volver a $1'], [/^Added (\{n\}) to (\{S\}) and updated (\{n\}) prices?$/, 'Se agregaron $1 a $2 y se actualizaron $3 precios'],
+  [/^Added (\{n\}) to (\{S\})$/, 'Se agregaron $1 a $2'], [/^Updated (\{n\}) prices?$/, 'Se actualizaron $1 precios'], [/^Add (\{n\}) to (\{S\})$/, 'Agregar $1 a $2'],
+  [/^We found (\{n\}) things?\. (.+)$/, 'Encontramos $1. Revisa los nombres, cantidades y precios, y corrige lo que se vea mal. Desmarca lo que no quieras.'],
+  [/^(.+) with the (.+) font$/, '$1 con la letra $2'], [/^Home bakery: (.+)$/, 'Pastelería en casa: $1'], [/^Cleaning: (.+)$/, 'Limpieza: $1'],
+  [/^Skip (.+)$/, 'Omitir $1'], [/^Bought (.+)$/, 'Compraste $1'],
+];
