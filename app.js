@@ -526,13 +526,23 @@ function sectionColor(id) {
 // =========================================
 // LANGUAGE
 // The app is written in English. When another language is picked, every bit of text
-// on the screen is swapped for its translation as it shows up (see LANG_ES at the bottom).
+// on the screen is swapped for its translation as it shows up (see LANG_ES and the other
+// languages at the bottom of this file).
 // Numbers, prices, dates and the business's own words are kept and put back in.
 // The language is saved on this computer, for every business.
 // =========================================
 const LANGUAGES = [
   { id: 'en', label: 'English' },
   { id: 'es', label: 'Español' },
+  { id: 'fr', label: 'Français' },
+  { id: 'zh', label: '中文 (简体)' },
+  { id: 'vi', label: 'Tiếng Việt' },
+  { id: 'ko', label: '한국어' },
+  { id: 'tl', label: 'Tagalog' },
+  { id: 'ru', label: 'Русский' },
+  { id: 'ja', label: '日本語' },
+  { id: 'pt', label: 'Português' },
+  { id: 'de', label: 'Deutsch' },
 ];
 let appLanguage = 'en';
 try { appLanguage = localStorage.getItem('bizStudio.language') || 'en'; } catch (error) { /* fine */ }
@@ -540,7 +550,17 @@ if (!LANGUAGES.some(function (l) { return l.id === appLanguage; })) appLanguage 
 
 // For dates and times: "Tuesday, November 17" or "martes, 17 de noviembre"
 function appLocale() {
-  if (appLanguage === 'es') return typeof myCountry === 'function' && myCountry() === 'MX' ? 'es-MX' : 'es-US';
+  const country = typeof myCountry === 'function' ? myCountry() : 'US';
+  if (appLanguage === 'es') return country === 'MX' ? 'es-MX' : 'es-US';
+  if (appLanguage === 'fr') return country === 'CA' ? 'fr-CA' : 'fr-FR';
+  if (appLanguage === 'zh') return 'zh-CN';
+  if (appLanguage === 'vi') return 'vi-VN';
+  if (appLanguage === 'ko') return 'ko-KR';
+  if (appLanguage === 'tl') return 'fil-PH';
+  if (appLanguage === 'ru') return 'ru-RU';
+  if (appLanguage === 'ja') return 'ja-JP';
+  if (appLanguage === 'pt') return 'pt-BR';
+  if (appLanguage === 'de') return 'de-DE';
   return 'en-US';
 }
 
@@ -553,40 +573,109 @@ function setLanguage(id) {
   else showSetup();
 }
 
-// The business's own words in other languages (Recipes, Orders...)
-const WORDS_ES = {
-  'Recipes': 'Recetas', 'Recipe': 'Receta', 'Orders': 'Pedidos', 'Order': 'Pedido',
-  'Customers': 'Clientes', 'Customer': 'Cliente', 'Ingredients': 'Ingredientes', 'Ingredient': 'Ingrediente',
-  'Classes': 'Clases', 'Class': 'Clase', 'Sessions': 'Sesiones', 'Session': 'Sesión',
-  'Clients': 'Clientes', 'Client': 'Cliente', 'Equipment': 'Equipo', 'Lessons': 'Clases', 'Lesson': 'Clase',
-  'Bookings': 'Reservas', 'Booking': 'Reserva', 'Students': 'Alumnos', 'Student': 'Alumno',
-  'Materials': 'Materiales', 'Material': 'Material', 'Menu items': 'Platillos', 'Menu item': 'Platillo',
-  'Packages': 'Paquetes', 'Package': 'Paquete', 'Events': 'Eventos', 'Event': 'Evento',
-  'Shoots': 'Sesiones de fotos', 'Shoot': 'Sesión de fotos', 'Gear': 'Equipo',
-  'Pieces': 'Piezas', 'Piece': 'Pieza', 'Commissions': 'Encargos', 'Commission': 'Encargo',
-  'Art supplies': 'Materiales de arte', 'Art supply': 'Material de arte',
-  'Products': 'Productos', 'Product': 'Producto', 'Supplies': 'Insumos', 'Supply': 'Insumo',
-  'Services': 'Servicios', 'Service': 'Servicio', 'Appointments': 'Citas', 'Appointment': 'Cita',
-  'Pet owners': 'Dueños de mascotas', 'Pet owner': 'Dueño de mascota', 'Jobs': 'Trabajos', 'Job': 'Trabajo',
+// The business's own words in other languages (Recipes, Orders...): Spanish, French, Chinese, Vietnamese, Korean
+const OWN_WORDS = {
+  'Recipes': ['Recetas', 'Recettes', '食谱', 'Công thức', '레시피'], 'Recipe': ['Receta', 'Recette', '食谱', 'Công thức', '레시피'],
+  'Orders': ['Pedidos', 'Commandes', '订单', 'Đơn hàng', '주문'], 'Order': ['Pedido', 'Commande', '订单', 'Đơn hàng', '주문'],
+  'Customers': ['Clientes', 'Clients', '顾客', 'Khách hàng', '고객'], 'Customer': ['Cliente', 'Client', '顾客', 'Khách hàng', '고객'],
+  'Ingredients': ['Ingredientes', 'Ingrédients', '食材', 'Nguyên liệu', '재료'], 'Ingredient': ['Ingrediente', 'Ingrédient', '食材', 'Nguyên liệu', '재료'],
+  'Classes': ['Clases', 'Cours', '课程', 'Lớp học', '수업'], 'Class': ['Clase', 'Cours', '课程', 'Lớp học', '수업'],
+  'Sessions': ['Sesiones', 'Séances', '课时', 'Buổi tập', '세션'], 'Session': ['Sesión', 'Séance', '课时', 'Buổi tập', '세션'],
+  'Clients': ['Clientes', 'Clients', '客户', 'Khách hàng', '고객'], 'Client': ['Cliente', 'Client', '客户', 'Khách hàng', '고객'],
+  'Equipment': ['Equipo', 'Équipement', '器材', 'Dụng cụ', '장비'],
+  'Lessons': ['Clases', 'Leçons', '课程', 'Bài học', '레슨'], 'Lesson': ['Clase', 'Leçon', '课程', 'Bài học', '레슨'],
+  'Bookings': ['Reservas', 'Réservations', '预约', 'Lịch đặt', '예약'], 'Booking': ['Reserva', 'Réservation', '预约', 'Lịch đặt', '예약'],
+  'Students': ['Alumnos', 'Élèves', '学生', 'Học sinh', '학생'], 'Student': ['Alumno', 'Élève', '学生', 'Học sinh', '학생'],
+  'Materials': ['Materiales', 'Matériel', '材料', 'Vật liệu', '재료'], 'Material': ['Material', 'Matériel', '材料', 'Vật liệu', '재료'],
+  'Menu items': ['Platillos', 'Plats', '菜品', 'Món ăn', '메뉴'], 'Menu item': ['Platillo', 'Plat', '菜品', 'Món ăn', '메뉴'],
+  'Packages': ['Paquetes', 'Forfaits', '套餐', 'Gói dịch vụ', '패키지'], 'Package': ['Paquete', 'Forfait', '套餐', 'Gói dịch vụ', '패키지'],
+  'Events': ['Eventos', 'Événements', '活动', 'Sự kiện', '행사'], 'Event': ['Evento', 'Événement', '活动', 'Sự kiện', '행사'],
+  'Shoots': ['Sesiones de fotos', 'Séances photo', '拍摄', 'Buổi chụp', '촬영'], 'Shoot': ['Sesión de fotos', 'Séance photo', '拍摄', 'Buổi chụp', '촬영'],
+  'Gear': ['Equipo', 'Matériel', '器材', 'Thiết bị', '장비'],
+  'Pieces': ['Piezas', 'Œuvres', '作品', 'Tác phẩm', '작품'], 'Piece': ['Pieza', 'Œuvre', '作品', 'Tác phẩm', '작품'],
+  'Commissions': ['Encargos', 'Commandes', '委托', 'Đơn đặt', '의뢰'], 'Commission': ['Encargo', 'Commande', '委托', 'Đơn đặt', '의뢰'],
+  'Art supplies': ['Materiales de arte', "Matériel d'art", '美术用品', 'Họa cụ', '미술 용품'], 'Art supply': ['Material de arte', "Matériel d'art", '美术用品', 'Họa cụ', '미술 용품'],
+  'Products': ['Productos', 'Produits', '产品', 'Sản phẩm', '상품'], 'Product': ['Producto', 'Produit', '产品', 'Sản phẩm', '상품'],
+  'Supplies': ['Insumos', 'Fournitures', '用品', 'Vật tư', '용품'], 'Supply': ['Insumo', 'Fourniture', '用品', 'Vật tư', '용품'],
+  'Services': ['Servicios', 'Services', '服务', 'Dịch vụ', '서비스'], 'Service': ['Servicio', 'Service', '服务', 'Dịch vụ', '서비스'],
+  'Appointments': ['Citas', 'Rendez-vous', '预约', 'Lịch hẹn', '예약'], 'Appointment': ['Cita', 'Rendez-vous', '预约', 'Lịch hẹn', '예약'],
+  'Pet owners': ['Dueños de mascotas', 'Propriétaires', '宠物主人', 'Chủ thú cưng', '보호자'], 'Pet owner': ['Dueño de mascota', 'Propriétaire', '宠物主人', 'Chủ thú cưng', '보호자'],
+  'Jobs': ['Trabajos', 'Contrats', '工作', 'Công việc', '작업'], 'Job': ['Trabajo', 'Contrat', '工作', 'Công việc', '작업'],
 };
+// ...and Tagalog, Russian, Japanese, Portuguese, German
+const OWN_WORDS_MORE = {
+  'Recipes': ['Mga recipe', 'Рецепты', 'レシピ', 'Receitas', 'Rezepte'], 'Recipe': ['Recipe', 'Рецепт', 'レシピ', 'Receita', 'Rezept'],
+  'Orders': ['Mga order', 'Заказы', '注文', 'Pedidos', 'Bestellungen'], 'Order': ['Order', 'Заказ', '注文', 'Pedido', 'Bestellung'],
+  'Customers': ['Mga customer', 'Клиенты', 'お客さん', 'Clientes', 'Kunden'], 'Customer': ['Customer', 'Клиент', 'お客さん', 'Cliente', 'Kunde'],
+  'Ingredients': ['Mga sangkap', 'Ингредиенты', '材料', 'Ingredientes', 'Zutaten'], 'Ingredient': ['Sangkap', 'Ингредиент', '材料', 'Ingrediente', 'Zutat'],
+  'Classes': ['Mga klase', 'Занятия', 'クラス', 'Aulas', 'Kurse'], 'Class': ['Klase', 'Занятие', 'クラス', 'Aula', 'Kurs'],
+  'Sessions': ['Mga session', 'Сеансы', 'セッション', 'Sessões', 'Einheiten'], 'Session': ['Session', 'Сеанс', 'セッション', 'Sessão', 'Einheit'],
+  'Clients': ['Mga kliyente', 'Клиенты', 'お客さま', 'Clientes', 'Kunden'], 'Client': ['Kliyente', 'Клиент', 'お客さま', 'Cliente', 'Kunde'],
+  'Equipment': ['Kagamitan', 'Оборудование', '道具', 'Equipamentos', 'Ausrüstung'],
+  'Lessons': ['Mga lesson', 'Уроки', 'レッスン', 'Aulas', 'Stunden'], 'Lesson': ['Lesson', 'Урок', 'レッスン', 'Aula', 'Stunde'],
+  'Bookings': ['Mga booking', 'Записи', '予約', 'Reservas', 'Buchungen'], 'Booking': ['Booking', 'Запись', '予約', 'Reserva', 'Buchung'],
+  'Students': ['Mga estudyante', 'Ученики', '生徒', 'Alunos', 'Schüler'], 'Student': ['Estudyante', 'Ученик', '生徒', 'Aluno', 'Schüler'],
+  'Materials': ['Mga materyales', 'Материалы', '材料', 'Materiais', 'Materialien'], 'Material': ['Materyales', 'Материал', '材料', 'Material', 'Material'],
+  'Menu items': ['Mga pagkain', 'Блюда', 'メニュー', 'Pratos', 'Gerichte'], 'Menu item': ['Pagkain', 'Блюдо', 'メニュー', 'Prato', 'Gericht'],
+  'Packages': ['Mga package', 'Пакеты', 'プラン', 'Pacotes', 'Pakete'], 'Package': ['Package', 'Пакет', 'プラン', 'Pacote', 'Paket'],
+  'Events': ['Mga event', 'Мероприятия', 'イベント', 'Eventos', 'Events'], 'Event': ['Event', 'Мероприятие', 'イベント', 'Evento', 'Event'],
+  'Shoots': ['Mga shoot', 'Съёмки', '撮影', 'Ensaios', 'Shootings'], 'Shoot': ['Shoot', 'Съёмка', '撮影', 'Ensaio', 'Shooting'],
+  'Gear': ['Gamit', 'Техника', '機材', 'Equipamentos', 'Ausrüstung'],
+  'Pieces': ['Mga likha', 'Работы', '作品', 'Obras', 'Werke'], 'Piece': ['Likha', 'Работа', '作品', 'Obra', 'Werk'],
+  'Commissions': ['Mga commission', 'Заказы', '依頼', 'Encomendas', 'Aufträge'], 'Commission': ['Commission', 'Заказ', '依頼', 'Encomenda', 'Auftrag'],
+  'Art supplies': ['Gamit sa sining', 'Художественные материалы', '画材', 'Materiais de arte', 'Künstlerbedarf'], 'Art supply': ['Gamit sa sining', 'Художественный материал', '画材', 'Material de arte', 'Künstlerbedarf'],
+  'Products': ['Mga produkto', 'Товары', '商品', 'Produtos', 'Produkte'], 'Product': ['Produkto', 'Товар', '商品', 'Produto', 'Produkt'],
+  'Supplies': ['Mga gamit', 'Расходники', '消耗品', 'Materiais', 'Material'], 'Supply': ['Gamit', 'Расходник', '消耗品', 'Material', 'Material'],
+  'Services': ['Mga serbisyo', 'Услуги', 'サービス', 'Serviços', 'Leistungen'], 'Service': ['Serbisyo', 'Услуга', 'サービス', 'Serviço', 'Leistung'],
+  'Appointments': ['Mga appointment', 'Записи', '予約', 'Horários', 'Termine'], 'Appointment': ['Appointment', 'Запись', '予約', 'Horário', 'Termin'],
+  'Pet owners': ['Mga may-ari ng alaga', 'Хозяева питомцев', '飼い主さん', 'Tutores', 'Tierhalter'], 'Pet owner': ['May-ari ng alaga', 'Хозяин питомца', '飼い主さん', 'Tutor', 'Tierhalter'],
+  'Jobs': ['Mga trabaho', 'Заказы', '仕事', 'Serviços', 'Aufträge'], 'Job': ['Trabaho', 'Заказ', '仕事', 'Serviço', 'Auftrag'],
+};
+Object.keys(OWN_WORDS_MORE).forEach(function (k) { OWN_WORDS[k] = OWN_WORDS[k].concat(OWN_WORDS_MORE[k]); });
+const OWN_WORD_LANGS = ['es', 'fr', 'zh', 'vi', 'ko', 'tl', 'ru', 'ja', 'pt', 'de'];
 function translateWord(word) {
-  if (appLanguage !== 'es') return word;
-  if (WORDS_ES[word]) return WORDS_ES[word];
+  const at = OWN_WORD_LANGS.indexOf(appLanguage);
+  if (at === -1) return word;
+  if (OWN_WORDS[word]) return OWN_WORDS[word][at];
   const cap = word.charAt(0).toUpperCase() + word.slice(1);
-  if (WORDS_ES[cap]) return WORDS_ES[cap].toLowerCase();
+  if (OWN_WORDS[cap]) return OWN_WORDS[cap][at].toLowerCase();
   return word;
 }
 
-// Month and day names (English and Spanish), so whole dates can be kept as they are
-const DATE_NAMES = '(?:January|February|March|April|May|June|July|August|September|October|November|December|' +
-  'Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sept|Sep|Oct|Nov|Dec|' +
-  'Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sun|Mon|Tue|Wed|Thu|Fri|Sat|' +
-  'enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre|' +
-  'ene|feb|mar|abr|jun|jul|ago|sept|sep|oct|nov|dic|' +
-  'domingo|lunes|martes|miércoles|jueves|viernes|sábado|dom|lun|mié|jue|vie|sáb)';
-const DATE_PART = '(?:' + DATE_NAMES + '\\.?|\\d{1,4}|de|del)';
-const DATE_RUN = new RegExp('(?<![\\wáéíóúñ])' + DATE_PART + '(?:[\\s,]+' + DATE_PART + ')*(?![\\wáéíóúñ])', 'g');
-const HAS_DATE_NAME = new RegExp('(?<![\\wáéíóúñ])' + DATE_NAMES + '(?![\\wáéíóúñ])');
+// Month and day names, so whole dates can be kept as they are.
+// English is always included (the app is written in English), plus the language that's picked.
+const DATE_WORDS = {
+  en: 'January|February|March|April|May|June|July|August|September|October|November|December|' +
+    'Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sept|Sep|Oct|Nov|Dec|' +
+    'Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sun|Mon|Tue|Wed|Thu|Fri|Sat',
+  es: 'enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre|' +
+    'ene|feb|mar|abr|jun|jul|ago|sept|sep|oct|nov|dic|domingo|lunes|martes|miércoles|jueves|viernes|sábado|dom|lun|mié|jue|vie|sáb',
+  fr: 'janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre|' +
+    'janv|févr|avr|juil|sept|oct|nov|déc|lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche|lun|mar|mer|jeu|ven|sam|dim',
+  vi: 'Thứ (?:Hai|Ba|Tư|Năm|Sáu|Bảy|\\d)|Chủ Nhật|thg|[Tt]háng',
+  tl: 'Enero|Pebrero|Marso|Abril|Mayo|Hunyo|Hulyo|Agosto|Setyembre|Oktubre|Nobyembre|Disyembre|' +
+    'Ene|Peb|Mar|Abr|Hun|Hul|Ago|Set|Okt|Nob|Dis|Linggo|Lunes|Martes|Miyerkules|Huwebes|Biyernes|Sabado|Lin|Lun|Miy|Huw|Biy|Sab',
+  ru: 'январь|февраль|март|апрель|май|июнь|июль|август|сентябрь|октябрь|ноябрь|декабрь|' +
+    'января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря|' +
+    'янв|февр|мар|апр|июн|июл|авг|сент|окт|нояб|дек|понедельник|вторник|среда|четверг|пятница|суббота|воскресенье|пн|вт|ср|чт|пт|сб|вс',
+  pt: 'janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro|' +
+    'jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez|domingo|segunda-feira|terça-feira|quarta-feira|quinta-feira|sexta-feira|sábado|dom|seg|ter|qua|qui|sex|sáb',
+  de: 'Januar|Februar|März|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember|' +
+    'Jan|Feb|Mär|Apr|Jun|Jul|Aug|Sept|Sep|Okt|Nov|Dez|Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag|Mo|Di|Mi|Do|Fr|Sa|So',
+};
+const dateRegexCache = {};
+function dateRegexes() {
+  if (dateRegexCache[appLanguage]) return dateRegexCache[appLanguage];
+  const names = '(?:' + [DATE_WORDS.en, DATE_WORDS[appLanguage]].filter(Boolean).join('|') + ')';
+  const part = '(?:' + names + '\\.?|\\d{1,4}|de|del|năm|г\\.?)';
+  dateRegexCache[appLanguage] = {
+    run: new RegExp('(?<![\\p{L}\\d])' + part + '(?:[\\s,.]+' + part + ')*(?![\\p{L}])', 'gu'),
+    has: new RegExp('(?<![\\p{L}])' + names + '(?![\\p{L}])', 'u'),
+  };
+  return dateRegexCache[appLanguage];
+}
+// Chinese, Japanese and Korean dates: 11月18日周三, 11月18日(水), 2026年11月, 11월 18일 (수)
+const CJK_DATE = /(?:\d{4}\s*[年년]\s*)?\d{1,2}\s*[月월](?:\s*\d{1,2}\s*[日일])?(?:\s*\(?(?:周[一二三四五六日]|星期[一二三四五六日天]|[月火水木金土日](?:曜日)?|[월화수목금토일](?:요일)?)\)?)?|[一二三四五六七八九十]+月|星期[一二三四五六日天]|周[一二三四五六日]|[月火水木金土日]曜日/g;
 
 function escapeRegex(text) { return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
@@ -612,13 +701,15 @@ function textKey(text) {
     key = key.replace(new RegExp('(?<![\\w{])' + escapeRegex(pair[0]) + '(?![\\w}])', 'g'), pair[1]);
   });
   // Dates (whole runs like "Tue, Nov 17" or "17 de noviembre")
-  key = key.replace(DATE_RUN, function (run) {
-    if (!HAS_DATE_NAME.test(run)) return run;
+  const dates = dateRegexes();
+  key = key.replace(dates.run, function (run) {
+    if (!dates.has.test(run)) return run;
     values.push(['d', run]);
     return '{d}';
   });
-  // Times like 3:30 PM
-  key = key.replace(/\b\d{1,2}:\d{2}\s?(?:AM|PM|a\. ?m\.|p\. ?m\.)/gi, function (t) { values.push(['t', t]); return '{t}'; });
+  key = key.replace(CJK_DATE, function (run) { values.push(['d', run]); return '{d}'; });
+  // Times like 3:30 PM, 14 h 00, 오후 2:00, 14:00
+  key = key.replace(/(?:(?:오전|오후|上午|下午)\s?)?\b\d{1,2}(?::\d{2}|\s?h\s?\d{2})(?:\s?(?:AM|PM|a\. ?m\.|p\. ?m\.|SA|CH))?/gi, function (t) { values.push(['t', t]); return '{t}'; });
   // Money, then other numbers
   key = key.replace(/-?\$\d[\d,]*(?:\.\d+)?/g, function (m) { values.push(['m', m]); return '{m}'; });
   key = key.replace(/(?<![{\w])\d+(?:[.,]\d+)*%?/g, function (n) { values.push(['n', n]); return '{n}'; });
@@ -645,8 +736,10 @@ function fillKey(template, values) {
 }
 
 function translateText(text) {
-  if (appLanguage !== 'es' || !text || !/[A-Za-z]/.test(text)) return null;
-  const dict = LANG_ES;
+  if (appLanguage === 'en' || !text || !/[A-Za-z]/.test(text)) return null;
+  const data = languageData();
+  if (!data) return null;
+  const dict = data.dict;
   const trimmed = text.trim();
   if (Object.prototype.hasOwnProperty.call(dict, trimmed)) return text.replace(trimmed, dict[trimmed]);
   const k = textKey(trimmed);
@@ -661,12 +754,12 @@ function translateText(text) {
     }
   }
   // Sentences with names in them
-  for (let i = 0; i < LANG_ES_PATTERNS.length; i++) {
-    const rule = LANG_ES_PATTERNS[i];
+  for (let i = 0; i < data.patterns.length; i++) {
+    const rule = data.patterns[i];
     if (rule[0].test(k.key)) return text.replace(trimmed, fillKey(k.key.replace(rule[0], rule[1]), k.values));
   }
   // A word on its own, like a business's own word in the menu
-  if (/^[A-Z][a-z ]+$/.test(trimmed) && WORDS_ES[trimmed]) return text.replace(trimmed, WORDS_ES[trimmed]);
+  if (/^[A-Z][a-z ]+$/.test(trimmed) && OWN_WORDS[trimmed]) return text.replace(trimmed, translateWord(trimmed));
   return null;
 }
 
@@ -7755,7 +7848,7 @@ function showSettings(page) {
       </button>
       <div class="settings-row mint lang-row">
         <span class="nav-icon">${icon('globe')}</span>
-        <span class="row-text"><strong>Language</strong><span class="row-value">English, Español</span></span>
+        <span class="row-text"><strong>Language</strong><span class="row-value">English, Español, Français, 中文, Tiếng Việt, 한국어, Tagalog, Русский, 日本語, Português, Deutsch</span></span>
         <select id="lang-pick" class="input lang-select" aria-label="Language"></select>
       </div>
       <label class="settings-row butter helper-row">
@@ -8161,7 +8254,7 @@ var LANG_ES = {
   'Business name and country': 'Nombre del negocio y país', '{B} · United States': '{B} · Estados Unidos', '{B} · Canada': '{B} · Canadá', '{B} · Mexico': '{B} · México',
   '{B} · United Kingdom': '{B} · Reino Unido', '{B} · Ireland': '{B} · Irlanda', '{B} · Australia': '{B} · Australia', '{B} · New Zealand': '{B} · Nueva Zelanda',
   '{B} · No holidays': '{B} · Sin días festivos', 'Business type and words': 'Tipo de negocio y palabras', 'Look': 'Apariencia', 'Colors and font': 'Colores y letra',
-  'Changes with the time of day': 'Cambia según la hora del día', 'Language': 'Idioma', 'English, Español': 'English, Español',
+  'Changes with the time of day': 'Cambia según la hora del día', 'Language': 'Idioma', 'English, Español, Français, 中文, Tiếng Việt, 한국어, Tagalog, Русский, 日本語, Português, Deutsch': 'English, Español, Français, 中文, Tiếng Việt, 한국어, Tagalog, Русский, 日本語, Português, Deutsch',
   'Pip, your helper': 'Pip, tu ayudante', 'Pops up with tips about your business': 'Aparece con consejos sobre tu negocio', 'Goals': 'Metas',
   'What you want help with': 'Con qué quieres ayuda', 'None picked yet': 'Ninguna elegida todavía', 'Backup': 'Copia de seguridad', 'Save a backup': 'Guardar una copia',
   "You haven't saved one yet": 'Aún no has guardado una', 'Load a backup': 'Cargar una copia', 'Bring back everything from a backup file': 'Recupera todo desde un archivo de copia',
@@ -8261,3 +8354,6241 @@ var LANG_ES_PATTERNS = [
   [/^(.+) with the (.+) font$/, '$1 con la letra $2'], [/^Home bakery: (.+)$/, 'Pastelería en casa: $1'], [/^Cleaning: (.+)$/, 'Limpieza: $1'],
   [/^Skip (.+)$/, 'Omitir $1'], [/^Bought (.+)$/, 'Compraste $1'],
 ];
+
+// =========================================
+// MORE LANGUAGES
+// Each line is "number|translation". The numbers follow the order of LANG_ES above
+// (0 is the first Spanish line), then the sentence patterns in LANG_ES_PATTERNS.
+// To add a new line to every language, add it at the END of LANG_ES so the numbers stay lined up.
+// =========================================
+function buildLanguage(text) {
+  const list = [];
+  text.trim().split('\n').forEach(function (line) {
+    const bar = line.indexOf('|');
+    if (bar > 0) list[Number(line.slice(0, bar))] = line.slice(bar + 1);
+  });
+  const keys = Object.keys(LANG_ES);
+  const dict = {};
+  keys.forEach(function (k, i) { if (list[i]) dict[k] = list[i]; });
+  const patterns = LANG_ES_PATTERNS.map(function (rule, i) { return [rule[0], list[keys.length + i]]; })
+    .filter(function (rule) { return rule[1]; });
+  return { dict: dict, patterns: patterns };
+}
+const languageCache = {};
+function languageData() {
+  if (appLanguage === 'es') return { dict: LANG_ES, patterns: LANG_ES_PATTERNS };
+  const text = { fr: LANG_FR, zh: LANG_ZH, vi: LANG_VI, ko: LANG_KO, tl: LANG_TL, ru: LANG_RU, ja: LANG_JA, pt: LANG_PT, de: LANG_DE }[appLanguage];
+  if (!text) return null;
+  if (!languageCache[appLanguage]) languageCache[appLanguage] = buildLanguage(text);
+  return languageCache[appLanguage];
+}
+
+// French
+var LANG_FR = `
+0|Dim
+1|Lun
+2|Mar
+3|Mer
+4|Jeu
+5|Ven
+6|Sam
+7|Ma journée
+8|Choisi pour toi
+9|Calendrier
+10|À faire
+11|Prix et profits
+12|Comptabilité
+13|Travail
+14|Notes autocollantes
+15|Entreprise
+16|{S} et courses
+17|Grandir
+18|Recherche
+19|Reçus et menus
+20|Paramètres
+21|Argent
+22|Menu
+23|Menus
+24|Bonjour
+25|Bon après-midi
+26|Bonsoir
+27|Bonjour !
+28|{o} pour aujourd'hui
+29|{oa} pour aujourd'hui
+30|tâches pour aujourd'hui
+31|tâche pour aujourd'hui
+32|payé ce mois-ci
+33|choses à acheter
+34|chose à acheter
+35|{n} {oa} est en retard. Touche pour voir.
+36|{n} {o} sont en retard. Touche pour voir.
+37|À faire aujourd'hui
+38|Tout voir
+39|Cette semaine
+40|événements aujourd'hui
+41|événement aujourd'hui
+42|Rien pour aujourd'hui. {n} à venir.
+43|Tes priorités
+44|Fermer
+45|Montre-moi
+46|Conseil suivant
+47|Conseils de Pip
+48|Pip
+49|Aujourd'hui
+50|Demain
+51|Hier
+52|En retard
+53|Sans date
+54|Un jour
+55|En retard, c'était le {d}
+56|{Oa} pour le {d}
+57|{Oa} pour le {d} à {t}
+58|{n} jours de retard
+59|{n} jour de retard
+60|Pour aujourd'hui
+61|Pour demain
+62|Pour demain à {t}
+63|Pour aujourd'hui à {t}
+64|Dans {n} jours
+65|Dans {n} jours à {t}
+66|Pour le {d}
+67|Pour le {d} à {t}
+68|Prévu le {d}
+69|Prévu le {d} à {t}
+70|{d} à {t}
+71|Marquer comme important
+72|Retirer la marque
+73|Supprimer
+74|Fait
+75|Pas fait
+76|Ajouter une tâche
+77|Nouvelle tâche
+78|Qu'est-ce que tu dois faire ?
+79|Acheter plus de farine
+80|Important
+81|Marque-la pour qu'elle reste en haut
+82|Ajouter la tâche
+83|Écris ce que tu dois faire.
+84|Effacer les tâches faites ({n})
+85|{n} choses à faire aujourd'hui
+86|{n} chose à faire aujourd'hui
+87|{n} tâches effacées
+88|{n} tâche effacée
+89|Rien ici pour l'instant.
+90|Annuler
+91|Aucune tâche
+92|Rien à faire aujourd'hui
+93|Tout est fait !
+94|Nouvelle note
+95|Écris ici...
+96|Note autocollante
+97|Sortir sur ton écran
+98|Couleur et supprimer
+99|La voir dans le calendrier
+100|Jaune
+101|Pêche
+102|Rose
+103|Lavande
+104|Bleu
+105|Menthe
+106|Citron vert
+107|Sable
+108|Choisir n'importe quelle couleur
+109|Couleur
+110|Au calendrier : {d}
+111|Supprimer la note
+112|Ajouter au calendrier
+113|Ouvrir dans Notes autocollantes
+114|Déplacer à un autre jour
+115|Quel jour ?
+116|La retirer du calendrier
+117|Enregistrer
+118|Ajoutée au calendrier le {d}
+119|Retirée du calendrier
+120|Note supprimée
+121|Choisis un jour.
+122|{n} note. Pointe une note pour la sortir sur ton écran.
+123|{n} notes. Pointe une note pour la sortir sur ton écran.
+124|Notes et rappels rapides, de la couleur que tu veux
+125|Pas encore de notes. Clique sur + pour en ajouter une.
+126|Ton navigateur a bloqué la fenêtre de la note. Autorise les fenêtres pop-up pour ce site et réessaie.
+127|Vue du calendrier
+128|Jour
+129|Semaine
+130|Mois
+131|Année
+132|Mois précédent
+133|Mois suivant
+134|Jour précédent
+135|Jour suivant
+136|Semaine précédente
+137|Semaine suivante
+138|Année précédente
+139|Année suivante
+140|Ajouter
+141|Voir ce jour
+142|Ajouter à ce jour
+143|Ajouter au {d}
+144|Voir ce mois
+145|{n} choses prévues cette semaine
+146|{n} chose prévue cette semaine
+147|Rien de prévu cette semaine pour l'instant
+148|{n} choses prévues
+149|{n} chose prévue
+150|Rien de prévu pour l'instant
+151|Les points montrent les jours prévus. Les jours fériés sont en jaune.
+152|Rien pour {d} pour l'instant
+153|Rien de prévu en {d} pour l'instant
+154|Rien de prévu. Une journée libre !
+155|{n} {o} en {d}
+156|{n} {oa} en {d}
+157|{n} événement en {d}
+158|{n} événements en {d}
+159|Événement
+160|À faire
+161|Modifier l'événement
+162|Nouvel événement
+163|Qu'est-ce qui se passe ?
+164|À quelle heure ?
+165|(tu peux sauter ça)
+166|À quelle heure ? (tu peux sauter ça)
+167|Où ?
+168|Parc de la rue principale
+169|Supprimer cet événement
+170|Ajouter l'événement
+171|Événement supprimé
+172|Écris ce qui se passe.
+173|Toute la journée
+174|N'importe quand
+175|Marché fermier
+176|Quoi ajouter
+177|Heure
+178|Où
+179|Titre
+180|(facultatif)
+181|Coché
+182|Jour de l'An
+183|Journée de Martin Luther King Jr.
+184|Saint-Valentin
+185|Journée des présidents
+186|Saint-Patrick
+187|Pâques
+188|Dimanche de Pâques
+189|Lundi de Pâques
+190|Vendredi saint
+191|Jeudi saint
+192|Fête des Mères
+193|Memorial Day
+194|Fête des Pères
+195|Juneteenth
+196|Fête de l'Indépendance
+197|Fête du Travail
+198|Journée des peuples autochtones
+199|Halloween
+200|Journée des anciens combattants
+201|Action de grâce
+202|Black Friday
+203|Samedi des petites entreprises
+204|Veille de Noël
+205|Noël
+206|Noël
+207|Réveillon du Nouvel An
+208|Lendemain de Noël
+209|Fête de la Famille
+210|Journée nationale des patriotes
+211|Fête du Canada
+212|Congé civique
+213|Fête du Travail
+214|Journée de la vérité et de la réconciliation
+215|Jour du Souvenir
+216|Jour des Rois
+217|Jour de la Constitution
+218|Anniversaire de Benito Juárez
+219|Journée des enfants
+220|Cinco de Mayo
+221|Jour des Morts
+222|Jour de la Révolution
+223|Jour de la Vierge de Guadalupe
+224|Fête de l'Australie
+225|Anzac Day
+226|Anniversaire du Roi
+227|Waitangi Day
+228|Lendemain du Jour de l'An
+229|Nuit des feux de joie
+230|Dimanche du Souvenir
+231|Saint-Étienne
+232|Jour férié de début mai
+233|Jour férié de printemps
+234|Jour férié d'été
+235|Jour férié de la Sainte-Brigitte
+236|Jour férié de mai
+237|Jour férié de juin
+238|Jour férié d'août
+239|Jour férié d'octobre
+240|Les {o} payés comptent comme argent reçu à leur date
+241|L'argent qui entre et qui sort, mois par mois
+242|Argent reçu
+243|Argent dépensé
+244|Il te reste
+245|En attente de paiement
+246|{n} derniers mois
+247|Reçu : {m}
+248|Dépensé : {m}
+249|Ce mois-ci
+250|Rien ce mois-ci pour l'instant.
+251|Ce que tu as acheté ou payé
+252|Boîtes à gâteau, location du stand
+253|Combien
+254|Quel jour
+255|Supprimer ceci
+256|L'ajouter
+257|Écris combien c'était.
+258|C'était pour quoi
+259|Vente de pâtisseries, pourboires
+260|Pourboire
+261|Pas encore d'argent suivi
+262|{n} choses à acheter
+263|{n} chose à acheter
+264|Ajouter depuis une photo
+265|Ajouter {sa}
+266|Liste de courses
+267|Pour tes {o} des {n} prochaines semaines, environ {m}
+268|Pour tes {o} des {n} prochaines semaines
+269|Ce qu'il faut pour tes {o} apparaît ici tout seul
+270|Choses à acheter
+271|Ajoute quelque chose à acheter
+272|Ce que tu as
+273|Moins
+274|Plus
+275|Tu as ce qu'il te faut
+276|Rien à acheter pour l'instant.
+277|Pas encore de prix
+278|Tu le mesures en
+279|Quand tu l'achètes
+280|Tu reçois
+281|Combien tu reçois
+282|unités
+283|pour
+284|Combien tu en as maintenant
+285|Ajouter {sa}
+286|Écris son nom.
+287|tasses
+288|pièce
+289|bâtons
+290|douzaine
+291|Nom
+292|Quantité
+293|Unité
+294|Prix
+295|Modifier {sa}
+296|Farine
+297|Sucre
+298|Prends une capture d'écran d'un reçu, d'une commande en ligne ou d'une liste de ce dont tu as besoin. L'appli la lit et remplit les noms, quantités et prix pour toi.
+299|Prends une capture d'écran d'un reçu, d'une commande en ligne ou d'une liste de ce dont tu as besoin. L'appli la lit et remplit les noms, quantités et prix pour toi.
+300|Colle une capture d'écran ici
+301|Appuie sur
+302|, dépose une image ou clique pour en choisir une
+303|Astuce :
+304|prend une capture d'écran
+305|Ou tape ou colle la liste en texte
+306|Lire cette liste
+307|Lecture de ton image...
+308|Ça peut prendre quelques secondes. La première fois, le lecteur se charge aussi depuis internet.
+309|Ajouter une ligne
+310|Essayer une autre image
+311|Ajouter à {S}
+312|Coche au moins une chose à ajouter.
+313|Met à jour le prix
+314|Ton image
+315|Impossible de lire l'image. La lecture d'images a besoin d'internet la première fois. Tu peux taper ou coller la liste ci-dessous.
+316|Aucun article avec un prix trouvé dans cette image. Essaie une capture plus nette, ou corrige le texte ci-dessous et clique sur Lire cette liste.
+317|Ce que chaque {pa} te coûte vraiment, et combien le vendre
+318|Paie-toi
+319|de l'heure
+320|Profit en plus
+321|Ton temps
+322|Coût réel
+323|Tu demandes
+324|Suggéré
+325|Demande plutôt {m}
+326|Pas encore de prix
+327|Non défini
+328|Tu gagnes {m}, un peu sous ton objectif
+329|Tu gagnes {m} à chaque fois
+330|Tu perds {m} à chaque fois
+331|Utiliser le prix suggéré
+332|Le coût réel, c'est tes {s} plus ton temps. Le prix suggéré ajoute le profit choisi, arrondi au dollar supérieur.
+333|Ajoute d'abord tes {p}
+334|Une fois que tu ajoutes ce qui entre dans chacun, cette page calcule tes coûts et un prix juste.
+335|Aller à {P}
+336|{n} ouverts, {n} terminés
+337|Depuis Google Forms
+338|Ajouter {oa}
+339|+ Ajouter {oa}
+340|Ouverts
+341|Tous
+342|Nouveau
+343|En cours
+344|Payé
+345|Modifier
+346|Statut
+347|Effacer les {o} terminés ({n})
+348|Retour à Ma journée
+349|Modifier {oa}
+350|Nom du {ca}
+351|Téléphone ou courriel (facultatif)
+352|{n}-{n}-{n} ou un courriel
+353|Ce qu'ils veulent
+354|Date prévue
+355|Heure (facultatif)
+356|Sans heure
+357|Détails en plus
+358|Saveur du gâteau
+359|Tu veux demander autre chose à chaque {oa} ?
+360|Message sur le gâteau
+361|Allergies
+362|Ramassage ou livraison
+363|Autre chose
+364|Notes (facultatif)
+365|Autre chose à retenir
+366|Enregistrer
+367|Annuler
+368|Supprimer {oa}
+369|Retour à {O}
+370|Ajouter {oa}
+371|{n} {o} supprimés
+372|Importer les {o} de ton Google Form
+373|Chaque personne qui a rempli ton formulaire apparaît ici comme {oa}. Tu peux le refaire quand tu veux. Ceux déjà importés ne seront pas ajoutés deux fois.
+374|Télécharge tes réponses
+375|Ouvre ton Google Form et clique sur
+376|Réponses
+377|Clique sur
+378|Afficher dans Sheets
+379|(ou
+380|Associer à Sheets
+381|la première fois).
+382|Dans la feuille, clique sur
+383|Fichier
+384|, puis
+385|Télécharger
+386|Choisis ce fichier
+387|Choisis ton fichier
+388|ou glisse-le ici
+389|Dis à l'appli où va chaque réponse
+390|On a deviné chaque question. Change celles qui semblent fausses.
+391|Choisis la question qui contient le nom du {ca}.
+392|Rien pour aujourd'hui
+393|{n} personne
+394|{n} personnes
+395|Ajouter un {ca}
+396|Trouver quelqu'un
+397|Plus récents
+398|Le plus de {o}
+399|Ont le plus dépensé
+400|De A à Z
+401|Pas encore de téléphone ni de courriel
+402|total
+403|Ajouter {ca}
+404|Laisse tomber
+405|Retour à {C}
+406|premier {oa}
+407|Leurs {o}
+408|Tous ceux qui t'achètent, au même endroit
+409|Pas encore de {c}
+410|Ajoute les personnes pour qui tu travailles, avec leur téléphone ou courriel, pour les avoir au même endroit.
+411|Garde tous ceux pour qui tu travailles au même endroit.
+412|{n} {p}
+413|Ajouter {pa}
+414|Donne {n}
+415|{n} {s}
+416|Coûte {m}
+417|Sans prix
+418|Retour à {P}
+419|Ce que tu demandes
+420|Combien ça donne
+421|{n} gâteau, {n} cupcakes
+422|Heures que ça te prend
+423|Ce qu'il y a dedans
+424|Rien d'ajouté pour l'instant. Choisis parmi tes {s} ci-dessous, ou ajoutes-en un nouveau.
+425|+ Ajouter {sa}
+426|Étapes
+427|(une par ligne)
+428|Ajouter {pa}
+429|Donne-lui un nom pour l'enregistrer.
+430|Les ingrédients d'une fournée coûtent
+431|Cherche tout dans ton appli, ou trouve des endroits près de chez toi
+432|Chercher {o}, {c}, {p}, tâches
+433|Chercher {c}, {p}, tâches
+434|Chercher
+435|Près de chez toi
+436|Marchés fermiers
+437|Ouvre Google Maps
+438|Foires d'artisanat
+439|Magasins de {s}
+440|Endroits où vendre
+441|Crées-en un, puis imprime-le ou enregistre-le en PDF
+442|Reçu
+443|Quel {oa}
+444|Imprimer
+445|Pour
+446|Date
+447|Article
+448|Total
+449|Pas encore payé
+450|Merci pour ton {oa} !
+451|Une note en bas
+452|{Oa} {n} jours à l'avance. Texto au {n}-{n}-{n}
+453|Commande {n} jours à l'avance. Texto au {n}-{n}-{n}
+454|Aucun résultat
+455|Changer l'image
+456|Retirer l'image
+457|Tes entreprises
+458|Ouverte
+459|Ajouter une autre entreprise
+460|Tes autres entreprises restent enregistrées
+461|Cette entreprise
+462|Nom de l'entreprise et pays
+463|{B} · États-Unis
+464|{B} · Canada
+465|{B} · Mexique
+466|{B} · Royaume-Uni
+467|{B} · Irlande
+468|{B} · Australie
+469|{B} · Nouvelle-Zélande
+470|{B} · Sans jours fériés
+471|Type d'entreprise et mots
+472|Apparence
+473|Couleurs et police
+474|Change selon l'heure de la journée
+475|Langue
+476|English, Español, Français, 中文, Tiếng Việt, 한국어, Tagalog, Русский, 日本語, Português, Deutsch
+477|Pip, ton assistant
+478|Apparaît avec des conseils sur ton entreprise
+479|Objectifs
+480|Ce pour quoi tu veux de l'aide
+481|Aucun choisi pour l'instant
+482|Sauvegarde
+483|Faire une sauvegarde
+484|Tu n'en as pas encore fait
+485|Charger une sauvegarde
+486|Récupère tout depuis un fichier de sauvegarde
+487|Sauvegardé aujourd'hui
+488|Sauvegardé hier
+489|Sauvegardé il y a {n} jours
+490|Supprimer {B}
+491|Retour aux Paramètres
+492|Ceci supprime tout dans {B}. Clique encore pour supprimer
+493|Type d'entreprise
+494|Ton entreprise
+495|Couleurs
+496|Quel genre d'entreprise est-ce ?
+497|Biz Studio utilise les bons mots pour ton entreprise, comme {P} pour une boulangerie ou Rendez-vous pour un salon.
+498|Pâtisserie maison
+499|Repas et traiteur
+500|Bougies et artisanat
+501|Art et commandes
+502|Couture et vêtements
+503|Ongles
+504|Coiffure
+505|Cils et maquillage
+506|Tutorat
+507|Cours de musique et de danse
+508|Coaching sportif
+509|Photographie
+510|Soins des animaux
+511|Ménage
+512|Jardinage
+513|Fêtes et événements
+514|Quel genre d'entreprise ?
+515|Réparation de vélos, toilettage de chiens, stand de limonade...
+516|Dis-nous ce que tu fais, et on remplira les mots qui vont bien.
+517|Ce que tu vends ou proposes
+518|Ce que les gens réservent ou commandent
+519|Les personnes avec qui tu travailles
+520|Ce que tu utilises pour travailler
+521|Continuer
+522|Comment s'appelle ton entreprise ?
+523|Ce nom va sur tes reçus, tes menus et en haut de ton appli. Tu peux le changer plus tard.
+524|Nom de l'entreprise
+525|Où es-tu ?
+526|États-Unis
+527|Canada
+528|Mexique
+529|Royaume-Uni
+530|Irlande
+531|Australie
+532|Nouvelle-Zélande
+533|Ailleurs (sans jours fériés)
+534|On mettra les jours fériés de ton pays dans ton calendrier.
+535|Photo de profil (facultatif)
+536|Ajouter une image ou un logo
+537|Si tu passes, tes initiales s'affichent à la place.
+538|Retour
+539|Écris un nom d'entreprise pour continuer.
+540|Fais-le à ton image
+541|Choisis tes couleurs. Chacune vient avec sa police, et toute l'appli change quand tu cliques.
+542|Simples
+543|Classique
+544|Ardoise
+545|Sauge
+546|Cerise
+547|Douceurs
+548|Fraise
+549|Matcha
+550|Myrtille
+551|Citron
+552|Caramel
+553|Barbe à papa
+554|Nature
+555|Océan
+556|Forêt
+557|Coucher de soleil
+558|Désert
+559|Ciel
+560|Audacieux
+561|Galaxie
+562|Tropical
+563|Rétro
+564|Arc-en-ciel
+565|Personnalisé
+566|Couleur principale
+567|Couleur d'accent
+568|Changer selon l'heure de la journée
+569|Chaleureux le matin, lumineux l'après-midi et calme le soir.
+570|Aperçu
+571|{o} à venir
+572|cette semaine
+573|Ensuite
+574|Biscuits aux pépites de chocolat
+575|Amicale
+576|Arrondie
+577|Ludique
+578|Élégante
+579|Moderne
+580|Police
+581|Pour quoi veux-tu de l'aide ?
+582|Choisis-en autant que tu veux. Biz Studio les met en premier et te donne des conseils.
+583|Autre chose ? (facultatif)
+584|Je veux vendre au marché fermier cet été
+585|Passer pour l'instant
+586|Terminer
+587|J'oublie des {o} ou des dates
+588|Je ne sais pas quel prix demander
+589|Je manque de {s}
+590|Je veux faire grandir mon entreprise
+591|Je manque de temps
+592|Mes infos sont éparpillées partout
+593|Je veux suivre mon argent
+594|Je veux que mon entreprise ait l'air professionnelle
+595|Regarde ton calendrier chaque matin. Tu auras des rappels en plus avant tes {o}.
+596|Ajoute ce que tu paies pour tes {s} dans Prix et profits, et Biz Studio te suggérera des prix justes.
+597|Regarde ta liste de {s} quelques jours avant les jours chargés pour acheter à l'avance.
+598|Utilise la Recherche pour trouver des marchés et des événements où vendre.
+599|Ta liste de tâches met le plus urgent en premier, donc tu sais toujours quoi faire ensuite.
+600|Garde tous tes {o} et {c} ici au lieu de les éparpiller dans des textos et des notes.
+601|Garde tes {c}, tâches et événements ici au lieu de les éparpiller dans des textos et des notes.
+602|La comptabilité additionne ce qui entre et ce qui sort, pour voir ton vrai profit.
+603|Crée des reçus, des menus et des listes de prix à partir de tes {p} en quelques clics.
+604|Ouvrir le calendrier
+605|Ouvrir prix et profits
+606|Ouvrir les tâches
+607|Ouvrir la comptabilité
+608|Ouvrir la recherche
+609|Ouvrir reçus et menus
+610|Attention ! {n} {o} sont en retard.
+611|Tu as {n} {o} pour aujourd'hui. Tu peux le faire !
+612|{n} {o} sont pour demain. Prépare-toi !
+613|Tu as {n} choses dans ta liste pour aujourd'hui.
+614|Tu as {n} chose dans ta liste pour aujourd'hui.
+615|{n} {o} terminés attendent d'être payés.
+616|Ajoute ton premier {oa} et je t'aiderai à le suivre.
+617|Ajoute tes {p} pour que je calcule ce qu'ils te coûtent.
+618|Ajoute ce que tu paies pour tes {s}, et je ferai ta liste de courses.
+619|Ça fait un moment depuis ta dernière sauvegarde. Fais-en une dans Paramètres pour ne rien perdre !
+620|Ajoute une image pour ton entreprise dans Paramètres. Elle va aussi sur tes reçus !
+621|Clique sur quelqu'un pour voir tous ses {o} au même endroit.
+622|Clique sur un jour, puis sur Ajouter pour y mettre un événement ou une tâche.
+623|Imprime un menu et apporte-le à ton prochain marché.
+624|Essaie de chercher un nom, un {pa}, ou autre chose.
+625|Ajoute ce que tu dépenses dans Argent dépensé, pour savoir ce qu'il te reste vraiment.
+626|Tu t'en sors très bien. Continue !
+627|Rien d'urgent pour l'instant. Beau travail !
+628|Tout est à jour ! Offre-toi une petite collation.
+629|Rien sur ta liste pour aujourd'hui.
+630|Ajoute une tâche ci-dessus pour commencer.
+631|Ajoute une tâche ci-dessus. Quand tu auras des {o} à venir, leurs tâches apparaîtront ici toutes seules.
+632|Pas encore de notes autocollantes
+633|Notes et rappels rapides, de la couleur que tu veux.
+634|Ton calendrier est libre
+635|Rien sur ta liste pour l'instant
+636|Rien à acheter
+637|Pas encore de prix calculés
+638|Trouve n'importe quoi
+639|Rien à imprimer pour l'instant
+640|Fait : $1
+641|Pas fait : $1
+642|Marquer comme important : $1
+643|Retirer la marque : $1
+644|Supprimer $1
+645|Retirer $1
+646|Modifier $1
+647|À faire : $1
+648|Note autocollante : $1
+649|Tu as acheté $1, $2 ajoutés à la Comptabilité
+650|Tu as acheté $1
+651|$1 coûte maintenant $2
+652|Dernier : $1
+653|Ajouter $1 pour $2
+654|$2 de $1 marqué $3
+655|Faire $1 pour $2
+656|$1, acheter $2
+657|Il te faut $1, tu as $2. Pour $3
+658|$1 pour $2 $3
+659|$1 à $2
+660|$1 pour $2
+661|Attention ! $2 de $1 est en retard.
+662|$2 de $1 est pour aujourd'hui à $3.
+663|$2 de $1 est pour aujourd'hui.
+664|N'oublie pas : $2 de $1 est pour demain.
+665|Aujourd'hui : $1 à $2. Amuse-toi bien !
+666|Aujourd'hui : $1. Amuse-toi bien !
+667|Tu as marqué « $1 » comme important. Et $2 de plus.
+668|Tu as marqué « $1 » comme important.
+669|Il te reste peu de $1 et $2 autres pour tes prochains $3.
+670|Il te reste peu de $1 pour tes prochains $2.
+671|Le $2 de $1 est fini mais pas encore payé.
+672|Ton $1 te coûte plus cher à faire que ce que tu demandes. Arrangeons ça !
+673|Tu pourrais demander un peu plus pour ton $1.
+674|$1 : $2 ($3)
+675|Retour à $1
+676|$1 ajoutés à $2 et $3 prix mis à jour
+677|$1 ajoutés à $2
+678|$1 prix mis à jour
+679|Ajouter $1 à $2
+680|On a trouvé $1 choses. Vérifie les noms, quantités et prix, et corrige ce qui semble faux. Décoche ce que tu ne veux pas.
+681|$1 avec la police $2
+682|Pâtisserie maison : $1
+683|Ménage : $1
+684|Passer $1
+685|Tu as acheté $1
+`;
+
+// Chinese (Simplified)
+var LANG_ZH = `
+0|周日
+1|周一
+2|周二
+3|周三
+4|周四
+5|周五
+6|周六
+7|我的一天
+8|为你精选
+9|日历
+10|待办事项
+11|定价与利润
+12|记账
+13|工作
+14|便利贴
+15|生意
+16|{S}和购物
+17|成长
+18|查找
+19|收据和菜单
+20|设置
+21|钱
+22|菜单
+23|菜单
+24|早上好
+25|下午好
+26|晚上好
+27|早上好！
+28|今天到期的{o}
+29|今天到期的{oa}
+30|今天的任务
+31|今天的任务
+32|本月收入
+33|要买的东西
+34|要买的东西
+35|{n}个{oa}已逾期。点击查看。
+36|{n}个{o}已逾期。点击查看。
+37|今天要做的
+38|查看全部
+39|本周即将到来
+40|今天的活动
+41|今天的活动
+42|今天没有安排。之后还有{n}项。
+43|你的重点
+44|关闭
+45|带我去看
+46|下一条提示
+47|Pip 的小提示
+48|Pip
+49|今天
+50|明天
+51|昨天
+52|逾期
+53|没有日期
+54|以后再说
+55|已逾期，原定{d}
+56|{Oa}到期：{d}
+57|{Oa}到期：{d} {t}
+58|逾期{n}天
+59|逾期{n}天
+60|今天到期
+61|明天到期
+62|明天{t}到期
+63|今天{t}到期
+64|{n}天后到期
+65|{n}天后{t}到期
+66|{d}到期
+67|{d} {t}到期
+68|原定{d}
+69|原定{d} {t}
+70|{d} {t}
+71|标为重要
+72|取消标记
+73|删除
+74|完成
+75|未完成
+76|添加任务
+77|新任务
+78|你需要做什么？
+79|再买些面粉
+80|重要
+81|标记后它会一直在最上面
+82|添加任务
+83|请写下你要做的事。
+84|清除已完成（{n}）
+85|今天有{n}件事要做
+86|今天有{n}件事要做
+87|已清除{n}个任务
+88|已清除{n}个任务
+89|这里暂时没有内容。
+90|撤销
+91|没有任务
+92|今天没什么要做的
+93|全部完成！
+94|新便利贴
+95|在这里写...
+96|便利贴
+97|弹出到屏幕上
+98|颜色和删除
+99|在日历中查看
+100|黄色
+101|桃色
+102|粉色
+103|薰衣草紫
+104|蓝色
+105|薄荷绿
+106|青柠绿
+107|沙色
+108|选择任意颜色
+109|颜色
+110|日历上：{d}
+111|删除便利贴
+112|添加到日历
+113|在便利贴中打开
+114|移到另一天
+115|哪一天？
+116|从日历上移除
+117|保存
+118|已添加到日历：{d}
+119|已从日历上移除
+120|便利贴已删除
+121|请选择一天。
+122|{n}张便利贴。把鼠标移到便利贴上就能把它弹出到屏幕上。
+123|{n}张便利贴。把鼠标移到便利贴上就能把它弹出到屏幕上。
+124|快速笔记和提醒，颜色随你选
+125|还没有便利贴。点击 + 添加一张。
+126|你的浏览器拦截了便利贴窗口。请允许此网站弹出窗口后再试一次。
+127|日历视图
+128|日
+129|周
+130|月
+131|年
+132|上个月
+133|下个月
+134|前一天
+135|后一天
+136|上周
+137|下周
+138|去年
+139|明年
+140|添加
+141|查看这一天
+142|添加到这一天
+143|添加到{d}
+144|查看这个月
+145|本周安排了{n}件事
+146|本周安排了{n}件事
+147|本周还没有安排
+148|安排了{n}件事
+149|安排了{n}件事
+150|还没有安排
+151|有圆点的日子有安排。节假日用黄色标出。
+152|{d}还没有到期的事
+153|{d}还没有安排
+154|没有安排。自由的一天！
+155|{d}有{n}个{o}到期
+156|{d}有{n}个{oa}到期
+157|{d}有{n}个活动
+158|{d}有{n}个活动
+159|活动
+160|待办
+161|编辑活动
+162|新活动
+163|发生什么事？
+164|几点？
+165|（可以不填）
+166|几点？（可以不填）
+167|在哪里？
+168|主街公园
+169|删除这个活动
+170|添加活动
+171|活动已删除
+172|请写下发生什么事。
+173|全天
+174|任何时间
+175|农贸市场
+176|要添加什么
+177|时间
+178|地点
+179|标题
+180|（可选）
+181|已勾选
+182|元旦
+183|马丁·路德·金纪念日
+184|情人节
+185|总统日
+186|圣帕特里克节
+187|复活节
+188|复活节星期日
+189|复活节星期一
+190|耶稣受难日
+191|濯足节
+192|母亲节
+193|阵亡将士纪念日
+194|父亲节
+195|六月节
+196|独立日
+197|劳动节
+198|原住民日
+199|万圣节
+200|退伍军人节
+201|感恩节
+202|黑色星期五
+203|小商家星期六
+204|平安夜
+205|圣诞节
+206|圣诞节
+207|除夕夜
+208|节礼日
+209|家庭日
+210|维多利亚日
+211|加拿大国庆日
+212|公民假日
+213|劳动节
+214|真相与和解日
+215|阵亡将士纪念日
+216|三王节
+217|宪法日
+218|贝尼托·华雷斯诞辰
+219|儿童节
+220|五月五日节
+221|亡灵节
+222|革命纪念日
+223|瓜达卢佩圣母节
+224|澳大利亚国庆日
+225|澳新军团日
+226|国王生日
+227|怀唐伊日
+228|元旦次日
+229|篝火之夜
+230|国殇纪念日
+231|圣史蒂芬节
+232|五月初银行假日
+233|春季银行假日
+234|夏季银行假日
+235|圣布里吉德节银行假日
+236|五月银行假日
+237|六月银行假日
+238|八月银行假日
+239|十月银行假日
+240|已付款的{o}在到期日计入收入
+241|每月的收入和支出
+242|收入
+243|支出
+244|你留下的
+245|等待付款
+246|最近{n}个月
+247|收入：{m}
+248|支出：{m}
+249|本月
+250|本月还没有记录。
+251|你买了或付了什么
+252|蛋糕盒、摊位费
+253|多少钱
+254|哪一天
+255|删除这一项
+256|添加
+257|请填写金额。
+258|用途
+259|义卖、小费
+260|小费
+261|还没有记账
+262|{n}样东西要买
+263|{n}样东西要买
+264|从图片添加
+265|添加{sa}
+266|购物清单
+267|未来{n}周的{o}所需，约{m}
+268|未来{n}周的{o}所需
+269|{o}需要的东西会自动出现在这里
+270|你需要买的东西
+271|添加要买的东西
+272|你现有的
+273|减少
+274|增加
+275|你需要的都有了
+276|现在没有要买的。
+277|还没有价格
+278|计量单位
+279|购买时
+280|你得到
+281|你得到多少
+282|单位
+283|共
+284|你现在有多少
+285|添加{sa}
+286|请填写名称。
+287|杯
+288|个
+289|条
+290|打
+291|名称
+292|数量
+293|单位
+294|价格
+295|编辑{sa}
+296|面粉
+297|糖
+298|截取收据、网上订单或购物清单的屏幕截图。应用会读取并帮你填好名称、数量和价格。
+299|截取收据、网上订单或购物清单的屏幕截图。应用会读取并帮你填好名称、数量和价格。
+300|在这里粘贴截图
+301|按
+302|，拖入图片，或点击选择一张
+303|提示：
+304|可以截图
+305|或者把清单打字或粘贴成文字
+306|读取这份清单
+307|正在读取你的图片...
+308|这可能需要几秒钟。第一次使用时还需要从网上加载读取工具。
+309|添加一行
+310|换一张图片
+311|添加到{S}
+312|请至少勾选一项。
+313|会更新价格
+314|你的图片
+315|无法读取这张图片。第一次读取图片需要联网。你也可以在下面打字或粘贴清单。
+316|这张图片里没找到带价格的项目。试试更清晰的截图，或修改下面的文字后点击"读取这份清单"。
+317|每个{pa}的真实成本，以及该收多少钱
+318|给自己的工资
+319|每小时
+320|额外利润
+321|你的时间
+322|真实成本
+323|你的售价
+324|建议价格
+325|改收{m}
+326|还没有定价
+327|未设置
+328|你赚{m}，略低于目标
+329|每次赚{m}
+330|每次亏{m}
+331|使用建议价格
+332|真实成本 = {s} + 你的时间。建议价格会加上你选的利润，并向上取整到整数美元。
+333|请先添加你的{p}
+334|添加每样东西的用料后，这个页面会算出成本和合理价格。
+335|前往{P}
+336|{n}个进行中，{n}个已完成
+337|从 Google 表单导入
+338|添加{oa}
+339|+ 添加{oa}
+340|进行中
+341|全部
+342|新
+343|进行中
+344|已付款
+345|编辑
+346|状态
+347|清除已完成的{o}（{n}）
+348|返回我的一天
+349|编辑{oa}
+350|{ca}姓名
+351|电话或邮箱（可选）
+352|{n}-{n}-{n} 或邮箱
+353|他们想要什么
+354|到期日
+355|时间（可选）
+356|不设时间
+357|额外细节
+358|蛋糕口味
+359|想在每个{oa}里多问点什么吗？
+360|蛋糕上的字
+361|过敏
+362|自取还是送货
+363|其他
+364|备注（可选）
+365|其他要记住的事
+366|保存更改
+367|取消
+368|删除这个{oa}
+369|返回{O}
+370|添加{oa}
+371|已删除{n}个{o}
+372|从你的 Google 表单导入{o}
+373|每个填过表单的人都会作为一个新的{oa}出现在这里。你可以随时再导入，已导入的不会重复添加。
+374|下载你的回复
+375|打开你的 Google 表单并点击
+376|回复
+377|点击
+378|在表格中查看
+379|（或
+380|关联到表格
+381|第一次时）。
+382|在表格中，点击
+383|文件
+384|，然后
+385|下载
+386|选择那个文件
+387|选择你的文件
+388|或拖到这里
+389|告诉应用每个回答该放哪里
+390|我们猜了每个问题。如有不对请修改。
+391|请选择哪个问题是{ca}的姓名。
+392|今天没有到期的
+393|{n}人
+394|{n}人
+395|添加{ca}
+396|找人
+397|最近的
+398|{o}最多
+399|花费最多
+400|按字母排序
+401|还没有电话或邮箱
+402|总计
+403|添加{ca}
+404|算了
+405|返回{C}
+406|第一个{oa}
+407|他们的{o}
+408|所有向你购买的人，都在这里
+409|还没有{c}
+410|添加你服务的人和他们的电话或邮箱，所有人都在一个地方。
+411|把你服务的每个人放在一个地方。
+412|{n}个{p}
+413|添加{pa}
+414|可做{n}份
+415|{n}种{s}
+416|成本{m}
+417|没有价格
+418|返回{P}
+419|你的售价
+420|能做多少
+421|{n}个蛋糕、{n}个纸杯蛋糕
+422|需要几小时
+423|用料
+424|还没有添加。从下面的{s}中选择，或新增一个。
+425|+ 添加{sa}
+426|步骤
+427|（每行一步）
+428|添加{pa}
+429|请起个名字再保存。
+430|一批的用料成本
+431|搜索应用里的所有内容，或查找附近的地方
+432|搜索{o}、{c}、{p}、任务
+433|搜索{c}、{p}、任务
+434|搜索
+435|在附近查找
+436|农贸市场
+437|打开 Google 地图
+438|手工艺市集
+439|{s}商店
+440|可以摆摊卖东西的地方
+441|制作一个，然后打印或保存为 PDF
+442|收据
+443|哪个{oa}
+444|打印
+445|给
+446|日期
+447|项目
+448|总计
+449|尚未付款
+450|感谢你的{oa}！
+451|底部备注
+452|请提前{n}天下{oa}。短信：{n}-{n}-{n}
+453|请提前{n}天下单。短信：{n}-{n}-{n}
+454|没有结果
+455|更换图片
+456|移除图片
+457|你的生意
+458|正在使用
+459|添加另一个生意
+460|你的其他生意会保留
+461|这个生意
+462|生意名称和国家
+463|{B} · 美国
+464|{B} · 加拿大
+465|{B} · 墨西哥
+466|{B} · 英国
+467|{B} · 爱尔兰
+468|{B} · 澳大利亚
+469|{B} · 新西兰
+470|{B} · 不显示节假日
+471|生意类型和用词
+472|外观
+473|颜色和字体
+474|随一天中的时间变化
+475|语言
+476|English, Español, Français, 中文, Tiếng Việt, 한국어, Tagalog, Русский, 日本語, Português, Deutsch
+477|Pip，你的小帮手
+478|会弹出关于你生意的小提示
+479|目标
+480|你想要什么帮助
+481|还没选
+482|备份
+483|保存备份
+484|你还没有保存过
+485|载入备份
+486|从备份文件恢复所有内容
+487|今天已保存
+488|昨天已保存
+489|{n}天前保存
+490|删除{B}
+491|返回设置
+492|这会删除{B}的所有内容。再点一次确认删除
+493|生意类型
+494|你的生意
+495|颜色
+496|你做的是什么生意？
+497|Biz Studio 会为你的生意使用合适的词，比如烘焙店用{P}，沙龙用预约。
+498|家庭烘焙
+499|餐饮外烩
+500|蜡烛和手工艺
+501|艺术和委托创作
+502|缝纫和服装
+503|美甲
+504|美发
+505|睫毛和化妆
+506|家教
+507|音乐和舞蹈课
+508|健身教练
+509|摄影
+510|宠物照护
+511|清洁
+512|园艺
+513|派对和活动
+514|什么类型的生意？
+515|修自行车、宠物美容、柠檬水摊...
+516|告诉我们你做什么，我们会帮你填上合适的词。
+517|你卖或提供什么
+518|大家预订或订购的东西
+519|和你合作的人
+520|你工作用的东西
+521|继续
+522|你的生意叫什么名字？
+523|这个名字会出现在你的收据、菜单和应用顶部。之后可以修改。
+524|生意名称
+525|你在哪里？
+526|美国
+527|加拿大
+528|墨西哥
+529|英国
+530|爱尔兰
+531|澳大利亚
+532|新西兰
+533|其他地方（不显示节假日）
+534|我们会把你所在国家的节假日放进你的日历。
+535|头像（可选）
+536|添加图片或标志
+537|如果跳过，会显示你的名字缩写。
+538|返回
+539|请输入生意名称再继续。
+540|打造你的风格
+541|选择你的颜色。每种都有配套字体，点击后整个应用都会改变。
+542|简约
+543|经典
+544|石板
+545|鼠尾草
+546|樱桃
+547|甜点
+548|草莓
+549|抹茶
+550|蓝莓
+551|柠檬
+552|焦糖
+553|泡泡糖
+554|自然
+555|海洋
+556|森林
+557|日落
+558|沙漠
+559|天空
+560|醒目
+561|银河
+562|热带
+563|复古
+564|彩虹
+565|自定义
+566|主色
+567|强调色
+568|随一天中的时间变化
+569|早上温暖，下午明亮，晚上安静。
+570|预览
+571|待完成的{o}
+572|本周
+573|接下来
+574|巧克力豆曲奇
+575|友好
+576|圆润
+577|活泼
+578|优雅
+579|现代
+580|字体
+581|你想要什么帮助？
+582|想选几个都可以。Biz Studio 会把它们放在最前面，并给你相关提示。
+583|还有别的吗？（可选）
+584|我想今年夏天去农贸市场摆摊
+585|先跳过
+586|完成设置
+587|我总忘记{o}或到期日
+588|我不知道该怎么定价
+589|我的{s}总是用完
+590|我想让生意成长
+591|我时间不够
+592|我的信息到处都是
+593|我想记录我的钱
+594|我想让生意看起来更专业
+595|每天早上看看日历。{o}到期前你会收到额外提醒。
+596|在"定价与利润"里填上{s}的价格，Biz Studio 会建议合理的售价。
+597|在忙碌的日子前几天看看{s}清单，提前采购。
+598|用"查找"发现附近可以摆摊的市场和活动。
+599|待办事项会把最紧急的放在最前面，你总知道下一步做什么。
+600|把所有{o}和{c}都放在这里，不用再翻短信和笔记。
+601|把{c}、待办和活动都放在这里，不用再翻短信和笔记。
+602|记账会算出收入和支出，让你看到真正的利润。
+603|几下点击就能用你的{p}做出收据、菜单和价目表。
+604|打开日历
+605|打开定价与利润
+606|打开待办事项
+607|打开记账
+608|打开查找
+609|打开收据和菜单
+610|注意！{n}个{o}已逾期。
+611|你今天有{n}个{o}要完成。加油！
+612|明天有{n}个{o}到期。该准备了！
+613|你今天的待办里有{n}件事。
+614|你今天的待办里有{n}件事。
+615|{n}个已完成的{o}还没付款。
+616|添加你的第一个{oa}，我会帮你跟进。
+617|添加你的{p}，我就能算出成本。
+618|填上{s}的价格，我会帮你做购物清单。
+619|你很久没备份了。在设置里保存一份，以免丢失！
+620|在设置里为你的生意添加一张图片。它也会出现在收据上！
+621|点击某人，就能看到他们所有的{o}。
+622|点击某一天，然后点"添加"来加上活动或待办。
+623|打印一份菜单，带去下一次市集。
+624|试着搜索名字、{pa}或其他任何东西。
+625|在"支出"里记录花费，就知道你真正留下了多少。
+626|你做得很棒，继续加油！
+627|目前没有紧急的事。干得好！
+628|全部搞定！犒劳一下自己吧。
+629|今天的清单上没有内容。
+630|在上面添加一个任务开始吧。
+631|在上面添加一个任务。有{o}要来时，相关任务会自动出现在这里。
+632|还没有便利贴
+633|快速笔记和提醒，颜色随你选。
+634|你的日历是空的
+635|你的清单还是空的
+636|没有要买的
+637|还没有算出价格
+638|找任何东西
+639|还没有可打印的
+640|完成：$1
+641|未完成：$1
+642|标为重要：$1
+643|取消标记：$1
+644|删除 $1
+645|移除 $1
+646|编辑 $1
+647|待办：$1
+648|便利贴：$1
+649|已购买 $1，已在记账中加入 $2
+650|已购买 $1
+651|$1 现在是 $2
+652|最近：$1
+653|为 $2 添加$1
+654|$1 的$2已标为$3
+655|为 $2 做 $1
+656|$1，买 $2
+657|需要 $1，现有 $2。用于 $3
+658|$1 / $2 $3
+659|$1 $2
+660|$1（给 $2）
+661|注意！$1 的 $2 已逾期。
+662|$1 的 $2 今天 $3 到期。
+663|$1 的 $2 今天到期。
+664|别忘了：$1 的 $2 明天到期。
+665|今天：$1，$2。玩得开心！
+666|今天：$1。玩得开心！
+667|你把"$1"标为重要。还有 $2 个。
+668|你把"$1"标为重要。
+669|你的 $1 和另外 $2 样东西快用完了，即将到来的$3需要。
+670|你的 $1 快用完了，即将到来的$2需要。
+671|$1 的$2已完成，但还没付款。
+672|你的 $1 成本比售价还高。我们来解决一下！
+673|你的 $1 可以再多收一点。
+674|$1：$2（$3）
+675|返回 $1
+676|已向$2添加 $1 项，并更新 $3 个价格
+677|已向$2添加 $1 项
+678|已更新 $1 个价格
+679|添加 $1 项到$2
+680|找到 $1 项。请检查名称、数量和价格，有错就改。不想要的取消勾选。
+681|$1，$2字体
+682|家庭烘焙：$1
+683|清洁：$1
+684|跳过 $1
+685|已购买 $1
+`;
+
+// Vietnamese
+var LANG_VI = `
+0|CN
+1|T2
+2|T3
+3|T4
+4|T5
+5|T6
+6|T7
+7|Ngày của tôi
+8|Chọn cho bạn
+9|Lịch
+10|Việc cần làm
+11|Giá và lợi nhuận
+12|Sổ sách
+13|Công việc
+14|Ghi chú dán
+15|Kinh doanh
+16|{S} và mua sắm
+17|Phát triển
+18|Tìm kiếm
+19|Hóa đơn và thực đơn
+20|Cài đặt
+21|Tiền
+22|Thực đơn
+23|Thực đơn
+24|Chào buổi sáng
+25|Chào buổi chiều
+26|Chào buổi tối
+27|Chào buổi sáng!
+28|{o} đến hạn hôm nay
+29|{oa} đến hạn hôm nay
+30|việc hôm nay
+31|việc hôm nay
+32|tiền nhận tháng này
+33|món cần mua
+34|món cần mua
+35|{n} {oa} bị trễ. Chạm để xem.
+36|{n} {o} bị trễ. Chạm để xem.
+37|Việc hôm nay
+38|Xem tất cả
+39|Sắp tới trong tuần
+40|sự kiện hôm nay
+41|sự kiện hôm nay
+42|Hôm nay không có gì. Sắp tới có {n} việc.
+43|Trọng tâm của bạn
+44|Đóng
+45|Cho tôi xem
+46|Mẹo tiếp theo
+47|Mẹo từ Pip
+48|Pip
+49|Hôm nay
+50|Ngày mai
+51|Hôm qua
+52|Trễ
+53|Không có ngày
+54|Lúc nào đó
+55|Trễ, hạn là {d}
+56|{Oa} hạn {d}
+57|{Oa} hạn {d} lúc {t}
+58|Trễ {n} ngày
+59|Trễ {n} ngày
+60|Hạn hôm nay
+61|Hạn ngày mai
+62|Hạn ngày mai lúc {t}
+63|Hạn hôm nay lúc {t}
+64|Còn {n} ngày
+65|Còn {n} ngày, lúc {t}
+66|Hạn {d}
+67|Hạn {d} lúc {t}
+68|Hạn đã là {d}
+69|Hạn đã là {d} lúc {t}
+70|{d} lúc {t}
+71|Đánh dấu quan trọng
+72|Bỏ đánh dấu
+73|Xóa
+74|Xong
+75|Chưa xong
+76|Thêm việc
+77|Việc mới
+78|Bạn cần làm gì?
+79|Mua thêm bột mì
+80|Quan trọng
+81|Đánh dấu để việc này luôn ở trên cùng
+82|Thêm việc
+83|Hãy nhập việc bạn cần làm.
+84|Xóa việc đã xong ({n})
+85|{n} việc cần làm hôm nay
+86|{n} việc cần làm hôm nay
+87|Đã xóa {n} việc
+88|Đã xóa {n} việc
+89|Hiện chưa có gì ở đây.
+90|Hoàn tác
+91|Không có việc nào
+92|Hôm nay không có gì phải làm
+93|Xong hết rồi!
+94|Ghi chú mới
+95|Viết ở đây...
+96|Ghi chú dán
+97|Đưa ra màn hình
+98|Màu và xóa
+99|Xem trên lịch
+100|Vàng
+101|Cam đào
+102|Hồng
+103|Tím oải hương
+104|Xanh dương
+105|Xanh bạc hà
+106|Xanh chanh
+107|Màu cát
+108|Chọn màu bất kỳ
+109|Màu
+110|Trên lịch: {d}
+111|Xóa ghi chú
+112|Thêm vào lịch
+113|Mở trong Ghi chú dán
+114|Dời sang ngày khác
+115|Ngày nào?
+116|Gỡ khỏi lịch
+117|Lưu
+118|Đã thêm vào lịch ngày {d}
+119|Đã gỡ khỏi lịch
+120|Đã xóa ghi chú
+121|Hãy chọn một ngày.
+122|{n} ghi chú. Rê chuột lên ghi chú để đưa nó ra màn hình.
+123|{n} ghi chú. Rê chuột lên ghi chú để đưa nó ra màn hình.
+124|Ghi chú và nhắc nhở nhanh, màu nào cũng được
+125|Chưa có ghi chú. Bấm + để thêm.
+126|Trình duyệt đã chặn cửa sổ ghi chú. Hãy cho phép cửa sổ bật lên cho trang này rồi thử lại.
+127|Chế độ xem lịch
+128|Ngày
+129|Tuần
+130|Tháng
+131|Năm
+132|Tháng trước
+133|Tháng sau
+134|Hôm trước
+135|Hôm sau
+136|Tuần trước
+137|Tuần sau
+138|Năm trước
+139|Năm sau
+140|Thêm
+141|Xem ngày này
+142|Thêm vào ngày này
+143|Thêm vào {d}
+144|Xem tháng này
+145|{n} việc đã lên kế hoạch tuần này
+146|{n} việc đã lên kế hoạch tuần này
+147|Tuần này chưa có kế hoạch
+148|{n} việc đã lên kế hoạch
+149|{n} việc đã lên kế hoạch
+150|Chưa có kế hoạch
+151|Dấu chấm là ngày có kế hoạch. Ngày lễ có màu vàng.
+152|Chưa có gì đến hạn trong {d}
+153|Chưa có kế hoạch trong {d}
+154|Không có kế hoạch. Một ngày rảnh!
+155|{n} {o} đến hạn trong {d}
+156|{n} {oa} đến hạn trong {d}
+157|{n} sự kiện trong {d}
+158|{n} sự kiện trong {d}
+159|Sự kiện
+160|Việc cần làm
+161|Sửa sự kiện
+162|Sự kiện mới
+163|Có chuyện gì?
+164|Mấy giờ?
+165|(có thể bỏ qua)
+166|Mấy giờ? (có thể bỏ qua)
+167|Ở đâu?
+168|Công viên phố chính
+169|Xóa sự kiện này
+170|Thêm sự kiện
+171|Đã xóa sự kiện
+172|Hãy nhập chuyện gì sẽ diễn ra.
+173|Cả ngày
+174|Giờ nào cũng được
+175|Chợ nông sản
+176|Thêm gì
+177|Giờ
+178|Ở đâu
+179|Tiêu đề
+180|(không bắt buộc)
+181|Đã đánh dấu xong
+182|Tết Dương lịch
+183|Ngày Martin Luther King Jr.
+184|Lễ Tình nhân
+185|Ngày Tổng thống
+186|Lễ Thánh Patrick
+187|Lễ Phục sinh
+188|Chủ nhật Phục sinh
+189|Thứ hai Phục sinh
+190|Thứ sáu Tuần Thánh
+191|Thứ năm Tuần Thánh
+192|Ngày của Mẹ
+193|Ngày Tưởng niệm
+194|Ngày của Cha
+195|Juneteenth
+196|Ngày Độc lập
+197|Ngày Lao động
+198|Ngày của Người bản địa
+199|Halloween
+200|Ngày Cựu chiến binh
+201|Lễ Tạ ơn
+202|Black Friday
+203|Thứ bảy Doanh nghiệp nhỏ
+204|Đêm Giáng sinh
+205|Giáng sinh
+206|Giáng sinh
+207|Đêm Giao thừa
+208|Boxing Day
+209|Ngày Gia đình
+210|Ngày Victoria
+211|Quốc khánh Canada
+212|Ngày lễ Công dân
+213|Ngày Lao động
+214|Ngày Sự thật và Hòa giải
+215|Ngày Tưởng niệm
+216|Lễ Ba Vua
+217|Ngày Hiến pháp
+218|Sinh nhật Benito Juárez
+219|Ngày Thiếu nhi
+220|Cinco de Mayo
+221|Lễ Người chết
+222|Ngày Cách mạng
+223|Lễ Đức Mẹ Guadalupe
+224|Quốc khánh Úc
+225|Ngày Anzac
+226|Sinh nhật Nhà vua
+227|Ngày Waitangi
+228|Ngày sau Tết Dương lịch
+229|Đêm Lửa trại
+230|Chủ nhật Tưởng niệm
+231|Lễ Thánh Stephen
+232|Ngày nghỉ đầu tháng Năm
+233|Ngày nghỉ mùa xuân
+234|Ngày nghỉ mùa hè
+235|Ngày nghỉ Thánh Brigid
+236|Ngày nghỉ tháng Năm
+237|Ngày nghỉ tháng Sáu
+238|Ngày nghỉ tháng Tám
+239|Ngày nghỉ tháng Mười
+240|{o} đã thanh toán được tính là tiền vào vào ngày đến hạn
+241|Tiền vào và tiền ra, theo từng tháng
+242|Tiền vào
+243|Tiền ra
+244|Bạn giữ lại
+245|Đang chờ thanh toán
+246|{n} tháng gần nhất
+247|Vào: {m}
+248|Ra: {m}
+249|Tháng này
+250|Tháng này chưa có gì.
+251|Bạn đã mua hoặc trả gì
+252|Hộp bánh, phí gian hàng
+253|Bao nhiêu
+254|Ngày nào
+255|Xóa mục này
+256|Thêm
+257|Hãy nhập số tiền.
+258|Dùng cho việc gì
+259|Bán bánh gây quỹ, tiền boa
+260|Tiền boa
+261|Chưa ghi chép tiền nào
+262|{n} món cần mua
+263|{n} món cần mua
+264|Thêm từ hình ảnh
+265|Thêm {sa}
+266|Danh sách mua sắm
+267|Cho {o} trong {n} tuần tới, khoảng {m}
+268|Cho {o} trong {n} tuần tới
+269|Những thứ cần cho {o} sẽ tự hiện ở đây
+270|Những thứ bạn cần mua
+271|Thêm món cần mua
+272|Những gì bạn có
+273|Bớt
+274|Thêm
+275|Bạn có đủ những gì cần
+276|Hiện không cần mua gì.
+277|Chưa có giá
+278|Đơn vị đo
+279|Khi bạn mua
+280|Bạn được
+281|Bạn được bao nhiêu
+282|đơn vị
+283|giá
+284|Bạn đang có bao nhiêu
+285|Thêm {sa}
+286|Hãy nhập tên.
+287|cốc
+288|cái
+289|thanh
+290|tá
+291|Tên
+292|Số lượng
+293|Đơn vị
+294|Giá
+295|Sửa {sa}
+296|Bột mì
+297|Đường
+298|Chụp màn hình hóa đơn, đơn hàng trực tuyến hoặc danh sách những gì bạn cần. Ứng dụng sẽ đọc và điền tên, số lượng và giá cho bạn.
+299|Chụp màn hình hóa đơn, đơn hàng trực tuyến hoặc danh sách những gì bạn cần. Ứng dụng sẽ đọc và điền tên, số lượng và giá cho bạn.
+300|Dán ảnh chụp màn hình vào đây
+301|Nhấn
+302|, thả hình ảnh vào, hoặc bấm để chọn
+303|Mẹo:
+304|để chụp màn hình
+305|Hoặc gõ hay dán danh sách dạng chữ
+306|Đọc danh sách này
+307|Đang đọc hình ảnh...
+308|Việc này có thể mất vài giây. Lần đầu, ứng dụng còn tải công cụ đọc từ internet.
+309|Thêm một dòng
+310|Thử ảnh khác
+311|Thêm vào {S}
+312|Hãy đánh dấu ít nhất một món để thêm.
+313|Sẽ cập nhật giá
+314|Hình ảnh của bạn
+315|Không đọc được hình ảnh. Lần đầu đọc ảnh cần có internet. Bạn có thể gõ hoặc dán danh sách bên dưới.
+316|Không tìm thấy món nào có giá trong ảnh đó. Hãy thử ảnh rõ hơn, hoặc sửa chữ bên dưới rồi bấm Đọc danh sách này.
+317|Mỗi {pa} thật sự tốn bao nhiêu, và nên bán giá nào
+318|Trả lương cho bạn
+319|mỗi giờ
+320|Lợi nhuận thêm
+321|Thời gian của bạn
+322|Chi phí thật
+323|Bạn bán
+324|Gợi ý
+325|Nên bán {m}
+326|Chưa đặt giá
+327|Chưa đặt
+328|Bạn lời {m}, hơi thấp hơn mục tiêu
+329|Mỗi lần lời {m}
+330|Mỗi lần lỗ {m}
+331|Dùng giá gợi ý
+332|Chi phí thật là {s} cộng thời gian của bạn. Giá gợi ý cộng thêm lợi nhuận bạn chọn, làm tròn lên đô la tiếp theo.
+333|Hãy thêm {p} trước
+334|Khi bạn thêm nguyên liệu cho từng món, trang này sẽ tính chi phí và giá hợp lý.
+335|Đến {P}
+336|{n} đang mở, {n} đã xong
+337|Từ Google Form
+338|Thêm {oa}
+339|+ Thêm {oa}
+340|Đang mở
+341|Tất cả
+342|Mới
+343|Đang làm
+344|Đã trả
+345|Sửa
+346|Trạng thái
+347|Xóa {o} đã xong ({n})
+348|Quay lại Ngày của tôi
+349|Sửa {oa}
+350|Tên {ca}
+351|Điện thoại hoặc email (không bắt buộc)
+352|{n}-{n}-{n} hoặc email
+353|Họ muốn gì
+354|Ngày đến hạn
+355|Giờ (không bắt buộc)
+356|Không có giờ
+357|Chi tiết thêm
+358|Vị bánh
+359|Muốn hỏi thêm gì trong mỗi {oa}?
+360|Chữ trên bánh
+361|Dị ứng
+362|Tự lấy hay giao hàng
+363|Khác
+364|Ghi chú (không bắt buộc)
+365|Điều khác cần nhớ
+366|Lưu thay đổi
+367|Hủy
+368|Xóa {oa} này
+369|Quay lại {O}
+370|Thêm {oa}
+371|Đã xóa {n} {o}
+372|Lấy {o} từ Google Form của bạn
+373|Mỗi người đã điền biểu mẫu sẽ hiện ở đây thành một {oa} mới. Bạn có thể làm lại bất cứ lúc nào. Những cái đã lấy sẽ không bị thêm hai lần.
+374|Tải câu trả lời về
+375|Mở Google Form và bấm
+376|Câu trả lời
+377|Bấm
+378|Xem trong Trang tính
+379|(hoặc
+380|Liên kết với Trang tính
+381|lần đầu).
+382|Trong trang tính, bấm
+383|Tệp
+384|, rồi
+385|Tải xuống
+386|Chọn tệp đó
+387|Chọn tệp của bạn
+388|hoặc kéo vào đây
+389|Cho ứng dụng biết mỗi câu trả lời thuộc mục nào
+390|Chúng tôi đã đoán cho từng câu hỏi. Hãy sửa nếu thấy sai.
+391|Chọn câu hỏi chứa tên {ca}.
+392|Hôm nay không có gì đến hạn
+393|{n} người
+394|{n} người
+395|Thêm {ca}
+396|Tìm người
+397|Gần đây nhất
+398|Nhiều {o} nhất
+399|Chi nhiều nhất
+400|A đến Z
+401|Chưa có điện thoại hay email
+402|tổng
+403|Thêm {ca}
+404|Thôi
+405|Quay lại {C}
+406|{oa} đầu tiên
+407|{o} của họ
+408|Tất cả những người mua hàng của bạn, ở một nơi
+409|Chưa có {c}
+410|Thêm những người bạn làm việc cùng, kèm điện thoại hoặc email, để tất cả ở một nơi.
+411|Giữ mọi người bạn làm việc cùng ở một nơi.
+412|{n} {p}
+413|Thêm {pa}
+414|Làm được {n}
+415|{n} {s}
+416|Tốn {m}
+417|Chưa có giá
+418|Quay lại {P}
+419|Giá bạn bán
+420|Làm được bao nhiêu
+421|{n} bánh kem, {n} bánh cupcake
+422|Số giờ bạn cần
+423|Thành phần
+424|Chưa thêm gì. Chọn từ {s} bên dưới, hoặc thêm mới.
+425|+ Thêm {sa}
+426|Các bước
+427|(mỗi dòng một bước)
+428|Thêm {pa}
+429|Hãy đặt tên để lưu.
+430|Nguyên liệu cho một mẻ tốn
+431|Tìm mọi thứ trong ứng dụng, hoặc tìm địa điểm gần bạn
+432|Tìm {o}, {c}, {p}, việc
+433|Tìm {c}, {p}, việc
+434|Tìm
+435|Tìm gần bạn
+436|Chợ nông sản
+437|Mở Google Maps
+438|Hội chợ thủ công
+439|Cửa hàng {s}
+440|Nơi để bán hàng
+441|Tạo một cái, rồi in hoặc lưu thành PDF
+442|Hóa đơn
+443|{oa} nào
+444|In
+445|Cho
+446|Ngày
+447|Món
+448|Tổng
+449|Chưa thanh toán
+450|Cảm ơn bạn đã đặt {oa}!
+451|Ghi chú ở cuối
+452|Đặt {oa} trước {n} ngày. Nhắn tin {n}-{n}-{n}
+453|Đặt trước {n} ngày. Nhắn tin {n}-{n}-{n}
+454|Không có kết quả
+455|Đổi ảnh
+456|Gỡ ảnh
+457|Các cơ sở kinh doanh của bạn
+458|Đang mở
+459|Thêm cơ sở kinh doanh khác
+460|Các cơ sở khác vẫn được lưu
+461|Cơ sở này
+462|Tên và quốc gia
+463|{B} · Hoa Kỳ
+464|{B} · Canada
+465|{B} · Mexico
+466|{B} · Vương quốc Anh
+467|{B} · Ireland
+468|{B} · Úc
+469|{B} · New Zealand
+470|{B} · Không có ngày lễ
+471|Loại hình và từ ngữ
+472|Giao diện
+473|Màu và phông chữ
+474|Thay đổi theo thời gian trong ngày
+475|Ngôn ngữ
+476|English, Español, Français, 中文, Tiếng Việt, 한국어, Tagalog, Русский, 日本語, Português, Deutsch
+477|Pip, người trợ giúp của bạn
+478|Hiện mẹo về việc kinh doanh của bạn
+479|Mục tiêu
+480|Bạn muốn được giúp gì
+481|Chưa chọn
+482|Sao lưu
+483|Lưu bản sao lưu
+484|Bạn chưa lưu bản nào
+485|Tải bản sao lưu
+486|Khôi phục mọi thứ từ tệp sao lưu
+487|Đã lưu hôm nay
+488|Đã lưu hôm qua
+489|Đã lưu {n} ngày trước
+490|Xóa {B}
+491|Quay lại Cài đặt
+492|Thao tác này xóa mọi thứ trong {B}. Bấm lần nữa để xóa
+493|Loại hình kinh doanh
+494|Cơ sở của bạn
+495|Màu sắc
+496|Bạn kinh doanh gì?
+497|Biz Studio dùng từ ngữ phù hợp với việc kinh doanh của bạn, như {P} cho tiệm bánh hay Lịch hẹn cho tiệm tóc.
+498|Làm bánh tại nhà
+499|Nấu ăn và đặt tiệc
+500|Nến và đồ thủ công
+501|Nghệ thuật và đặt vẽ
+502|May vá và quần áo
+503|Làm móng
+504|Làm tóc
+505|Mi và trang điểm
+506|Gia sư
+507|Dạy nhạc và nhảy
+508|Huấn luyện thể hình
+509|Nhiếp ảnh
+510|Chăm sóc thú cưng
+511|Dọn dẹp
+512|Sân vườn
+513|Tiệc và sự kiện
+514|Loại hình kinh doanh nào?
+515|Sửa xe đạp, tắm chó, quầy nước chanh...
+516|Hãy cho biết bạn làm gì, chúng tôi sẽ điền từ ngữ phù hợp.
+517|Những gì bạn bán hoặc cung cấp
+518|Những gì người ta đặt
+519|Những người bạn làm việc cùng
+520|Những gì bạn dùng để làm việc
+521|Tiếp tục
+522|Cơ sở của bạn tên gì?
+523|Tên này sẽ có trên hóa đơn, thực đơn và đầu ứng dụng. Bạn có thể đổi sau.
+524|Tên cơ sở
+525|Bạn ở đâu?
+526|Hoa Kỳ
+527|Canada
+528|Mexico
+529|Vương quốc Anh
+530|Ireland
+531|Úc
+532|New Zealand
+533|Nơi khác (không có ngày lễ)
+534|Chúng tôi sẽ đưa ngày lễ của nước bạn vào lịch.
+535|Ảnh đại diện (không bắt buộc)
+536|Thêm ảnh hoặc logo
+537|Nếu bỏ qua, chữ viết tắt tên bạn sẽ hiện ra.
+538|Quay lại
+539|Hãy nhập tên cơ sở để tiếp tục.
+540|Làm theo phong cách của bạn
+541|Chọn màu. Mỗi màu đi kèm một phông chữ, và cả ứng dụng thay đổi khi bạn bấm.
+542|Đơn giản
+543|Cổ điển
+544|Xám đá
+545|Xô thơm
+546|Anh đào
+547|Đồ ngọt
+548|Dâu tây
+549|Matcha
+550|Việt quất
+551|Chanh
+552|Caramel
+553|Kẹo cao su
+554|Thiên nhiên
+555|Đại dương
+556|Rừng
+557|Hoàng hôn
+558|Sa mạc
+559|Bầu trời
+560|Nổi bật
+561|Thiên hà
+562|Nhiệt đới
+563|Cổ điển retro
+564|Cầu vồng
+565|Tùy chỉnh
+566|Màu chính
+567|Màu nhấn
+568|Thay đổi theo thời gian trong ngày
+569|Ấm áp buổi sáng, tươi sáng buổi chiều và dịu nhẹ buổi tối.
+570|Xem trước
+571|{o} sắp đến hạn
+572|tuần này
+573|Tiếp theo
+574|Bánh quy sô-cô-la chip
+575|Thân thiện
+576|Bo tròn
+577|Vui nhộn
+578|Thanh lịch
+579|Hiện đại
+580|Phông chữ
+581|Bạn muốn được giúp gì?
+582|Chọn bao nhiêu cũng được. Biz Studio sẽ đưa chúng lên đầu và cho bạn mẹo.
+583|Điều khác? (không bắt buộc)
+584|Tôi muốn bán ở chợ nông sản mùa hè này
+585|Bỏ qua lúc này
+586|Hoàn tất
+587|Tôi hay quên {o} hoặc ngày đến hạn
+588|Tôi không biết định giá thế nào
+589|Tôi hay hết {s}
+590|Tôi muốn phát triển việc kinh doanh
+591|Tôi không đủ thời gian
+592|Thông tin của tôi để lung tung khắp nơi
+593|Tôi muốn theo dõi tiền bạc
+594|Tôi muốn cơ sở của mình trông chuyên nghiệp
+595|Xem lịch mỗi sáng. Bạn sẽ được nhắc thêm trước khi {o} đến hạn.
+596|Nhập giá bạn mua {s} trong Giá và lợi nhuận, Biz Studio sẽ gợi ý giá hợp lý.
+597|Xem danh sách {s} vài ngày trước những ngày bận để mua sẵn.
+598|Dùng Tìm kiếm để tìm chợ và sự kiện nơi bạn có thể bán hàng.
+599|Danh sách việc cần làm đưa việc gấp nhất lên đầu, nên bạn luôn biết phải làm gì tiếp.
+600|Giữ tất cả {o} và {c} ở đây thay vì trong tin nhắn và ghi chú.
+601|Giữ {c}, việc cần làm và sự kiện ở đây thay vì trong tin nhắn và ghi chú.
+602|Sổ sách cộng tiền vào và tiền ra, để bạn thấy lợi nhuận thật.
+603|Tạo hóa đơn, thực đơn và bảng giá từ {p} chỉ với vài cú bấm.
+604|Mở lịch
+605|Mở giá và lợi nhuận
+606|Mở việc cần làm
+607|Mở sổ sách
+608|Mở tìm kiếm
+609|Mở hóa đơn và thực đơn
+610|Chú ý! {n} {o} bị trễ.
+611|Hôm nay bạn có {n} {o} đến hạn. Bạn làm được mà!
+612|{n} {o} đến hạn ngày mai. Chuẩn bị thôi!
+613|Hôm nay bạn có {n} việc trong danh sách.
+614|Hôm nay bạn có {n} việc trong danh sách.
+615|{n} {o} đã xong đang chờ thanh toán.
+616|Thêm {oa} đầu tiên và tôi sẽ giúp bạn theo dõi.
+617|Thêm {p} để tôi tính chi phí cho bạn.
+618|Nhập giá bạn mua {s}, tôi sẽ lập danh sách mua sắm.
+619|Đã lâu rồi bạn chưa sao lưu. Hãy lưu một bản trong Cài đặt để không mất gì!
+620|Thêm ảnh cho cơ sở của bạn trong Cài đặt. Ảnh cũng có trên hóa đơn!
+621|Bấm vào một người để xem tất cả {o} của họ.
+622|Bấm vào một ngày, rồi bấm Thêm để thêm sự kiện hoặc việc cần làm.
+623|In một thực đơn và mang đến phiên chợ tới.
+624|Thử tìm một cái tên, một {pa}, hoặc bất cứ thứ gì.
+625|Ghi khoản chi trong Tiền ra, để biết bạn thật sự giữ lại bao nhiêu.
+626|Bạn đang làm rất tốt. Cứ thế nhé!
+627|Hiện không có gì gấp. Làm tốt lắm!
+628|Xong hết rồi! Tự thưởng một món ăn vặt nhé.
+629|Hôm nay danh sách trống.
+630|Thêm một việc ở trên để bắt đầu.
+631|Thêm một việc ở trên. Khi có {o} sắp tới, việc của chúng sẽ tự hiện ở đây.
+632|Chưa có ghi chú dán
+633|Ghi chú và nhắc nhở nhanh, màu nào cũng được.
+634|Lịch của bạn đang trống
+635|Danh sách của bạn đang trống
+636|Không cần mua gì
+637|Chưa tính được giá
+638|Tìm bất cứ thứ gì
+639|Chưa có gì để in
+640|Xong: $1
+641|Chưa xong: $1
+642|Đánh dấu quan trọng: $1
+643|Bỏ đánh dấu: $1
+644|Xóa $1
+645|Gỡ $1
+646|Sửa $1
+647|Việc cần làm: $1
+648|Ghi chú dán: $1
+649|Đã mua $1, đã thêm $2 vào Sổ sách
+650|Đã mua $1
+651|$1 giờ là $2
+652|Gần nhất: $1
+653|Thêm $1 cho $2
+654|$2 của $1 đã đánh dấu $3
+655|Làm $1 cho $2
+656|$1, mua $2
+657|Cần $1, đang có $2. Cho $3
+658|$1 cho $2 $3
+659|$1 lúc $2
+660|$1 cho $2
+661|Chú ý! $2 của $1 bị trễ.
+662|$2 của $1 đến hạn hôm nay lúc $3.
+663|$2 của $1 đến hạn hôm nay.
+664|Đừng quên: $2 của $1 đến hạn ngày mai.
+665|Hôm nay: $1 lúc $2. Chúc vui!
+666|Hôm nay: $1. Chúc vui!
+667|Bạn đã đánh dấu "$1" là quan trọng. Và $2 việc nữa.
+668|Bạn đã đánh dấu "$1" là quan trọng.
+669|Bạn sắp hết $1 và $2 món khác cho $3 sắp tới.
+670|Bạn sắp hết $1 cho $2 sắp tới.
+671|$2 của $1 đã xong nhưng chưa thanh toán.
+672|$1 của bạn tốn nhiều hơn giá bạn bán. Cùng sửa nhé!
+673|Bạn có thể bán $1 giá cao hơn một chút.
+674|$1: $2 ($3)
+675|Quay lại $1
+676|Đã thêm $1 vào $2 và cập nhật $3 giá
+677|Đã thêm $1 vào $2
+678|Đã cập nhật $1 giá
+679|Thêm $1 vào $2
+680|Tìm thấy $1 món. Hãy kiểm tra tên, số lượng và giá, sửa nếu sai. Bỏ chọn những gì bạn không muốn.
+681|$1 với phông $2
+682|Làm bánh tại nhà: $1
+683|Dọn dẹp: $1
+684|Bỏ qua $1
+685|Đã mua $1
+`;
+
+// Korean
+var LANG_KO = `
+0|일
+1|월
+2|화
+3|수
+4|목
+5|금
+6|토
+7|나의 하루
+8|추천 메뉴
+9|캘린더
+10|할 일
+11|가격과 이익
+12|장부
+13|업무
+14|메모지
+15|비즈니스
+16|{S}와 장보기
+17|성장
+18|찾기
+19|영수증과 메뉴
+20|설정
+21|돈
+22|메뉴
+23|메뉴
+24|좋은 아침이에요
+25|좋은 오후예요
+26|좋은 저녁이에요
+27|좋은 아침이에요!
+28|오늘 마감 {o}
+29|오늘 마감 {oa}
+30|오늘 할 일
+31|오늘 할 일
+32|이번 달 받은 돈
+33|살 것
+34|살 것
+35|{oa} {n}개가 늦었어요. 눌러서 확인하세요.
+36|{o} {n}개가 늦었어요. 눌러서 확인하세요.
+37|오늘 할 일
+38|모두 보기
+39|이번 주 예정
+40|오늘 일정
+41|오늘 일정
+42|오늘은 일정이 없어요. 곧 {n}개가 있어요.
+43|나의 목표
+44|닫기
+45|보여 줘
+46|다음 팁
+47|Pip의 팁
+48|Pip
+49|오늘
+50|내일
+51|어제
+52|늦음
+53|날짜 없음
+54|언젠가
+55|늦음, {d}까지였어요
+56|{Oa} 마감 {d}
+57|{Oa} 마감 {d} {t}
+58|{n}일 늦음
+59|{n}일 늦음
+60|오늘 마감
+61|내일 마감
+62|내일 {t} 마감
+63|오늘 {t} 마감
+64|{n}일 후 마감
+65|{n}일 후 {t} 마감
+66|{d} 마감
+67|{d} {t} 마감
+68|{d} 마감이었어요
+69|{d} {t} 마감이었어요
+70|{d} {t}
+71|중요 표시
+72|표시 해제
+73|삭제
+74|완료
+75|미완료
+76|할 일 추가
+77|새 할 일
+78|무엇을 해야 하나요?
+79|밀가루 더 사기
+80|중요
+81|표시하면 맨 위에 계속 있어요
+82|할 일 추가
+83|할 일을 입력하세요.
+84|완료 항목 지우기 ({n})
+85|오늘 할 일 {n}개
+86|오늘 할 일 {n}개
+87|할 일 {n}개를 지웠어요
+88|할 일 {n}개를 지웠어요
+89|지금은 아무것도 없어요.
+90|실행 취소
+91|할 일 없음
+92|오늘은 할 일이 없어요
+93|모두 끝!
+94|새 메모
+95|여기에 쓰세요...
+96|메모지
+97|화면으로 꺼내기
+98|색상 및 삭제
+99|캘린더에서 보기
+100|노랑
+101|복숭아
+102|분홍
+103|라벤더
+104|파랑
+105|민트
+106|라임
+107|모래
+108|아무 색이나 고르기
+109|색상
+110|캘린더: {d}
+111|메모 삭제
+112|캘린더에 추가
+113|메모지에서 열기
+114|다른 날로 옮기기
+115|어느 날?
+116|캘린더에서 빼기
+117|저장
+118|{d} 캘린더에 추가했어요
+119|캘린더에서 뺐어요
+120|메모를 삭제했어요
+121|날짜를 고르세요.
+122|메모 {n}개. 메모에 마우스를 올리면 화면으로 꺼낼 수 있어요.
+123|메모 {n}개. 메모에 마우스를 올리면 화면으로 꺼낼 수 있어요.
+124|원하는 색으로 쓰는 간단한 메모와 알림
+125|아직 메모가 없어요. +를 눌러 추가하세요.
+126|브라우저가 메모 창을 막았어요. 이 사이트의 팝업을 허용하고 다시 시도하세요.
+127|캘린더 보기
+128|일
+129|주
+130|월
+131|년
+132|지난달
+133|다음 달
+134|전날
+135|다음 날
+136|지난주
+137|다음 주
+138|작년
+139|내년
+140|추가
+141|이날 보기
+142|이날에 추가
+143|{d}에 추가
+144|이 달 보기
+145|이번 주 계획 {n}개
+146|이번 주 계획 {n}개
+147|이번 주 계획이 아직 없어요
+148|계획 {n}개
+149|계획 {n}개
+150|아직 계획이 없어요
+151|점은 계획이 있는 날이에요. 공휴일은 노란색이에요.
+152|{d}에 마감이 아직 없어요
+153|{d}에 계획이 아직 없어요
+154|계획 없음. 자유로운 하루!
+155|{d}에 {o} {n}개 마감
+156|{d}에 {oa} {n}개 마감
+157|{d}에 일정 {n}개
+158|{d}에 일정 {n}개
+159|일정
+160|할 일
+161|일정 수정
+162|새 일정
+163|무슨 일인가요?
+164|몇 시?
+165|(건너뛰어도 돼요)
+166|몇 시? (건너뛰어도 돼요)
+167|어디서?
+168|메인 스트리트 공원
+169|이 일정 삭제
+170|일정 추가
+171|일정을 삭제했어요
+172|무슨 일인지 입력하세요.
+173|하루 종일
+174|아무 때나
+175|파머스 마켓
+176|추가할 항목
+177|시간
+178|장소
+179|제목
+180|(선택)
+181|완료 표시했어요
+182|새해 첫날
+183|마틴 루터 킹 주니어의 날
+184|밸런타인데이
+185|대통령의 날
+186|성 패트릭의 날
+187|부활절
+188|부활절 일요일
+189|부활절 월요일
+190|성금요일
+191|성목요일
+192|어머니의 날
+193|현충일
+194|아버지의 날
+195|준틴스
+196|독립기념일
+197|노동절
+198|원주민의 날
+199|핼러윈
+200|재향군인의 날
+201|추수감사절
+202|블랙 프라이데이
+203|스몰 비즈니스 새터데이
+204|크리스마스이브
+205|크리스마스
+206|크리스마스
+207|새해 전야
+208|박싱 데이
+209|가족의 날
+210|빅토리아 데이
+211|캐나다 데이
+212|시민의 날
+213|노동절
+214|진실과 화해의 날
+215|현충일
+216|주현절
+217|제헌절
+218|베니토 후아레스 탄생일
+219|어린이날
+220|싱코 데 마요
+221|망자의 날
+222|혁명 기념일
+223|과달루페 성모의 날
+224|오스트레일리아 데이
+225|안작 데이
+226|국왕 탄신일
+227|와이탕이 데이
+228|새해 다음 날
+229|본파이어 나이트
+230|현충 일요일
+231|성 스테파노의 날
+232|5월 초 공휴일
+233|봄 공휴일
+234|여름 공휴일
+235|성 브리지드의 날 공휴일
+236|5월 공휴일
+237|6월 공휴일
+238|8월 공휴일
+239|10월 공휴일
+240|결제된 {o}은 마감일에 들어온 돈으로 계산돼요
+241|월별로 보는 들어온 돈과 나간 돈
+242|들어온 돈
+243|나간 돈
+244|남은 돈
+245|받을 돈
+246|최근 {n}개월
+247|들어옴: {m}
+248|나감: {m}
+249|이번 달
+250|이번 달은 아직 없어요.
+251|산 것 또는 낸 것
+252|케이크 상자, 부스 비용
+253|금액
+254|날짜
+255|삭제
+256|추가하기
+257|금액을 입력하세요.
+258|용도
+259|베이크 세일, 팁
+260|팁
+261|아직 기록한 돈이 없어요
+262|살 것 {n}개
+263|살 것 {n}개
+264|사진으로 추가
+265|{sa} 추가
+266|장보기 목록
+267|앞으로 {n}주 동안의 {o}에 필요해요, 약 {m}
+268|앞으로 {n}주 동안의 {o}에 필요해요
+269|{o}에 필요한 것은 여기에 자동으로 나타나요
+270|사야 할 것
+271|살 것 추가
+272|가지고 있는 것
+273|줄이기
+274|늘리기
+275|필요한 건 다 있어요
+276|지금은 살 게 없어요.
+277|아직 가격이 없어요
+278|측정 단위
+279|살 때
+280|받는 양
+281|받는 양
+282|단위
+283|가격
+284|지금 가진 양
+285|{sa} 추가
+286|이름을 입력하세요.
+287|컵
+288|개
+289|스틱
+290|다스
+291|이름
+292|양
+293|단위
+294|가격
+295|{sa} 수정
+296|밀가루
+297|설탕
+298|영수증, 온라인 주문, 필요한 물건 목록의 스크린샷을 찍어 보세요. 앱이 읽고 이름, 양, 가격을 채워 줘요.
+299|영수증, 온라인 주문, 필요한 물건 목록의 스크린샷을 찍어 보세요. 앱이 읽고 이름, 양, 가격을 채워 줘요.
+300|여기에 스크린샷을 붙여넣으세요
+301|누르기
+302|, 사진을 끌어다 놓거나 클릭해서 고르세요
+303|팁:
+304|로 스크린샷을 찍어요
+305|또는 목록을 글자로 입력하거나 붙여넣기
+306|이 목록 읽기
+307|사진을 읽는 중...
+308|몇 초 걸릴 수 있어요. 처음에는 인터넷에서 읽기 도구도 불러와요.
+309|줄 추가
+310|다른 사진으로 해 보기
+311|{S}에 추가
+312|추가할 항목을 하나 이상 체크하세요.
+313|가격을 업데이트해요
+314|내 사진
+315|사진을 읽지 못했어요. 처음 사진을 읽을 때는 인터넷이 필요해요. 아래에 목록을 입력하거나 붙여넣어도 돼요.
+316|그 사진에서 가격이 있는 항목을 찾지 못했어요. 더 선명한 스크린샷으로 해 보거나, 아래 글자를 고친 뒤 이 목록 읽기를 누르세요.
+317|각 {pa}에 실제로 드는 비용과 받을 가격
+318|내 시급
+319|시간당
+320|추가 이익
+321|내 시간
+322|실제 비용
+323|판매가
+324|추천 가격
+325|대신 {m} 받기
+326|아직 가격이 없어요
+327|미설정
+328|{m} 남아요, 목표보다 조금 적어요
+329|매번 {m} 남아요
+330|매번 {m} 손해예요
+331|추천 가격 사용
+332|실제 비용은 {s}에 내 시간을 더한 거예요. 추천 가격은 고른 이익을 더하고 1달러 단위로 올림해요.
+333|먼저 {p}을 추가하세요
+334|각 항목에 들어가는 재료를 추가하면, 이 페이지가 비용과 적정 가격을 계산해요.
+335|{P}로 가기
+336|진행 중 {n}개, 완료 {n}개
+337|구글 설문지에서
+338|{oa} 추가
+339|+ {oa} 추가
+340|진행 중
+341|전체
+342|새로 들어옴
+343|진행 중
+344|결제 완료
+345|수정
+346|상태
+347|완료된 {o} 지우기 ({n})
+348|나의 하루로 돌아가기
+349|{oa} 수정
+350|{ca} 이름
+351|전화번호 또는 이메일 (선택)
+352|{n}-{n}-{n} 또는 이메일
+353|원하는 것
+354|마감일
+355|시간 (선택)
+356|시간 없음
+357|추가 정보
+358|케이크 맛
+359|{oa}마다 더 물어보고 싶은 게 있나요?
+360|케이크 문구
+361|알레르기
+362|픽업 또는 배달
+363|기타
+364|메모 (선택)
+365|기억할 다른 내용
+366|변경 사항 저장
+367|취소
+368|이 {oa} 삭제
+369|{O}로 돌아가기
+370|{oa} 추가
+371|{o} {n}개를 삭제했어요
+372|구글 설문지에서 {o} 가져오기
+373|설문지를 작성한 사람마다 여기에 새 {oa}로 나타나요. 언제든 다시 할 수 있어요. 이미 가져온 것은 두 번 추가되지 않아요.
+374|응답 다운로드하기
+375|구글 설문지를 열고 클릭하세요
+376|응답
+377|클릭
+378|스프레드시트에서 보기
+379|(또는
+380|스프레드시트에 연결
+381|처음일 때).
+382|시트에서 클릭하세요
+383|파일
+384|, 그다음
+385|다운로드
+386|그 파일 고르기
+387|파일 고르기
+388|또는 여기로 끌어다 놓기
+389|각 답이 어디로 가는지 알려 주세요
+390|질문마다 추측해 봤어요. 틀린 것은 바꿔 주세요.
+391|{ca} 이름이 있는 질문을 고르세요.
+392|오늘 마감 없음
+393|{n}명
+394|{n}명
+395|{ca} 추가
+396|사람 찾기
+397|최근 순
+398|{o} 많은 순
+399|많이 쓴 순
+400|가나다순
+401|아직 전화번호나 이메일이 없어요
+402|합계
+403|{ca} 추가
+404|그만두기
+405|{C}로 돌아가기
+406|첫 {oa}
+407|이 사람의 {o}
+408|내게 주문하는 모든 사람을 한곳에
+409|아직 {c}이 없어요
+410|함께 일하는 사람들을 전화번호나 이메일과 함께 추가해서 한곳에 모아 두세요.
+411|함께 일하는 모든 사람을 한곳에 모아 두세요.
+412|{p} {n}개
+413|{pa} 추가
+414|{n}개 만들어요
+415|{s} {n}개
+416|비용 {m}
+417|가격 없음
+418|{P}로 돌아가기
+419|판매가
+420|만드는 양
+421|케이크 {n}개, 컵케이크 {n}개
+422|걸리는 시간
+423|들어가는 것
+424|아직 추가한 게 없어요. 아래 {s}에서 고르거나 새로 추가하세요.
+425|+ {sa} 추가
+426|순서
+427|(한 줄에 하나씩)
+428|{pa} 추가
+429|저장하려면 이름을 붙여 주세요.
+430|한 번 만드는 재료비
+431|앱 안의 모든 것을 찾거나, 근처 장소를 찾아보세요
+432|{o}, {c}, {p}, 할 일 검색
+433|{c}, {p}, 할 일 검색
+434|검색
+435|근처에서 찾기
+436|파머스 마켓
+437|구글 지도 열기
+438|공예 장터
+439|{s} 가게
+440|판매할 수 있는 곳
+441|만든 다음 인쇄하거나 PDF로 저장하세요
+442|영수증
+443|어떤 {oa}
+444|인쇄
+445|받는 사람
+446|날짜
+447|항목
+448|합계
+449|아직 결제 안 됨
+450|{oa} 감사합니다!
+451|아래쪽 메모
+452|{n}일 전에 {oa}하세요. 문자 {n}-{n}-{n}
+453|{n}일 전에 주문하세요. 문자 {n}-{n}-{n}
+454|결과 없음
+455|사진 바꾸기
+456|사진 빼기
+457|내 비즈니스
+458|지금 열림
+459|다른 비즈니스 추가
+460|다른 비즈니스는 그대로 저장돼요
+461|이 비즈니스
+462|비즈니스 이름과 나라
+463|{B} · 미국
+464|{B} · 캐나다
+465|{B} · 멕시코
+466|{B} · 영국
+467|{B} · 아일랜드
+468|{B} · 호주
+469|{B} · 뉴질랜드
+470|{B} · 공휴일 없음
+471|비즈니스 종류와 단어
+472|모양
+473|색상과 글꼴
+474|하루 시간에 따라 바뀌어요
+475|언어
+476|English, Español, Français, 中文, Tiếng Việt, 한국어, Tagalog, Русский, 日本語, Português, Deutsch
+477|도우미 Pip
+478|비즈니스에 대한 팁을 알려 줘요
+479|목표
+480|도움받고 싶은 것
+481|아직 고르지 않았어요
+482|백업
+483|백업 저장
+484|아직 저장한 적이 없어요
+485|백업 불러오기
+486|백업 파일에서 모두 되살리기
+487|오늘 저장했어요
+488|어제 저장했어요
+489|{n}일 전에 저장했어요
+490|{B} 삭제
+491|설정으로 돌아가기
+492|{B}의 모든 것이 삭제돼요. 삭제하려면 한 번 더 클릭하세요
+493|비즈니스 종류
+494|내 비즈니스
+495|색상
+496|어떤 비즈니스인가요?
+497|Biz Studio는 비즈니스에 맞는 단어를 써요. 베이커리는 {P}, 미용실은 예약처럼요.
+498|홈 베이커리
+499|음식과 케이터링
+500|양초와 공예
+501|미술과 의뢰 작품
+502|바느질과 옷
+503|네일
+504|헤어
+505|속눈썹과 메이크업
+506|과외
+507|음악과 댄스 레슨
+508|피트니스 코칭
+509|사진
+510|반려동물 돌봄
+511|청소
+512|마당과 정원
+513|파티와 이벤트
+514|어떤 비즈니스인가요?
+515|자전거 수리, 강아지 미용, 레모네이드 가판대...
+516|무슨 일을 하는지 알려 주시면 어울리는 단어를 채워 드릴게요.
+517|팔거나 제공하는 것
+518|사람들이 예약하거나 주문하는 것
+519|함께 일하는 사람들
+520|일할 때 쓰는 것
+521|계속
+522|비즈니스 이름이 뭔가요?
+523|이 이름은 영수증, 메뉴, 앱 맨 위에 나와요. 나중에 바꿀 수 있어요.
+524|비즈니스 이름
+525|어디에 있나요?
+526|미국
+527|캐나다
+528|멕시코
+529|영국
+530|아일랜드
+531|호주
+532|뉴질랜드
+533|기타 지역 (공휴일 없음)
+534|그 나라의 공휴일을 캘린더에 넣어 드릴게요.
+535|프로필 사진 (선택)
+536|사진이나 로고 추가
+537|건너뛰면 이니셜이 대신 나와요.
+538|뒤로
+539|계속하려면 비즈니스 이름을 입력하세요.
+540|나만의 스타일로
+541|색을 골라 보세요. 색마다 어울리는 글꼴이 있고, 클릭하면 앱 전체가 바뀌어요.
+542|심플
+543|클래식
+544|슬레이트
+545|세이지
+546|체리
+547|달콤한 간식
+548|딸기
+549|말차
+550|블루베리
+551|레몬
+552|캐러멜
+553|풍선껌
+554|자연
+555|바다
+556|숲
+557|노을
+558|사막
+559|하늘
+560|강렬한
+561|은하수
+562|트로피컬
+563|레트로
+564|무지개
+565|직접 만들기
+566|메인 색
+567|포인트 색
+568|하루 시간에 따라 바꾸기
+569|아침엔 따뜻하게, 오후엔 밝게, 밤엔 차분하게.
+570|미리 보기
+571|마감 예정 {o}
+572|이번 주
+573|다음 할 일
+574|초코칩 쿠키
+575|친근한
+576|둥근
+577|발랄한
+578|우아한
+579|모던한
+580|글꼴
+581|어떤 도움이 필요하세요?
+582|원하는 만큼 고르세요. Biz Studio가 먼저 보여 주고 팁도 드려요.
+583|다른 게 있나요? (선택)
+584|이번 여름에 파머스 마켓에서 팔고 싶어요
+585|지금은 건너뛰기
+586|설정 끝내기
+587|{o}이나 마감일을 잊어버려요
+588|가격을 어떻게 정할지 모르겠어요
+589|{s}이 자주 떨어져요
+590|비즈니스를 키우고 싶어요
+591|시간이 부족해요
+592|정보가 여기저기 흩어져 있어요
+593|돈 관리를 하고 싶어요
+594|비즈니스가 전문적으로 보였으면 해요
+595|매일 아침 캘린더를 확인하세요. {o} 마감 전에 알림을 더 드려요.
+596|가격과 이익에 {s} 구매 가격을 넣으면 Biz Studio가 적정 가격을 추천해요.
+597|바쁜 날 며칠 전에 {s} 목록을 확인해서 미리 사 두세요.
+598|찾기로 팔 수 있는 근처 장터와 행사를 찾아보세요.
+599|할 일 목록은 가장 급한 일을 맨 위에 둬서, 다음에 뭘 할지 항상 알 수 있어요.
+600|모든 {o}과 {c}을 문자나 메모 대신 여기에 모아 두세요.
+601|{c}, 할 일, 일정을 문자나 메모 대신 여기에 모아 두세요.
+602|장부는 들어온 돈과 나간 돈을 더해서 진짜 이익을 보여 줘요.
+603|{p}으로 영수증, 메뉴, 가격표를 몇 번만 클릭해서 만들어요.
+604|캘린더 열기
+605|가격과 이익 열기
+606|할 일 열기
+607|장부 열기
+608|찾기 열기
+609|영수증과 메뉴 열기
+610|주의! {o} {n}개가 늦었어요.
+611|오늘 마감인 {o}이 {n}개 있어요. 할 수 있어요!
+612|내일 마감인 {o}이 {n}개예요. 준비할 시간이에요!
+613|오늘 할 일 목록에 {n}개가 있어요.
+614|오늘 할 일 목록에 {n}개가 있어요.
+615|완료된 {o} {n}개가 결제를 기다리고 있어요.
+616|첫 {oa}을 추가하면 관리를 도와 드릴게요.
+617|{p}을 추가하면 비용을 계산해 드릴게요.
+618|{s} 구매 가격을 넣으면 장보기 목록을 만들어 드릴게요.
+619|마지막 백업 이후 시간이 꽤 지났어요. 아무것도 잃지 않게 설정에서 백업하세요!
+620|설정에서 비즈니스 사진을 추가하세요. 영수증에도 나와요!
+621|사람을 클릭하면 그 사람의 {o}을 한곳에서 볼 수 있어요.
+622|날짜를 클릭하고 추가를 눌러 일정이나 할 일을 넣으세요.
+623|메뉴를 인쇄해서 다음 장터에 가져가세요.
+624|이름, {pa}, 무엇이든 검색해 보세요.
+625|쓴 돈을 나간 돈에 추가하면 실제로 남은 돈을 알 수 있어요.
+626|정말 잘하고 있어요. 계속 힘내요!
+627|지금은 급한 일이 없어요. 잘했어요!
+628|모두 끝났어요! 간식 하나 먹어도 돼요.
+629|오늘 목록이 비어 있어요.
+630|위에서 할 일을 추가해서 시작하세요.
+631|위에서 할 일을 추가하세요. 다가오는 {o}이 있으면 관련 할 일이 여기에 자동으로 나타나요.
+632|아직 메모지가 없어요
+633|원하는 색으로 쓰는 간단한 메모와 알림.
+634|캘린더가 비어 있어요
+635|목록이 아직 비어 있어요
+636|살 것이 없어요
+637|아직 계산된 가격이 없어요
+638|무엇이든 찾기
+639|아직 인쇄할 것이 없어요
+640|완료: $1
+641|미완료: $1
+642|중요 표시: $1
+643|표시 해제: $1
+644|$1 삭제
+645|$1 빼기
+646|$1 수정
+647|할 일: $1
+648|메모지: $1
+649|$1 구매, 장부에 $2 추가
+650|$1 구매
+651|$1 이제 $2
+652|최근: $1
+653|$2님의 $1 추가
+654|$1님의 $2: $3 표시
+655|$2님 $1 만들기
+656|$1, $2 사기
+657|$1 필요, $2 있음. $3님 것
+658|$2 $3에 $1
+659|$1 $2
+660|$2님 $1
+661|주의! $1님의 $2이(가) 늦었어요.
+662|$1님의 $2은(는) 오늘 $3 마감이에요.
+663|$1님의 $2은(는) 오늘 마감이에요.
+664|잊지 마세요: $1님의 $2은(는) 내일 마감이에요.
+665|오늘: $2 $1. 즐거운 시간 보내세요!
+666|오늘: $1. 즐거운 시간 보내세요!
+667|"$1"을(를) 중요로 표시했어요. 그리고 $2개 더 있어요.
+668|"$1"을(를) 중요로 표시했어요.
+669|다가오는 $3에 필요한 $1 외 $2개가 부족해요.
+670|다가오는 $2에 필요한 $1이(가) 부족해요.
+671|$1님의 $2은(는) 완료됐지만 아직 결제 전이에요.
+672|$1은(는) 판매가보다 만드는 비용이 더 들어요. 고쳐 봐요!
+673|$1은(는) 조금 더 받아도 돼요.
+674|$1: $2 ($3)
+675|$1로 돌아가기
+676|$2에 $1개 추가, 가격 $3개 업데이트
+677|$2에 $1개 추가
+678|가격 $1개 업데이트
+679|$2에 $1개 추가
+680|$1개를 찾았어요. 이름, 양, 가격을 확인하고 틀린 건 고치세요. 원하지 않는 건 체크를 해제하세요.
+681|$1, $2 글꼴
+682|홈 베이커리: $1
+683|청소: $1
+684|$1 건너뛰기
+685|$1 구매
+`;
+
+// Tagalog
+var LANG_TL = `
+0|Lin
+1|Lun
+2|Mar
+3|Miy
+4|Huw
+5|Biy
+6|Sab
+7|Araw Ko
+8|Pinili para sa iyo
+9|Kalendaryo
+10|Mga gagawin
+11|Presyo at kita
+12|Talaan ng pera
+13|Trabaho
+14|Mga sticky note
+15|Negosyo
+16|{S} at pamimili
+17|Paglago
+18|Hanapin
+19|Resibo at menu
+20|Settings
+21|Pera
+22|Menu
+23|Mga menu
+24|Magandang umaga
+25|Magandang hapon
+26|Magandang gabi
+27|Magandang umaga!
+28|{o} na due ngayon
+29|{oa} na due ngayon
+30|gagawin ngayon
+31|gagawin ngayon
+32|naibayad sa iyo ngayong buwan
+33|bibilhin
+34|bibilhin
+35|{n} {oa} ang late. I-tap para makita.
+36|{n} {o} ang late. I-tap para makita.
+37|Gagawin ngayon
+38|Tingnan lahat
+39|Ngayong linggo
+40|event ngayon
+41|event ngayon
+42|Wala ngayong araw. {n} ang paparating.
+43|Ang focus mo
+44|Isara
+45|Ipakita
+46|Susunod na tip
+47|Mga tip mula kay Pip
+48|Pip
+49|Ngayon
+50|Bukas
+51|Kahapon
+52|Late
+53|Walang petsa
+54|Balang araw
+55|Late, dapat noong {d}
+56|{Oa} due {d}
+57|{Oa} due {d} nang {t}
+58|{n} araw na late
+59|{n} araw na late
+60|Due ngayon
+61|Due bukas
+62|Due bukas nang {t}
+63|Due ngayon nang {t}
+64|Due sa loob ng {n} araw
+65|Due sa loob ng {n} araw nang {t}
+66|Due {d}
+67|Due {d} nang {t}
+68|Dapat noong {d}
+69|Dapat noong {d} nang {t}
+70|{d} nang {t}
+71|Markahan na mahalaga
+72|Alisin ang marka
+73|Burahin
+74|Tapos
+75|Hindi pa tapos
+76|Magdagdag ng gagawin
+77|Bagong gagawin
+78|Ano ang kailangan mong gawin?
+79|Bumili ng dagdag na harina
+80|Mahalaga
+81|Markahan para manatili sa itaas
+82|Idagdag
+83|Isulat kung ano ang kailangan mong gawin.
+84|Burahin ang tapos na ({n})
+85|{n} gagawin ngayon
+86|{n} gagawin ngayon
+87|Nabura ang {n} gagawin
+88|Nabura ang {n} gagawin
+89|Wala pa rito ngayon.
+90|I-undo
+91|Walang gagawin
+92|Walang gagawin ngayon
+93|Tapos na lahat!
+94|Bagong note
+95|Sumulat dito...
+96|Sticky note
+97|Ilabas sa screen mo
+98|Kulay at burahin
+99|Tingnan sa kalendaryo
+100|Dilaw
+101|Peach
+102|Pink
+103|Lavender
+104|Asul
+105|Mint
+106|Lime
+107|Buhangin
+108|Pumili ng kahit anong kulay
+109|Kulay
+110|Sa kalendaryo: {d}
+111|Burahin ang note
+112|Idagdag sa kalendaryo
+113|Buksan sa Mga sticky note
+114|Ilipat sa ibang araw
+115|Anong araw?
+116|Alisin sa kalendaryo
+117|I-save
+118|Naidagdag sa kalendaryo sa {d}
+119|Inalis sa kalendaryo
+120|Nabura ang note
+121|Pumili ng araw.
+122|{n} note. Itapat ang mouse sa note para ilabas ito sa screen mo.
+123|{n} note. Itapat ang mouse sa note para ilabas ito sa screen mo.
+124|Mabilis na note at paalala, sa kahit anong kulay
+125|Wala pang note. I-click ang + para magdagdag.
+126|Hinarang ng browser mo ang window ng note. Payagan ang mga pop-up para sa site na ito at subukan ulit.
+127|View ng kalendaryo
+128|Araw
+129|Linggo
+130|Buwan
+131|Taon
+132|Nakaraang buwan
+133|Susunod na buwan
+134|Nakaraang araw
+135|Susunod na araw
+136|Nakaraang linggo
+137|Susunod na linggo
+138|Nakaraang taon
+139|Susunod na taon
+140|Idagdag
+141|Tingnan ang araw na ito
+142|Idagdag sa araw na ito
+143|Idagdag sa {d}
+144|Tingnan ang buwang ito
+145|{n} plano ngayong linggo
+146|{n} plano ngayong linggo
+147|Wala pang plano ngayong linggo
+148|{n} plano
+149|{n} plano
+150|Wala pang plano
+151|May tuldok ang mga araw na may plano. Dilaw ang mga holiday.
+152|Wala pang due sa {d}
+153|Wala pang plano sa {d}
+154|Walang plano. Libreng araw!
+155|{n} {o} ang due sa {d}
+156|{n} {oa} ang due sa {d}
+157|{n} event sa {d}
+158|{n} event sa {d}
+159|Event
+160|Gagawin
+161|I-edit ang event
+162|Bagong event
+163|Ano ang mangyayari?
+164|Anong oras?
+165|(puwedeng laktawan)
+166|Anong oras? (puwedeng laktawan)
+167|Saan?
+168|Parke sa Main Street
+169|Burahin ang event na ito
+170|Idagdag ang event
+171|Nabura ang event
+172|Isulat kung ano ang mangyayari.
+173|Buong araw
+174|Kahit anong oras
+175|Farmers market
+176|Ano ang idadagdag
+177|Oras
+178|Saan
+179|Pamagat
+180|(opsyonal)
+181|Natapos
+182|Bagong Taon
+183|Araw ni Martin Luther King Jr.
+184|Araw ng mga Puso
+185|Araw ng mga Pangulo
+186|Araw ni San Patricio
+187|Pasko ng Pagkabuhay
+188|Linggo ng Pagkabuhay
+189|Lunes ng Pagkabuhay
+190|Biyernes Santo
+191|Huwebes Santo
+192|Araw ng mga Ina
+193|Memorial Day
+194|Araw ng mga Ama
+195|Juneteenth
+196|Araw ng Kalayaan
+197|Araw ng Paggawa
+198|Araw ng mga Katutubo
+199|Halloween
+200|Araw ng mga Beterano
+201|Thanksgiving
+202|Black Friday
+203|Small Business Saturday
+204|Bisperas ng Pasko
+205|Pasko
+206|Pasko
+207|Bisperas ng Bagong Taon
+208|Boxing Day
+209|Araw ng Pamilya
+210|Victoria Day
+211|Canada Day
+212|Civic Holiday
+213|Araw ng Paggawa
+214|Araw ng Katotohanan at Pagkakasundo
+215|Araw ng Paggunita
+216|Araw ng Tatlong Hari
+217|Araw ng Konstitusyon
+218|Kaarawan ni Benito Juárez
+219|Araw ng mga Bata
+220|Cinco de Mayo
+221|Araw ng mga Patay
+222|Araw ng Rebolusyon
+223|Araw ng Birhen ng Guadalupe
+224|Australia Day
+225|Anzac Day
+226|Kaarawan ng Hari
+227|Waitangi Day
+228|Araw pagkatapos ng Bagong Taon
+229|Bonfire Night
+230|Linggo ng Paggunita
+231|Araw ni San Esteban
+232|Holiday sa unang bahagi ng Mayo
+233|Spring holiday
+234|Summer holiday
+235|Holiday ni Santa Brigida
+236|Holiday ng Mayo
+237|Holiday ng Hunyo
+238|Holiday ng Agosto
+239|Holiday ng Oktubre
+240|Ang mga bayad na {o} ay binibilang na pumasok na pera sa due date nila
+241|Pumasok at lumabas na pera, bawat buwan
+242|Pumasok na pera
+243|Lumabas na pera
+244|Natira sa iyo
+245|Hinihintay na bayad
+246|Huling {n} buwan
+247|Pumasok: {m}
+248|Lumabas: {m}
+249|Ngayong buwan
+250|Wala pa ngayong buwan.
+251|Ano ang binili o binayaran mo
+252|Kahon ng cake, bayad sa booth
+253|Magkano
+254|Anong araw
+255|Burahin ito
+256|Idagdag
+257|Isulat kung magkano.
+258|Para saan
+259|Bake sale, tip
+260|Tip
+261|Wala pang naitalang pera
+262|{n} bibilhin
+263|{n} bibilhin
+264|Idagdag mula sa larawan
+265|Magdagdag ng {sa}
+266|Listahan ng bibilhin
+267|Para sa {o} mo sa susunod na {n} linggo, mga {m}
+268|Para sa {o} mo sa susunod na {n} linggo
+269|Kusang lalabas dito ang kailangan para sa {o} mo
+270|Mga kailangan mong bilhin
+271|Magdagdag ng bibilhin
+272|Ang meron ka
+273|Bawasan
+274|Dagdagan
+275|Nasa iyo na ang kailangan mo
+276|Walang bibilhin ngayon.
+277|Wala pang presyo
+278|Sinusukat mo ito sa
+279|Kapag binili mo
+280|Makakakuha ka ng
+281|Gaano karami ang makukuha mo
+282|unit
+283|sa halagang
+284|Gaano karami ang meron ka ngayon
+285|Magdagdag ng {sa}
+286|Isulat ang pangalan nito.
+287|tasa
+288|piraso
+289|stick
+290|dosena
+291|Pangalan
+292|Dami
+293|Unit
+294|Presyo
+295|I-edit ang {sa}
+296|Harina
+297|Asukal
+298|Mag-screenshot ng resibo, online order, o listahan ng kailangan mo. Babasahin ito ng app at pupunuin ang mga pangalan, dami at presyo para sa iyo.
+299|Mag-screenshot ng resibo, online order, o listahan ng kailangan mo. Babasahin ito ng app at pupunuin ang mga pangalan, dami at presyo para sa iyo.
+300|I-paste ang screenshot dito
+301|Pindutin ang
+302|, mag-drop ng larawan, o i-click para pumili
+303|Tip:
+304|ay kumukuha ng screenshot
+305|O i-type o i-paste ang listahan bilang text
+306|Basahin ang listahang ito
+307|Binabasa ang larawan mo...
+308|Ilang segundo lang ito. Sa unang beses, ilo-load din ang reader mula sa internet.
+309|Magdagdag ng linya
+310|Subukan ang ibang larawan
+311|Idagdag sa {S}
+312|Mag-check ng kahit isang idadagdag.
+313|Ia-update ang presyo
+314|Ang larawan mo
+315|Hindi mabasa ang larawan. Kailangan ng internet sa unang pagbasa ng larawan. Puwede mong i-type o i-paste ang listahan sa ibaba.
+316|Walang nakitang item na may presyo sa larawang iyon. Subukan ang mas malinaw na screenshot, o ayusin ang text sa ibaba at i-click ang Basahin ang listahang ito.
+317|Magkano talaga ang gastos sa bawat {pa}, at magkano dapat ang singil
+318|Bayaran ang sarili
+319|kada oras
+320|Dagdag na kita
+321|Oras mo
+322|Totoong gastos
+323|Singil mo
+324|Mungkahi
+325|Singilin ng {m} na lang
+326|Wala pang presyo
+327|Hindi pa naka-set
+328|Kumikita ka ng {m}, medyo kulang sa goal mo
+329|Kumikita ka ng {m} bawat beses
+330|Nalulugi ka ng {m} bawat beses
+331|Gamitin ang mungkahing presyo
+332|Ang totoong gastos ay {s} mo kasama ang oras mo. Dinadagdagan ng mungkahing presyo ang kitang pinili mo, at ira-round up sa susunod na dolyar.
+333|Idagdag muna ang {p} mo
+334|Kapag naidagdag mo ang laman ng bawat isa, kakalkulahin ng page na ito ang gastos at tamang presyo.
+335|Pumunta sa {P}
+336|{n} bukas, {n} tapos
+337|Mula sa Google Form
+338|Magdagdag ng {oa}
+339|+ Magdagdag ng {oa}
+340|Bukas
+341|Lahat
+342|Bago
+343|Ginagawa
+344|Bayad na
+345|I-edit
+346|Status
+347|Burahin ang tapos na {o} ({n})
+348|Bumalik sa Araw Ko
+349|I-edit ang {oa}
+350|Pangalan ng {ca}
+351|Telepono o email (opsyonal)
+352|{n}-{n}-{n} o email
+353|Ano ang gusto nila
+354|Due date
+355|Oras (opsyonal)
+356|Walang oras
+357|Dagdag na detalye
+358|Flavor ng cake
+359|Gusto mo bang magtanong ng iba pa sa bawat {oa}?
+360|Mensahe sa cake
+361|Allergy
+362|Pickup o delivery
+363|Iba pa
+364|Notes (opsyonal)
+365|Iba pang dapat tandaan
+366|I-save ang mga pagbabago
+367|Kanselahin
+368|Burahin ang {oa} na ito
+369|Bumalik sa {O}
+370|Idagdag ang {oa}
+371|Nabura ang {n} {o}
+372|Kunin ang {o} mula sa Google Form mo
+373|Lahat ng sumagot sa form mo ay lalabas dito bilang bagong {oa}. Puwede mo itong ulitin anumang oras. Hindi madodoble ang mga nakuha mo na.
+374|I-download ang mga sagot
+375|Buksan ang Google Form mo at i-click ang
+376|Mga sagot
+377|I-click ang
+378|Tingnan sa Sheets
+379|(o
+380|I-link sa Sheets
+381|sa unang beses).
+382|Sa sheet, i-click ang
+383|File
+384|, tapos
+385|Download
+386|Piliin ang file na iyon
+387|Pumili ng file
+388|o i-drag dito
+389|Sabihin sa app kung saan pupunta ang bawat sagot
+390|Hinulaan namin ang bawat tanong. Palitan ang mukhang mali.
+391|Piliin ang tanong na may pangalan ng {ca}.
+392|Walang due ngayon
+393|{n} tao
+394|{n} tao
+395|Magdagdag ng {ca}
+396|Maghanap ng tao
+397|Pinakabago
+398|Pinakamaraming {o}
+399|Pinakamalaking gastos
+400|A hanggang Z
+401|Wala pang telepono o email
+402|kabuuan
+403|Idagdag ang {ca}
+404|Huwag na
+405|Bumalik sa {C}
+406|unang {oa}
+407|Kanilang {o}
+408|Lahat ng bumibili sa iyo, nasa iisang lugar
+409|Wala pang {c}
+410|Idagdag ang mga taong pinagtatrabahuhan mo, kasama ang telepono o email nila, para nasa iisang lugar sila.
+411|Ilagay sa iisang lugar ang lahat ng pinagtatrabahuhan mo.
+412|{n} {p}
+413|Magdagdag ng {pa}
+414|Nakakagawa ng {n}
+415|{n} {s}
+416|Gastos {m}
+417|Walang presyo
+418|Bumalik sa {P}
+419|Singil mo
+420|Ilan ang nagagawa
+421|{n} cake, {n} cupcake
+422|Ilang oras ang kailangan
+423|Ano ang laman
+424|Wala pang naidagdag. Pumili mula sa {s} mo sa ibaba, o magdagdag ng bago.
+425|+ Magdagdag ng {sa}
+426|Mga hakbang
+427|(isa bawat linya)
+428|Idagdag ang {pa}
+429|Pangalanan muna bago i-save.
+430|Gastos ng sangkap sa isang batch
+431|Hanapin ang lahat sa app mo, o maghanap ng lugar malapit sa iyo
+432|Hanapin ang {o}, {c}, {p}, gagawin
+433|Hanapin ang {c}, {p}, gagawin
+434|Hanapin
+435|Malapit sa iyo
+436|Mga farmers market
+437|Bubuksan ang Google Maps
+438|Mga craft fair
+439|Tindahan ng {s}
+440|Mga lugar na mabebentahan
+441|Gumawa ng isa, tapos i-print o i-save bilang PDF
+442|Resibo
+443|Aling {oa}
+444|I-print
+445|Para kay
+446|Petsa
+447|Item
+448|Kabuuan
+449|Hindi pa bayad
+450|Salamat sa {oa} mo!
+451|Note sa ibaba
+452|Mag-{oa} {n} araw bago. Mag-text sa {n}-{n}-{n}
+453|Mag-order {n} araw bago. Mag-text sa {n}-{n}-{n}
+454|Walang resulta
+455|Palitan ang larawan
+456|Alisin ang larawan
+457|Mga negosyo mo
+458|Bukas ngayon
+459|Magdagdag ng ibang negosyo
+460|Mananatiling naka-save ang iba mong negosyo
+461|Negosyong ito
+462|Pangalan ng negosyo at bansa
+463|{B} · Estados Unidos
+464|{B} · Canada
+465|{B} · Mexico
+466|{B} · United Kingdom
+467|{B} · Ireland
+468|{B} · Australia
+469|{B} · New Zealand
+470|{B} · Walang holiday
+471|Uri ng negosyo at mga salita
+472|Itsura
+473|Kulay at font
+474|Nagbabago ayon sa oras ng araw
+475|Wika
+476|English, Español, Français, 中文, Tiếng Việt, 한국어, Tagalog, Русский, 日本語, Português, Deutsch
+477|Si Pip, ang katulong mo
+478|Lumalabas na may tip tungkol sa negosyo mo
+479|Mga layunin
+480|Ano ang gusto mong matulungan
+481|Wala pang napili
+482|Backup
+483|Mag-save ng backup
+484|Wala ka pang na-save
+485|Mag-load ng backup
+486|Ibalik ang lahat mula sa backup file
+487|Na-save ngayon
+488|Na-save kahapon
+489|Na-save {n} araw na ang nakalipas
+490|Burahin ang {B}
+491|Bumalik sa Settings
+492|Buburahin nito ang lahat sa {B}. I-click ulit para burahin
+493|Uri ng negosyo
+494|Ang negosyo mo
+495|Mga kulay
+496|Anong klaseng negosyo ito?
+497|Gumagamit ang Biz Studio ng tamang salita para sa negosyo mo, gaya ng {P} para sa bakery o Appointment para sa salon.
+498|Home bakery
+499|Pagkain at catering
+500|Kandila at crafts
+501|Sining at commission
+502|Pananahi at damit
+503|Kuko
+504|Buhok
+505|Pilikmata at makeup
+506|Tutoring
+507|Lessons sa musika at sayaw
+508|Fitness coaching
+509|Photography
+510|Pag-aalaga ng alaga
+511|Paglilinis
+512|Hardin at bakuran
+513|Party at events
+514|Anong klaseng negosyo?
+515|Pag-aayos ng bike, pag-groom ng aso, tindahan ng lemonade...
+516|Sabihin kung ano ang ginagawa mo, at pupunuin namin ng tamang salita.
+517|Ang binebenta o inaalok mo
+518|Ang bina-book o ino-order ng tao
+519|Mga taong katrabaho mo
+520|Ang ginagamit mo sa trabaho
+521|Tuloy
+522|Ano ang pangalan ng negosyo mo?
+523|Lalabas ang pangalang ito sa resibo, menu at itaas ng app mo. Puwede mo itong palitan mamaya.
+524|Pangalan ng negosyo
+525|Saan ka nakabase?
+526|Estados Unidos
+527|Canada
+528|Mexico
+529|United Kingdom
+530|Ireland
+531|Australia
+532|New Zealand
+533|Ibang lugar (walang holiday)
+534|Ilalagay namin ang mga holiday ng bansa mo sa kalendaryo mo.
+535|Profile picture (opsyonal)
+536|Magdagdag ng larawan o logo
+537|Kung lalaktawan, initials mo ang lalabas.
+538|Bumalik
+539|Isulat ang pangalan ng negosyo para magpatuloy.
+540|Gawin mong sa iyo
+541|Piliin ang mga kulay mo. May kasamang font ang bawat isa, at nagbabago ang buong app habang nagki-click ka.
+542|Simple
+543|Classic
+544|Slate
+545|Sage
+546|Cherry
+547|Matatamis
+548|Strawberry
+549|Matcha
+550|Blueberry
+551|Lemon
+552|Caramel
+553|Bubblegum
+554|Kalikasan
+555|Dagat
+556|Gubat
+557|Paglubog ng araw
+558|Disyerto
+559|Langit
+560|Matapang
+561|Kalawakan
+562|Tropical
+563|Retro
+564|Bahaghari
+565|Custom
+566|Pangunahing kulay
+567|Accent na kulay
+568|Magbago ayon sa oras ng araw
+569|Mainit sa umaga, maliwanag sa hapon at kalmado sa gabi.
+570|Preview
+571|{o} na due
+572|ngayong linggo
+573|Susunod
+574|Chocolate chip cookies
+575|Friendly
+576|Bilugan
+577|Masaya
+578|Elegante
+579|Moderno
+580|Font
+581|Ano ang gusto mong matulungan?
+582|Pumili hangga't gusto mo. Uunahin ito ng Biz Studio at bibigyan ka ng mga tip.
+583|Iba pa? (opsyonal)
+584|Gusto kong magbenta sa farmers market ngayong summer
+585|Laktawan muna
+586|Tapusin ang setup
+587|Nakakalimutan ko ang {o} o due date
+588|Hindi ko alam kung paano magpresyo
+589|Nauubusan ako ng {s}
+590|Gusto kong palaguin ang negosyo ko
+591|Kulang ako sa oras
+592|Kalat-kalat ang impormasyon ko
+593|Gusto kong subaybayan ang pera ko
+594|Gusto kong magmukhang propesyonal ang negosyo ko
+595|Tingnan ang kalendaryo tuwing umaga. Makakakuha ka ng dagdag na paalala bago mag-due ang {o}.
+596|Idagdag ang presyo ng {s} sa Presyo at kita, at magmumungkahi ang Biz Studio ng tamang presyo.
+597|Tingnan ang listahan ng {s} ilang araw bago ang abalang araw para makabili nang maaga.
+598|Gamitin ang Hanapin para makahanap ng market at event na mabebentahan.
+599|Inuuna ng listahan ng gagawin ang pinakaapurahan, kaya alam mo palagi ang susunod.
+600|Ilagay dito ang lahat ng {o} at {c} mo imbes na sa text at notes.
+601|Ilagay dito ang {c}, gagawin at events mo imbes na sa text at notes.
+602|Sinusuma ng Talaan ng pera ang pumasok at lumabas, para makita mo ang totoong kita.
+603|Gumawa ng resibo, menu at listahan ng presyo mula sa {p} mo sa ilang click lang.
+604|Buksan ang kalendaryo
+605|Buksan ang presyo at kita
+606|Buksan ang mga gagawin
+607|Buksan ang talaan ng pera
+608|Buksan ang Hanapin
+609|Buksan ang resibo at menu
+610|Heads up! {n} {o} ang late.
+611|May {n} {o} kang due ngayon. Kaya mo 'yan!
+612|{n} {o} ang due bukas. Oras na para maghanda!
+613|May {n} gagawin ka ngayon sa listahan mo.
+614|May {n} gagawin ka ngayon sa listahan mo.
+615|{n} tapos na {o} ang naghihintay ng bayad.
+616|Idagdag ang una mong {oa} at tutulungan kitang bantayan ito.
+617|Idagdag ang {p} mo para makalkula ko ang gastos.
+618|Idagdag ang presyo ng {s} mo, at gagawin ko ang listahan ng bibilhin.
+619|Matagal na mula sa huli mong backup. Mag-save ng isa sa Settings para walang mawala!
+620|Magdagdag ng larawan ng negosyo mo sa Settings. Lalabas din ito sa resibo mo!
+621|I-click ang isang tao para makita ang lahat ng {o} nila.
+622|I-click ang isang araw, tapos ang Idagdag para maglagay ng event o gagawin.
+623|Mag-print ng menu at dalhin sa susunod na market.
+624|Subukang hanapin ang pangalan, {pa}, o kahit ano.
+625|Idagdag ang ginastos mo sa Lumabas na pera, para alam mo kung magkano talaga ang natira.
+626|Ang galing mo. Ituloy mo lang!
+627|Walang apurahan ngayon. Magaling!
+628|Tapos lahat! Mag-meryenda ka muna.
+629|Wala sa listahan mo ngayon.
+630|Magdagdag ng gagawin sa itaas para magsimula.
+631|Magdagdag ng gagawin sa itaas. Kapag may paparating na {o}, kusang lalabas dito ang mga gagawin para sa mga ito.
+632|Wala pang sticky note
+633|Mabilis na note at paalala, sa kahit anong kulay.
+634|Walang laman ang kalendaryo mo
+635|Wala pang laman ang listahan mo
+636|Walang bibilhin
+637|Wala pang nakalkulang presyo
+638|Hanapin ang kahit ano
+639|Wala pang mapi-print
+640|Tapos: $1
+641|Hindi pa tapos: $1
+642|Markahan na mahalaga: $1
+643|Alisin ang marka: $1
+644|Burahin ang $1
+645|Alisin ang $1
+646|I-edit ang $1
+647|Gagawin: $1
+648|Sticky note: $1
+649|Binili ang $1, naidagdag ang $2 sa Talaan ng pera
+650|Binili ang $1
+651|$2 na ngayon ang $1
+652|Huli: $1
+653|Magdagdag ng $1 para kay $2
+654|Ang $2 ni $1 ay minarkahang $3
+655|Gumawa ng $1 para kay $2
+656|$1, bumili ng $2
+657|Kailangan ng $1, meron $2. Para kay $3
+658|$1 para sa $2 $3
+659|$1 nang $2
+660|$1 para kay $2
+661|Heads up! Late na ang $2 ni $1.
+662|Due ngayon nang $3 ang $2 ni $1.
+663|Due ngayon ang $2 ni $1.
+664|Huwag kalimutan: due bukas ang $2 ni $1.
+665|Ngayon: $1 nang $2. Mag-enjoy!
+666|Ngayon: $1. Mag-enjoy!
+667|Minarkahan mong mahalaga ang "$1". At $2 pa.
+668|Minarkahan mong mahalaga ang "$1".
+669|Paubos na ang $1 at $2 pa para sa paparating mong $3.
+670|Paubos na ang $1 para sa paparating mong $2.
+671|Tapos na ang $2 ni $1 pero hindi pa bayad.
+672|Mas mahal gawin ang $1 mo kaysa sa singil mo. Ayusin natin!
+673|Puwede kang maningil nang kaunti pa para sa $1 mo.
+674|$1: $2 ($3)
+675|Bumalik sa $1
+676|Naidagdag ang $1 sa $2 at na-update ang $3 presyo
+677|Naidagdag ang $1 sa $2
+678|Na-update ang $1 presyo
+679|Idagdag ang $1 sa $2
+680|Nakakita ng $1. Tingnan ang mga pangalan, dami at presyo, at ayusin ang mukhang mali. Alisin ang check sa ayaw mo.
+681|$1 na may $2 font
+682|Home bakery: $1
+683|Paglilinis: $1
+684|Laktawan ang $1
+685|Binili ang $1
+`;
+
+// Russian
+var LANG_RU = `
+0|Вс
+1|Пн
+2|Вт
+3|Ср
+4|Чт
+5|Пт
+6|Сб
+7|Мой день
+8|Для тебя
+9|Календарь
+10|Список дел
+11|Цены и прибыль
+12|Учёт денег
+13|Работа
+14|Стикеры
+15|Бизнес
+16|{S} и покупки
+17|Рост
+18|Поиск
+19|Чеки и меню
+20|Настройки
+21|Деньги
+22|Меню
+23|Меню
+24|Доброе утро
+25|Добрый день
+26|Добрый вечер
+27|Доброе утро!
+28|{o} на сегодня
+29|{oa} на сегодня
+30|дел на сегодня
+31|дело на сегодня
+32|получено в этом месяце
+33|нужно купить
+34|нужно купить
+35|{oa}: {n} опаздывает. Нажми, чтобы посмотреть.
+36|{o}: {n} опаздывают. Нажми, чтобы посмотреть.
+37|Дела на сегодня
+38|Все
+39|На этой неделе
+40|событий сегодня
+41|событие сегодня
+42|На сегодня ничего. Впереди: {n}.
+43|Твои цели
+44|Закрыть
+45|Покажи
+46|Следующий совет
+47|Советы от Pip
+48|Pip
+49|Сегодня
+50|Завтра
+51|Вчера
+52|Опоздание
+53|Без даты
+54|Когда-нибудь
+55|Опоздание, было на {d}
+56|{Oa} к {d}
+57|{Oa} к {d} в {t}
+58|Опоздание {n} дн.
+59|Опоздание {n} дн.
+60|К сегодня
+61|К завтра
+62|К завтра в {t}
+63|К сегодня в {t}
+64|Через {n} дн.
+65|Через {n} дн. в {t}
+66|К {d}
+67|К {d} в {t}
+68|Было к {d}
+69|Было к {d} в {t}
+70|{d} в {t}
+71|Отметить как важное
+72|Снять отметку
+73|Удалить
+74|Готово
+75|Не готово
+76|Добавить дело
+77|Новое дело
+78|Что нужно сделать?
+79|Купить ещё муки
+80|Важное
+81|Отметь, чтобы оно было наверху
+82|Добавить дело
+83|Напиши, что нужно сделать.
+84|Убрать выполненные ({n})
+85|Дел на сегодня: {n}
+86|Дел на сегодня: {n}
+87|Удалено дел: {n}
+88|Удалено дел: {n}
+89|Здесь пока ничего нет.
+90|Отменить
+91|Нет дел
+92|Сегодня делать нечего
+93|Всё готово!
+94|Новый стикер
+95|Пиши здесь...
+96|Стикер
+97|Вынести на экран
+98|Цвет и удаление
+99|Посмотреть в календаре
+100|Жёлтый
+101|Персиковый
+102|Розовый
+103|Лавандовый
+104|Голубой
+105|Мятный
+106|Лаймовый
+107|Песочный
+108|Выбрать любой цвет
+109|Цвет
+110|В календаре: {d}
+111|Удалить стикер
+112|Добавить в календарь
+113|Открыть в Стикерах
+114|Перенести на другой день
+115|Какой день?
+116|Убрать из календаря
+117|Сохранить
+118|Добавлено в календарь на {d}
+119|Убрано из календаря
+120|Стикер удалён
+121|Выбери день.
+122|Стикеров: {n}. Наведи на стикер, чтобы вынести его на экран.
+123|Стикеров: {n}. Наведи на стикер, чтобы вынести его на экран.
+124|Быстрые заметки и напоминания любого цвета
+125|Стикеров пока нет. Нажми +, чтобы добавить.
+126|Браузер заблокировал окно стикера. Разреши всплывающие окна для этого сайта и попробуй ещё раз.
+127|Вид календаря
+128|День
+129|Неделя
+130|Месяц
+131|Год
+132|Прошлый месяц
+133|Следующий месяц
+134|Предыдущий день
+135|Следующий день
+136|Прошлая неделя
+137|Следующая неделя
+138|Прошлый год
+139|Следующий год
+140|Добавить
+141|Открыть этот день
+142|Добавить в этот день
+143|Добавить на {d}
+144|Открыть этот месяц
+145|Запланировано на неделю: {n}
+146|Запланировано на неделю: {n}
+147|На этой неделе пока ничего не запланировано
+148|Запланировано: {n}
+149|Запланировано: {n}
+150|Пока ничего не запланировано
+151|Точки — дни с планами. Праздники выделены жёлтым.
+152|На {d} пока ничего нет
+153|На {d} пока ничего не запланировано
+154|Ничего не запланировано. Свободный день!
+155|{o} в {d}: {n}
+156|{oa} в {d}: {n}
+157|Событий в {d}: {n}
+158|Событий в {d}: {n}
+159|Событие
+160|Дело
+161|Изменить событие
+162|Новое событие
+163|Что будет?
+164|Во сколько?
+165|(можно пропустить)
+166|Во сколько? (можно пропустить)
+167|Где?
+168|Парк на главной улице
+169|Удалить это событие
+170|Добавить событие
+171|Событие удалено
+172|Напиши, что будет.
+173|Весь день
+174|В любое время
+175|Фермерский рынок
+176|Что добавить
+177|Время
+178|Где
+179|Название
+180|(необязательно)
+181|Отмечено
+182|Новый год
+183|День Мартина Лютера Кинга
+184|День святого Валентина
+185|День президентов
+186|День святого Патрика
+187|Пасха
+188|Пасхальное воскресенье
+189|Пасхальный понедельник
+190|Страстная пятница
+191|Великий четверг
+192|День матери
+193|День памяти
+194|День отца
+195|Джунтин
+196|День независимости
+197|День труда
+198|День коренных народов
+199|Хэллоуин
+200|День ветеранов
+201|День благодарения
+202|Чёрная пятница
+203|Суббота малого бизнеса
+204|Сочельник
+205|Рождество
+206|Рождество
+207|Канун Нового года
+208|День подарков
+209|День семьи
+210|День Виктории
+211|День Канады
+212|Гражданский праздник
+213|День труда
+214|День правды и примирения
+215|День памяти
+216|День трёх королей
+217|День Конституции
+218|День рождения Бенито Хуареса
+219|День детей
+220|Синко де Майо
+221|День мёртвых
+222|День революции
+223|День Девы Марии Гваделупской
+224|День Австралии
+225|День АНЗАК
+226|День рождения короля
+227|День Вайтанги
+228|День после Нового года
+229|Ночь костров
+230|Поминальное воскресенье
+231|День святого Стефана
+232|Выходной в начале мая
+233|Весенний выходной
+234|Летний выходной
+235|Выходной святой Бригитты
+236|Майский выходной
+237|Июньский выходной
+238|Августовский выходной
+239|Октябрьский выходной
+240|Оплаченные {o} считаются доходом в день срока
+241|Доходы и расходы по месяцам
+242|Доходы
+243|Расходы
+244|Осталось у тебя
+245|Ожидает оплаты
+246|Последние {n} мес.
+247|Доход: {m}
+248|Расход: {m}
+249|Этот месяц
+250|В этом месяце пока ничего.
+251|Что ты купил или оплатил
+252|Коробки для торта, аренда места
+253|Сколько
+254|Какой день
+255|Удалить это
+256|Добавить
+257|Напиши сумму.
+258|На что
+259|Ярмарка выпечки, чаевые
+260|Чаевые
+261|Денег пока не записано
+262|Нужно купить: {n}
+263|Нужно купить: {n}
+264|Добавить с картинки
+265|Добавить: {sa}
+266|Список покупок
+267|Для твоих {o} на ближайшие {n} нед., примерно {m}
+268|Для твоих {o} на ближайшие {n} нед.
+269|Всё нужное для {o} появится здесь само
+270|Что нужно купить
+271|Добавь, что купить
+272|Что у тебя есть
+273|Меньше
+274|Больше
+275|У тебя есть всё нужное
+276|Сейчас ничего не нужно покупать.
+277|Цены пока нет
+278|Ты измеряешь это в
+279|Когда покупаешь
+280|Ты получаешь
+281|Сколько получаешь
+282|ед.
+283|за
+284|Сколько у тебя сейчас
+285|Добавить: {sa}
+286|Напиши название.
+287|чашки
+288|шт.
+289|палочки
+290|дюжина
+291|Название
+292|Количество
+293|Единица
+294|Цена
+295|Изменить: {sa}
+296|Мука
+297|Сахар
+298|Сделай скриншот чека, онлайн-заказа или списка нужного. Приложение прочитает его и заполнит названия, количество и цены за тебя.
+299|Сделай скриншот чека, онлайн-заказа или списка нужного. Приложение прочитает его и заполнит названия, количество и цены за тебя.
+300|Вставь скриншот сюда
+301|Нажми
+302|, перетащи картинку или нажми, чтобы выбрать
+303|Совет:
+304|делает скриншот
+305|Или напиши или вставь список текстом
+306|Прочитать этот список
+307|Читаю картинку...
+308|Это займёт несколько секунд. В первый раз программа чтения ещё загрузится из интернета.
+309|Добавить строку
+310|Попробовать другую картинку
+311|Добавить в {S}
+312|Отметь хотя бы одну позицию.
+313|Обновит цену
+314|Твоя картинка
+315|Не удалось прочитать картинку. Для первого чтения нужен интернет. Можно напечатать или вставить список ниже.
+316|На картинке не нашлось позиций с ценами. Попробуй более чёткий скриншот или исправь текст ниже и нажми «Прочитать этот список».
+317|Сколько на самом деле стоит каждый {pa} и сколько за него брать
+318|Плати себе
+319|в час
+320|Прибыль сверху
+321|Твоё время
+322|Настоящая стоимость
+323|Твоя цена
+324|Рекомендуем
+325|Бери лучше {m}
+326|Цена ещё не задана
+327|Не задано
+328|Ты зарабатываешь {m}, чуть меньше цели
+329|Ты зарабатываешь {m} каждый раз
+330|Ты теряешь {m} каждый раз
+331|Взять рекомендуемую цену
+332|Настоящая стоимость — это {s} плюс твоё время. Рекомендуемая цена добавляет выбранную прибыль и округляет вверх до целого доллара.
+333|Сначала добавь {p}
+334|Когда добавишь, что входит в каждый, эта страница посчитает стоимость и честную цену.
+335|Перейти в {P}
+336|Открыто: {n}, готово: {n}
+337|Из Google Формы
+338|Добавить: {oa}
+339|+ Добавить: {oa}
+340|Открытые
+341|Все
+342|Новый
+343|В работе
+344|Оплачено
+345|Изменить
+346|Статус
+347|Убрать готовые {o} ({n})
+348|Назад в Мой день
+349|Изменить: {oa}
+350|Имя ({ca})
+351|Телефон или почта (необязательно)
+352|{n}-{n}-{n} или почта
+353|Что хотят
+354|Срок
+355|Время (необязательно)
+356|Без времени
+357|Доп. детали
+358|Вкус торта
+359|Хочешь спрашивать что-то ещё в каждом заказе ({oa})?
+360|Надпись на торте
+361|Аллергии
+362|Самовывоз или доставка
+363|Другое
+364|Заметки (необязательно)
+365|Что ещё запомнить
+366|Сохранить
+367|Отмена
+368|Удалить: {oa}
+369|Назад в {O}
+370|Добавить: {oa}
+371|Удалено ({o}): {n}
+372|Загрузить {o} из Google Формы
+373|Каждый, кто заполнил форму, появится здесь как новый {oa}. Можно повторить в любое время. Уже загруженные не добавятся дважды.
+374|Скачай ответы
+375|Открой Google Форму и нажми
+376|Ответы
+377|Нажми
+378|Открыть в Таблицах
+379|(или
+380|Связать с Таблицами
+381|в первый раз).
+382|В таблице нажми
+383|Файл
+384|, затем
+385|Скачать
+386|Выбери этот файл
+387|Выбери файл
+388|или перетащи сюда
+389|Подскажи приложению, куда идёт каждый ответ
+390|Мы угадали каждый вопрос. Исправь, если что-то не так.
+391|Выбери вопрос, где имя ({ca}).
+392|На сегодня ничего
+393|{n} чел.
+394|{n} чел.
+395|Добавить: {ca}
+396|Найти человека
+397|Сначала новые
+398|Больше всего {o}
+399|Больше всех потратили
+400|От А до Я
+401|Пока нет телефона или почты
+402|всего
+403|Добавить: {ca}
+404|Не надо
+405|Назад в {C}
+406|первый {oa}
+407|Их {o}
+408|Все, кто у тебя покупает, в одном месте
+409|Пока нет: {c}
+410|Добавь людей, на которых работаешь, с телефоном или почтой, чтобы все были в одном месте.
+411|Держи всех, на кого работаешь, в одном месте.
+412|{p}: {n}
+413|Добавить: {pa}
+414|Выход: {n}
+415|{s}: {n}
+416|Стоит {m}
+417|Без цены
+418|Назад в {P}
+419|Твоя цена
+420|Сколько выходит
+421|{n} торт, {n} капкейков
+422|Сколько часов занимает
+423|Что входит
+424|Пока ничего не добавлено. Выбери из {s} ниже или добавь новое.
+425|+ Добавить: {sa}
+426|Шаги
+427|(по одному в строке)
+428|Добавить: {pa}
+429|Дай название, чтобы сохранить.
+430|Ингредиенты на одну партию стоят
+431|Ищи всё в приложении или находи места рядом
+432|Искать {o}, {c}, {p}, дела
+433|Искать {c}, {p}, дела
+434|Искать
+435|Рядом с тобой
+436|Фермерские рынки
+437|Открывает Google Карты
+438|Ярмарки ремёсел
+439|Магазины: {s}
+440|Где продавать
+441|Создай, а потом распечатай или сохрани в PDF
+442|Чек
+443|Какой {oa}
+444|Печать
+445|Для
+446|Дата
+447|Позиция
+448|Итого
+449|Ещё не оплачено
+450|Спасибо за заказ ({oa})!
+451|Заметка внизу
+452|{Oa} за {n} дн. Пиши на {n}-{n}-{n}
+453|Заказывай за {n} дн. Пиши на {n}-{n}-{n}
+454|Ничего не найдено
+455|Сменить картинку
+456|Убрать картинку
+457|Твои бизнесы
+458|Открыт сейчас
+459|Добавить ещё бизнес
+460|Другие бизнесы останутся сохранёнными
+461|Этот бизнес
+462|Название бизнеса и страна
+463|{B} · США
+464|{B} · Канада
+465|{B} · Мексика
+466|{B} · Великобритания
+467|{B} · Ирландия
+468|{B} · Австралия
+469|{B} · Новая Зеландия
+470|{B} · Без праздников
+471|Тип бизнеса и слова
+472|Вид
+473|Цвета и шрифт
+474|Меняется в течение дня
+475|Язык
+476|English, Español, Français, 中文, Tiếng Việt, 한국어, Tagalog, Русский, 日本語, Português, Deutsch
+477|Pip, твой помощник
+478|Появляется с советами о твоём бизнесе
+479|Цели
+480|С чем тебе помочь
+481|Пока ничего не выбрано
+482|Резервная копия
+483|Сохранить копию
+484|Ты ещё не сохранял копию
+485|Загрузить копию
+486|Вернуть всё из файла копии
+487|Сохранено сегодня
+488|Сохранено вчера
+489|Сохранено {n} дн. назад
+490|Удалить {B}
+491|Назад в Настройки
+492|Это удалит всё в {B}. Нажми ещё раз, чтобы удалить
+493|Тип бизнеса
+494|Твой бизнес
+495|Цвета
+496|Какой у тебя бизнес?
+497|Biz Studio использует подходящие слова, например {P} для пекарни или Записи для салона.
+498|Домашняя выпечка
+499|Еда и кейтеринг
+500|Свечи и рукоделие
+501|Искусство и заказы
+502|Шитьё и одежда
+503|Ногти
+504|Волосы
+505|Ресницы и макияж
+506|Репетиторство
+507|Уроки музыки и танцев
+508|Фитнес-тренировки
+509|Фотография
+510|Уход за животными
+511|Уборка
+512|Двор и сад
+513|Праздники и события
+514|Какой бизнес?
+515|Ремонт велосипедов, груминг собак, лимонадная лавка...
+516|Расскажи, чем занимаешься, и мы подберём подходящие слова.
+517|Что ты продаёшь или предлагаешь
+518|Что люди бронируют или заказывают
+519|Люди, с которыми ты работаешь
+520|Чем ты пользуешься в работе
+521|Далее
+522|Как называется твой бизнес?
+523|Это название будет на чеках, в меню и вверху приложения. Его можно поменять позже.
+524|Название бизнеса
+525|Где ты находишься?
+526|США
+527|Канада
+528|Мексика
+529|Великобритания
+530|Ирландия
+531|Австралия
+532|Новая Зеландия
+533|Другое место (без праздников)
+534|Мы добавим праздники твоей страны в календарь.
+535|Фото профиля (необязательно)
+536|Добавить картинку или логотип
+537|Если пропустить, будут показаны твои инициалы.
+538|Назад
+539|Напиши название бизнеса, чтобы продолжить.
+540|Сделай по-своему
+541|Выбери цвета. У каждого свой шрифт, и всё приложение меняется при нажатии.
+542|Простые
+543|Классика
+544|Сланец
+545|Шалфей
+546|Вишня
+547|Сладости
+548|Клубника
+549|Матча
+550|Черника
+551|Лимон
+552|Карамель
+553|Жвачка
+554|Природа
+555|Океан
+556|Лес
+557|Закат
+558|Пустыня
+559|Небо
+560|Яркие
+561|Галактика
+562|Тропики
+563|Ретро
+564|Радуга
+565|Свои
+566|Основной цвет
+567|Акцентный цвет
+568|Менять в течение дня
+569|Тёплые утром, яркие днём и спокойные вечером.
+570|Предпросмотр
+571|{o} к сроку
+572|на этой неделе
+573|Дальше
+574|Печенье с шоколадной крошкой
+575|Дружелюбный
+576|Округлый
+577|Игривый
+578|Элегантный
+579|Современный
+580|Шрифт
+581|С чем тебе помочь?
+582|Выбирай сколько хочешь. Biz Studio поставит это на первое место и даст советы.
+583|Что-то ещё? (необязательно)
+584|Хочу продавать на фермерском рынке этим летом
+585|Пропустить пока
+586|Завершить
+587|Я забываю {o} или сроки
+588|Не знаю, сколько брать за работу
+589|У меня заканчиваются {s}
+590|Хочу развивать бизнес
+591|Мне не хватает времени
+592|Моя информация разбросана повсюду
+593|Хочу следить за деньгами
+594|Хочу, чтобы мой бизнес выглядел профессионально
+595|Проверяй календарь каждое утро. Перед сроком {o} будут дополнительные напоминания.
+596|Добавь, сколько платишь за {s}, в «Цены и прибыль», и Biz Studio предложит честные цены.
+597|Смотри список ({s}) за несколько дней до загруженных дней, чтобы купить заранее.
+598|Используй Поиск, чтобы найти рынки и события, где можно продавать.
+599|Список дел ставит самое срочное первым, поэтому ты всегда знаешь, что делать дальше.
+600|Храни все {o} и {c} здесь, а не в сообщениях и заметках.
+601|Храни {c}, дела и события здесь, а не в сообщениях и заметках.
+602|Учёт денег складывает доходы и расходы, чтобы ты видел настоящую прибыль.
+603|Делай чеки, меню и прайс-листы из своих {p} в пару кликов.
+604|Открыть календарь
+605|Открыть цены и прибыль
+606|Открыть список дел
+607|Открыть учёт денег
+608|Открыть поиск
+609|Открыть чеки и меню
+610|Внимание! Опаздывают: {n} ({o}).
+611|Сегодня у тебя {n} ({o}). Ты справишься!
+612|Завтра срок: {n} ({o}). Пора готовиться!
+613|Сегодня в твоём списке дел: {n}.
+614|Сегодня в твоём списке дел: {n}.
+615|Готовы, но не оплачены: {n} ({o}).
+616|Добавь первый {oa}, и я помогу за ним следить.
+617|Добавь {p}, чтобы я посчитал, во сколько они тебе обходятся.
+618|Добавь, сколько платишь за {s}, и я составлю список покупок.
+619|Давно не было резервной копии. Сохрани её в Настройках, чтобы ничего не потерять!
+620|Добавь картинку для бизнеса в Настройках. Она будет и на чеках!
+621|Нажми на человека, чтобы увидеть все его {o}.
+622|Нажми на день, потом «Добавить», чтобы поставить событие или дело.
+623|Распечатай меню и возьми его на следующий рынок.
+624|Попробуй найти имя, {pa} или что угодно.
+625|Записывай траты в «Расходы», чтобы знать, сколько у тебя реально осталось.
+626|У тебя отлично получается. Так держать!
+627|Сейчас ничего срочного. Хорошая работа!
+628|Всё сделано! Можно и перекусить.
+629|На сегодня в списке ничего нет.
+630|Добавь дело выше, чтобы начать.
+631|Добавь дело выше. Когда появятся ближайшие {o}, дела для них появятся здесь сами.
+632|Стикеров пока нет
+633|Быстрые заметки и напоминания любого цвета.
+634|Календарь пуст
+635|Список пока пуст
+636|Нечего покупать
+637|Цены ещё не посчитаны
+638|Найди что угодно
+639|Пока нечего печатать
+640|Готово: $1
+641|Не готово: $1
+642|Отметить как важное: $1
+643|Снять отметку: $1
+644|Удалить: $1
+645|Убрать: $1
+646|Изменить: $1
+647|Дело: $1
+648|Стикер: $1
+649|Куплено: $1, $2 добавлено в Учёт денег
+650|Куплено: $1
+651|$1 теперь стоит $2
+652|Последний: $1
+653|Добавить $1 для $2
+654|$2 ($1) отмечен: $3
+655|Сделать $1 для $2
+656|$1, купить $2
+657|Нужно $1, есть $2. Для $3
+658|$1 за $2 $3
+659|$1 в $2
+660|$1 для $2
+661|Внимание! $2 ($1) опаздывает.
+662|$2 ($1) — сегодня в $3.
+663|$2 ($1) — сегодня.
+664|Не забудь: $2 ($1) — завтра.
+665|Сегодня: $1 в $2. Хорошо провести время!
+666|Сегодня: $1. Хорошо провести время!
+667|Ты отметил «$1» как важное. И ещё $2.
+668|Ты отметил «$1» как важное.
+669|Заканчивается $1 и ещё $2 для ближайших $3.
+670|Заканчивается $1 для ближайших $2.
+671|$2 ($1) готов, но ещё не оплачен.
+672|$1 обходится дороже, чем ты берёшь. Давай исправим!
+673|За $1 можно брать чуть больше.
+674|$1: $2 ($3)
+675|Назад в $1
+676|Добавлено в $2: $1, обновлено цен: $3
+677|Добавлено в $2: $1
+678|Обновлено цен: $1
+679|Добавить $1 в $2
+680|Найдено: $1. Проверь названия, количество и цены и исправь ошибки. Сними отметку с ненужного.
+681|$1, шрифт $2
+682|Домашняя выпечка: $1
+683|Уборка: $1
+684|Пропустить: $1
+685|Куплено: $1
+`;
+
+// Japanese
+var LANG_JA = `
+0|日
+1|月
+2|火
+3|水
+4|木
+5|金
+6|土
+7|今日の予定
+8|おすすめ
+9|カレンダー
+10|やることリスト
+11|価格と利益
+12|帳簿
+13|仕事
+14|付箋
+15|ビジネス
+16|{S}と買い物
+17|成長
+18|検索
+19|レシートとメニュー
+20|設定
+21|お金
+22|メニュー
+23|メニュー
+24|おはようございます
+25|こんにちは
+26|こんばんは
+27|おはようございます！
+28|今日が期限の{o}
+29|今日が期限の{oa}
+30|今日のタスク
+31|今日のタスク
+32|今月の入金
+33|買うもの
+34|買うもの
+35|{oa}が{n}件遅れています。タップして確認。
+36|{o}が{n}件遅れています。タップして確認。
+37|今日やること
+38|すべて見る
+39|今週の予定
+40|今日のイベント
+41|今日のイベント
+42|今日は予定なし。この先{n}件あります。
+43|あなたの目標
+44|閉じる
+45|見せて
+46|次のヒント
+47|Pipのヒント
+48|Pip
+49|今日
+50|明日
+51|昨日
+52|遅れ
+53|日付なし
+54|いつか
+55|遅れ、期限は{d}
+56|{Oa}の期限 {d}
+57|{Oa}の期限 {d} {t}
+58|{n}日遅れ
+59|{n}日遅れ
+60|今日が期限
+61|明日が期限
+62|明日 {t} が期限
+63|今日 {t} が期限
+64|あと{n}日
+65|あと{n}日、{t}
+66|期限 {d}
+67|期限 {d} {t}
+68|期限は{d}でした
+69|期限は{d} {t}でした
+70|{d} {t}
+71|重要にする
+72|重要を外す
+73|削除
+74|完了
+75|未完了
+76|タスクを追加
+77|新しいタスク
+78|何をする必要がありますか？
+79|小麦粉をもっと買う
+80|重要
+81|印をつけると一番上に残ります
+82|タスクを追加
+83|やることを入力してください。
+84|完了したものを消す（{n}）
+85|今日やること{n}件
+86|今日やること{n}件
+87|{n}件のタスクを消しました
+88|{n}件のタスクを消しました
+89|今は何もありません。
+90|元に戻す
+91|タスクなし
+92|今日やることはありません
+93|全部完了！
+94|新しい付箋
+95|ここに書く...
+96|付箋
+97|画面に出す
+98|色と削除
+99|カレンダーで見る
+100|イエロー
+101|ピーチ
+102|ピンク
+103|ラベンダー
+104|ブルー
+105|ミント
+106|ライム
+107|サンド
+108|好きな色を選ぶ
+109|色
+110|カレンダー：{d}
+111|付箋を削除
+112|カレンダーに追加
+113|付箋で開く
+114|別の日に移す
+115|何日？
+116|カレンダーから外す
+117|保存
+118|{d}のカレンダーに追加しました
+119|カレンダーから外しました
+120|付箋を削除しました
+121|日付を選んでください。
+122|付箋{n}枚。付箋にマウスを合わせると画面に出せます。
+123|付箋{n}枚。付箋にマウスを合わせると画面に出せます。
+124|好きな色で、すばやくメモやリマインダー
+125|まだ付箋がありません。＋を押して追加。
+126|ブラウザが付箋のウィンドウをブロックしました。このサイトのポップアップを許可して、もう一度お試しください。
+127|カレンダー表示
+128|日
+129|週
+130|月
+131|年
+132|前の月
+133|次の月
+134|前の日
+135|次の日
+136|前の週
+137|次の週
+138|前の年
+139|次の年
+140|追加
+141|この日を見る
+142|この日に追加
+143|{d}に追加
+144|この月を見る
+145|今週の予定{n}件
+146|今週の予定{n}件
+147|今週はまだ予定がありません
+148|予定{n}件
+149|予定{n}件
+150|まだ予定がありません
+151|点は予定がある日です。祝日は黄色です。
+152|{d}はまだ期限のものがありません
+153|{d}はまだ予定がありません
+154|予定なし。自由な一日！
+155|{d}の{o} {n}件
+156|{d}の{oa} {n}件
+157|{d}のイベント{n}件
+158|{d}のイベント{n}件
+159|イベント
+160|タスク
+161|イベントを編集
+162|新しいイベント
+163|何がありますか？
+164|何時？
+165|（なくても大丈夫）
+166|何時？（なくても大丈夫）
+167|どこで？
+168|メインストリート公園
+169|このイベントを削除
+170|イベントを追加
+171|イベントを削除しました
+172|何があるか入力してください。
+173|終日
+174|いつでも
+175|ファーマーズマーケット
+176|追加するもの
+177|時間
+178|場所
+179|タイトル
+180|（任意）
+181|チェックしました
+182|元日
+183|キング牧師記念日
+184|バレンタインデー
+185|大統領の日
+186|聖パトリックの祝日
+187|イースター
+188|イースターの日曜日
+189|イースターの月曜日
+190|聖金曜日
+191|聖木曜日
+192|母の日
+193|戦没者追悼記念日
+194|父の日
+195|ジューンティーンス
+196|独立記念日
+197|労働者の日
+198|先住民の日
+199|ハロウィン
+200|退役軍人の日
+201|感謝祭
+202|ブラックフライデー
+203|スモールビジネス・サタデー
+204|クリスマスイブ
+205|クリスマス
+206|クリスマス
+207|大みそか
+208|ボクシングデー
+209|家族の日
+210|ビクトリア・デー
+211|カナダ・デー
+212|シビック・ホリデー
+213|労働者の日
+214|真実と和解の日
+215|リメンブランス・デー
+216|公現祭
+217|憲法記念日
+218|ベニート・フアレス生誕記念日
+219|こどもの日
+220|シンコ・デ・マヨ
+221|死者の日
+222|革命記念日
+223|グアダルーペの聖母の日
+224|オーストラリア・デー
+225|アンザック・デー
+226|国王誕生日
+227|ワイタンギ・デー
+228|元日の翌日
+229|ボンファイア・ナイト
+230|リメンブランス・サンデー
+231|聖ステファノの日
+232|5月初めの祝日
+233|春の祝日
+234|夏の祝日
+235|聖ブリジッドの日の祝日
+236|5月の祝日
+237|6月の祝日
+238|8月の祝日
+239|10月の祝日
+240|支払い済みの{o}は期限の日に入金として数えます
+241|月ごとの入金と出金
+242|入金
+243|出金
+244|手元に残ったお金
+245|入金待ち
+246|直近{n}か月
+247|入金：{m}
+248|出金：{m}
+249|今月
+250|今月はまだありません。
+251|買ったもの・支払ったもの
+252|ケーキの箱、出店料
+253|金額
+254|日付
+255|これを削除
+256|追加する
+257|金額を入力してください。
+258|何のため
+259|ベイクセール、チップ
+260|チップ
+261|まだお金の記録がありません
+262|買うもの{n}件
+263|買うもの{n}件
+264|画像から追加
+265|{sa}を追加
+266|買い物リスト
+267|今後{n}週間の{o}用、約{m}
+268|今後{n}週間の{o}用
+269|{o}に必要なものは自動でここに表示されます
+270|買う必要があるもの
+271|買うものを追加
+272|持っているもの
+273|減らす
+274|増やす
+275|必要なものはそろっています
+276|今は買うものはありません。
+277|まだ価格がありません
+278|単位
+279|買うとき
+280|入る量
+281|入る量
+282|単位
+283|で
+284|今ある量
+285|{sa}を追加
+286|名前を入力してください。
+287|カップ
+288|個
+289|本
+290|ダース
+291|名前
+292|量
+293|単位
+294|価格
+295|{sa}を編集
+296|小麦粉
+297|砂糖
+298|レシート、ネット注文、必要なもののリストのスクリーンショットを撮ってください。アプリが読み取って、名前・量・価格を入力します。
+299|レシート、ネット注文、必要なもののリストのスクリーンショットを撮ってください。アプリが読み取って、名前・量・価格を入力します。
+300|ここにスクリーンショットを貼り付け
+301|押す：
+302|、画像をドロップ、またはクリックして選択
+303|ヒント：
+304|でスクリーンショット
+305|またはリストを文字で入力・貼り付け
+306|このリストを読み取る
+307|画像を読み取り中...
+308|数秒かかることがあります。初回は読み取りツールもインターネットから読み込みます。
+309|行を追加
+310|別の画像を試す
+311|{S}に追加
+312|追加するものを1つ以上チェックしてください。
+313|価格を更新します
+314|あなたの画像
+315|画像を読み取れませんでした。初回の読み取りにはインターネットが必要です。下にリストを入力または貼り付けることもできます。
+316|その画像には価格付きの項目が見つかりませんでした。もっと鮮明なスクリーンショットを試すか、下の文字を直して「このリストを読み取る」を押してください。
+317|各{pa}に本当にかかる費用と、いくらで売るか
+318|自分の時給
+319|1時間あたり
+320|上乗せする利益
+321|あなたの時間
+322|本当の費用
+323|売値
+324|おすすめ価格
+325|{m}にする
+326|まだ価格がありません
+327|未設定
+328|利益は{m}、目標より少し下
+329|毎回{m}の利益
+330|毎回{m}の赤字
+331|おすすめ価格を使う
+332|本当の費用は{s}とあなたの時間の合計です。おすすめ価格は選んだ利益を足して、1ドル単位に切り上げます。
+333|まず{p}を追加してください
+334|それぞれに使うものを追加すると、このページで費用と適正価格を計算します。
+335|{P}へ
+336|進行中{n}件、完了{n}件
+337|Googleフォームから
+338|{oa}を追加
+339|+ {oa}を追加
+340|進行中
+341|すべて
+342|新規
+343|作業中
+344|支払い済み
+345|編集
+346|状況
+347|完了した{o}を消す（{n}）
+348|今日の予定に戻る
+349|{oa}を編集
+350|{ca}の名前
+351|電話番号かメール（任意）
+352|{n}-{n}-{n} またはメール
+353|ご希望の内容
+354|期限
+355|時間（任意）
+356|時間なし
+357|追加の詳細
+358|ケーキの味
+359|{oa}ごとに他に聞きたいことはありますか？
+360|ケーキのメッセージ
+361|アレルギー
+362|受け取りか配達か
+363|その他
+364|メモ（任意）
+365|他に覚えておくこと
+366|変更を保存
+367|キャンセル
+368|この{oa}を削除
+369|{O}に戻る
+370|{oa}を追加
+371|{o}を{n}件削除しました
+372|Googleフォームから{o}を取り込む
+373|フォームに回答した人は、ここに新しい{oa}として表示されます。いつでもやり直せます。取り込み済みのものは二重に追加されません。
+374|回答をダウンロード
+375|Googleフォームを開いてクリック
+376|回答
+377|クリック
+378|スプレッドシートで表示
+379|（または
+380|スプレッドシートにリンク
+381|初回のみ）。
+382|シートでクリック
+383|ファイル
+384|、次に
+385|ダウンロード
+386|そのファイルを選ぶ
+387|ファイルを選ぶ
+388|またはここにドラッグ
+389|それぞれの回答の行き先を教えてください
+390|各質問を推測しました。違うものは変更してください。
+391|{ca}の名前が入っている質問を選んでください。
+392|今日が期限のものはありません
+393|{n}人
+394|{n}人
+395|{ca}を追加
+396|人を探す
+397|新しい順
+398|{o}が多い順
+399|利用額が多い順
+400|名前順
+401|電話番号・メールはまだありません
+402|合計
+403|{ca}を追加
+404|やめる
+405|{C}に戻る
+406|最初の{oa}
+407|この人の{o}
+408|お客さん全員を一か所に
+409|まだ{c}はいません
+410|一緒に仕事をする人を、電話番号かメールと一緒に追加して、一か所にまとめましょう。
+411|一緒に仕事をする人を一か所にまとめましょう。
+412|{p} {n}件
+413|{pa}を追加
+414|{n}個できる
+415|{s} {n}件
+416|費用{m}
+417|価格なし
+418|{P}に戻る
+419|売値
+420|できる量
+421|ケーキ{n}個、カップケーキ{n}個
+422|かかる時間
+423|使うもの
+424|まだ何もありません。下の{s}から選ぶか、新しく追加してください。
+425|+ {sa}を追加
+426|手順
+427|（1行に1つ）
+428|{pa}を追加
+429|保存するには名前をつけてください。
+430|1回分の材料費
+431|アプリ内のすべてを検索、または近くの場所を探す
+432|{o}、{c}、{p}、タスクを検索
+433|{c}、{p}、タスクを検索
+434|検索
+435|近くで探す
+436|ファーマーズマーケット
+437|Googleマップを開く
+438|クラフトフェア
+439|{s}のお店
+440|売れる場所
+441|作って、印刷するかPDFで保存
+442|レシート
+443|どの{oa}
+444|印刷
+445|宛先
+446|日付
+447|品目
+448|合計
+449|未払い
+450|{oa}ありがとうございます！
+451|下に入れるメモ
+452|{n}日前までに{oa}を。SMS：{n}-{n}-{n}
+453|{n}日前までにご注文を。SMS：{n}-{n}-{n}
+454|結果なし
+455|画像を変える
+456|画像を外す
+457|あなたのビジネス
+458|使用中
+459|別のビジネスを追加
+460|他のビジネスはそのまま保存されます
+461|このビジネス
+462|ビジネス名と国
+463|{B} · アメリカ
+464|{B} · カナダ
+465|{B} · メキシコ
+466|{B} · イギリス
+467|{B} · アイルランド
+468|{B} · オーストラリア
+469|{B} · ニュージーランド
+470|{B} · 祝日なし
+471|ビジネスの種類と言葉
+472|見た目
+473|色とフォント
+474|時間帯で変わる
+475|言語
+476|English, Español, Français, 中文, Tiếng Việt, 한국어, Tagalog, Русский, 日本語, Português, Deutsch
+477|お手伝いのPip
+478|ビジネスのヒントを教えてくれます
+479|目標
+480|手伝ってほしいこと
+481|まだ選んでいません
+482|バックアップ
+483|バックアップを保存
+484|まだ保存していません
+485|バックアップを読み込む
+486|バックアップファイルからすべて戻す
+487|今日保存しました
+488|昨日保存しました
+489|{n}日前に保存しました
+490|{B}を削除
+491|設定に戻る
+492|{B}のすべてが削除されます。もう一度クリックすると削除します
+493|ビジネスの種類
+494|あなたのビジネス
+495|色
+496|どんなビジネスですか？
+497|Biz Studioはビジネスに合った言葉を使います。たとえばパン屋なら{P}、サロンなら予約です。
+498|自宅のお菓子づくり
+499|料理とケータリング
+500|キャンドルとクラフト
+501|アートと依頼制作
+502|裁縫と服
+503|ネイル
+504|ヘア
+505|まつげとメイク
+506|家庭教師
+507|音楽とダンスのレッスン
+508|フィットネス指導
+509|写真
+510|ペットのお世話
+511|掃除
+512|庭仕事
+513|パーティーとイベント
+514|どんなビジネス？
+515|自転車修理、犬のトリミング、レモネード屋さん...
+516|何をしているか教えてくれたら、合う言葉を入れます。
+517|売っているもの・提供しているもの
+518|予約や注文されるもの
+519|一緒に仕事をする人
+520|仕事に使うもの
+521|続ける
+522|ビジネスの名前は？
+523|この名前はレシート、メニュー、アプリの上に表示されます。あとで変えられます。
+524|ビジネス名
+525|どこにいますか？
+526|アメリカ
+527|カナダ
+528|メキシコ
+529|イギリス
+530|アイルランド
+531|オーストラリア
+532|ニュージーランド
+533|その他の場所（祝日なし）
+534|あなたの国の祝日をカレンダーに入れます。
+535|プロフィール画像（任意）
+536|画像かロゴを追加
+537|スキップすると、イニシャルが表示されます。
+538|戻る
+539|続けるにはビジネス名を入力してください。
+540|自分らしく
+541|色を選んでください。それぞれに合うフォントがあり、クリックするとアプリ全体が変わります。
+542|シンプル
+543|クラシック
+544|スレート
+545|セージ
+546|チェリー
+547|スイーツ
+548|いちご
+549|抹茶
+550|ブルーベリー
+551|レモン
+552|キャラメル
+553|バブルガム
+554|自然
+555|オーシャン
+556|フォレスト
+557|夕焼け
+558|砂漠
+559|空
+560|はっきり
+561|ギャラクシー
+562|トロピカル
+563|レトロ
+564|レインボー
+565|カスタム
+566|メインの色
+567|アクセントの色
+568|時間帯で変える
+569|朝はあたたかく、昼は明るく、夜は落ち着いた色に。
+570|プレビュー
+571|期限の{o}
+572|今週
+573|次
+574|チョコチップクッキー
+575|フレンドリー
+576|まるい
+577|楽しい
+578|エレガント
+579|モダン
+580|フォント
+581|何を手伝ってほしいですか？
+582|いくつでも選べます。Biz Studioがそれを先に表示して、ヒントを出します。
+583|他には？（任意）
+584|この夏ファーマーズマーケットで売りたい
+585|今はスキップ
+586|設定を完了
+587|{o}や期限を忘れてしまう
+588|値段の決め方がわからない
+589|{s}がよく足りなくなる
+590|ビジネスを大きくしたい
+591|時間が足りない
+592|情報があちこちに散らばっている
+593|お金を管理したい
+594|ビジネスをプロらしく見せたい
+595|毎朝カレンダーを確認しましょう。{o}の期限前にリマインダーが増えます。
+596|「価格と利益」に{s}の値段を入れると、Biz Studioが適正価格を提案します。
+597|忙しい日の数日前に{s}のリストを見て、前もって買い物しましょう。
+598|「検索」で近くのマーケットやイベントを見つけましょう。
+599|やることリストは一番急ぐものが先に来るので、次に何をするかいつもわかります。
+600|{o}と{c}を全部、メッセージやメモではなくここにまとめましょう。
+601|{c}、タスク、イベントを、メッセージやメモではなくここにまとめましょう。
+602|帳簿は入金と出金を合計して、本当の利益を見せてくれます。
+603|{p}からレシート、メニュー、価格表を数クリックで作れます。
+604|カレンダーを開く
+605|価格と利益を開く
+606|やることリストを開く
+607|帳簿を開く
+608|検索を開く
+609|レシートとメニューを開く
+610|注意！{o}が{n}件遅れています。
+611|今日が期限の{o}が{n}件あります。がんばって！
+612|明日が期限の{o}が{n}件。準備しましょう！
+613|今日のやることリストに{n}件あります。
+614|今日のやることリストに{n}件あります。
+615|完了した{o}が{n}件、支払い待ちです。
+616|最初の{oa}を追加すると、管理をお手伝いします。
+617|{p}を追加すると、費用を計算します。
+618|{s}の値段を入れると、買い物リストを作ります。
+619|しばらくバックアップしていません。何もなくさないよう、設定で保存しましょう！
+620|設定でビジネスの画像を追加しましょう。レシートにも入ります！
+621|人をクリックすると、その人の{o}をまとめて見られます。
+622|日付をクリックして「追加」を押すと、イベントやタスクを入れられます。
+623|メニューを印刷して、次のマーケットに持っていきましょう。
+624|名前、{pa}、なんでも検索してみましょう。
+625|使ったお金を「出金」に入れると、本当に残ったお金がわかります。
+626|とてもいい調子です。その調子！
+627|今は急ぎのことはありません。おつかれさま！
+628|全部終わり！おやつでもどうぞ。
+629|今日のリストは空です。
+630|上でタスクを追加して始めましょう。
+631|上でタスクを追加してください。{o}が近づくと、そのタスクが自動でここに出ます。
+632|まだ付箋がありません
+633|好きな色で、すばやくメモやリマインダー。
+634|カレンダーは空いています
+635|リストはまだ空です
+636|買うものはありません
+637|まだ価格が計算されていません
+638|なんでも探す
+639|まだ印刷するものがありません
+640|完了：$1
+641|未完了：$1
+642|重要にする：$1
+643|重要を外す：$1
+644|$1を削除
+645|$1を外す
+646|$1を編集
+647|タスク：$1
+648|付箋：$1
+649|$1を購入、帳簿に$2を追加しました
+650|$1を購入
+651|$1は$2になりました
+652|最後：$1
+653|$2さんの$1を追加
+654|$1さんの$2を「$3」にしました
+655|$2さんの$1を作る
+656|$1、$2買う
+657|$1必要、$2あり。$3さん用
+658|$2 $3で$1
+659|$1 $2
+660|$2さんの$1
+661|注意！$1さんの$2が遅れています。
+662|$1さんの$2は今日 $3 が期限です。
+663|$1さんの$2は今日が期限です。
+664|忘れずに：$1さんの$2は明日が期限です。
+665|今日：$1 $2。楽しんで！
+666|今日：$1。楽しんで！
+667|「$1」を重要にしました。ほかに$2件あります。
+668|「$1」を重要にしました。
+669|今度の$3に使う$1など$2件が少なくなっています。
+670|今度の$2に使う$1が少なくなっています。
+671|$1さんの$2は完了しましたが、まだ支払われていません。
+672|$1は売値より作る費用のほうが高いです。直しましょう！
+673|$1はもう少し高くしても大丈夫です。
+674|$1：$2（$3）
+675|$1に戻る
+676|$2に$1件追加、価格を$3件更新しました
+677|$2に$1件追加しました
+678|価格を$1件更新しました
+679|$2に$1件追加
+680|$1件見つかりました。名前・量・価格を確認して、違うところは直してください。いらないもののチェックを外してください。
+681|$1、$2フォント
+682|自宅のお菓子づくり：$1
+683|掃除：$1
+684|$1をスキップ
+685|$1を購入
+`;
+
+// Portuguese (Brazil)
+var LANG_PT = `
+0|Dom
+1|Seg
+2|Ter
+3|Qua
+4|Qui
+5|Sex
+6|Sáb
+7|Meu dia
+8|Escolhido para você
+9|Calendário
+10|Tarefas
+11|Preços e lucro
+12|Contas
+13|Trabalho
+14|Notas adesivas
+15|Negócio
+16|{S} e compras
+17|Crescer
+18|Buscar
+19|Recibos e cardápios
+20|Configurações
+21|Dinheiro
+22|Cardápio
+23|Cardápios
+24|Bom dia
+25|Boa tarde
+26|Boa noite
+27|Bom dia!
+28|{o} para hoje
+29|{oa} para hoje
+30|tarefas para hoje
+31|tarefa para hoje
+32|recebido este mês
+33|coisas para comprar
+34|coisa para comprar
+35|{n} {oa} está atrasado. Toque para ver.
+36|{n} {o} estão atrasados. Toque para ver.
+37|Para fazer hoje
+38|Ver tudo
+39|Nesta semana
+40|eventos hoje
+41|evento hoje
+42|Nada para hoje. {n} chegando.
+43|Seu foco
+44|Fechar
+45|Me mostre
+46|Próxima dica
+47|Dicas do Pip
+48|Pip
+49|Hoje
+50|Amanhã
+51|Ontem
+52|Atrasado
+53|Sem data
+54|Algum dia
+55|Atrasado, era em {d}
+56|{Oa} para {d}
+57|{Oa} para {d} às {t}
+58|{n} dias de atraso
+59|{n} dia de atraso
+60|Para hoje
+61|Para amanhã
+62|Para amanhã às {t}
+63|Para hoje às {t}
+64|Em {n} dias
+65|Em {n} dias às {t}
+66|Para {d}
+67|Para {d} às {t}
+68|Era para {d}
+69|Era para {d} às {t}
+70|{d} às {t}
+71|Marcar como importante
+72|Desmarcar
+73|Excluir
+74|Feito
+75|Não feito
+76|Adicionar tarefa
+77|Nova tarefa
+78|O que você precisa fazer?
+79|Comprar mais farinha
+80|Importante
+81|Marque para ficar no topo
+82|Adicionar tarefa
+83|Escreva o que você precisa fazer.
+84|Limpar feitas ({n})
+85|{n} coisas para fazer hoje
+86|{n} coisa para fazer hoje
+87|{n} tarefas apagadas
+88|{n} tarefa apagada
+89|Nada por aqui agora.
+90|Desfazer
+91|Sem tarefas
+92|Nada para fazer hoje
+93|Tudo pronto!
+94|Nova nota
+95|Escreva aqui...
+96|Nota adesiva
+97|Levar para a tela
+98|Cor e excluir
+99|Ver no calendário
+100|Amarelo
+101|Pêssego
+102|Rosa
+103|Lavanda
+104|Azul
+105|Menta
+106|Lima
+107|Areia
+108|Escolher qualquer cor
+109|Cor
+110|No calendário: {d}
+111|Excluir nota
+112|Adicionar ao calendário
+113|Abrir em Notas adesivas
+114|Mudar para outro dia
+115|Que dia?
+116|Tirar do calendário
+117|Salvar
+118|Adicionada ao calendário em {d}
+119|Tirada do calendário
+120|Nota excluída
+121|Escolha um dia.
+122|{n} nota. Passe o mouse sobre uma nota para levá-la à tela.
+123|{n} notas. Passe o mouse sobre uma nota para levá-la à tela.
+124|Notas e lembretes rápidos, da cor que você quiser
+125|Ainda não há notas. Clique em + para adicionar.
+126|Seu navegador bloqueou a janela da nota. Permita pop-ups para este site e tente de novo.
+127|Visualização do calendário
+128|Dia
+129|Semana
+130|Mês
+131|Ano
+132|Mês anterior
+133|Próximo mês
+134|Dia anterior
+135|Próximo dia
+136|Semana anterior
+137|Próxima semana
+138|Ano anterior
+139|Próximo ano
+140|Adicionar
+141|Ver este dia
+142|Adicionar a este dia
+143|Adicionar em {d}
+144|Ver este mês
+145|{n} coisas planejadas nesta semana
+146|{n} coisa planejada nesta semana
+147|Nada planejado nesta semana ainda
+148|{n} coisas planejadas
+149|{n} coisa planejada
+150|Nada planejado ainda
+151|Os pontos mostram dias com planos. Os feriados ficam em amarelo.
+152|Nada para {d} ainda
+153|Nada planejado em {d} ainda
+154|Nada planejado. Um dia livre!
+155|{n} {o} em {d}
+156|{n} {oa} em {d}
+157|{n} evento em {d}
+158|{n} eventos em {d}
+159|Evento
+160|Tarefa
+161|Editar evento
+162|Novo evento
+163|O que vai acontecer?
+164|Que horas?
+165|(pode pular)
+166|Que horas? (pode pular)
+167|Onde?
+168|Parque da rua principal
+169|Excluir este evento
+170|Adicionar evento
+171|Evento excluído
+172|Escreva o que vai acontecer.
+173|O dia todo
+174|Qualquer hora
+175|Feira livre
+176|O que adicionar
+177|Hora
+178|Onde
+179|Título
+180|(opcional)
+181|Marcado como feito
+182|Ano-Novo
+183|Dia de Martin Luther King Jr.
+184|Dia de São Valentim
+185|Dia dos Presidentes
+186|Dia de São Patrício
+187|Páscoa
+188|Domingo de Páscoa
+189|Segunda-feira de Páscoa
+190|Sexta-feira Santa
+191|Quinta-feira Santa
+192|Dia das Mães
+193|Dia da Memória
+194|Dia dos Pais
+195|Juneteenth
+196|Dia da Independência
+197|Dia do Trabalho
+198|Dia dos Povos Indígenas
+199|Halloween
+200|Dia dos Veteranos
+201|Dia de Ação de Graças
+202|Black Friday
+203|Sábado dos Pequenos Negócios
+204|Véspera de Natal
+205|Natal
+206|Natal
+207|Véspera de Ano-Novo
+208|Boxing Day
+209|Dia da Família
+210|Dia da Vitória
+211|Dia do Canadá
+212|Feriado Cívico
+213|Dia do Trabalho
+214|Dia da Verdade e Reconciliação
+215|Dia da Lembrança
+216|Dia de Reis
+217|Dia da Constituição
+218|Aniversário de Benito Juárez
+219|Dia das Crianças
+220|Cinco de Mayo
+221|Dia dos Mortos
+222|Dia da Revolução
+223|Dia da Virgem de Guadalupe
+224|Dia da Austrália
+225|Dia de Anzac
+226|Aniversário do Rei
+227|Dia de Waitangi
+228|Dia depois do Ano-Novo
+229|Noite das Fogueiras
+230|Domingo da Lembrança
+231|Dia de Santo Estêvão
+232|Feriado do início de maio
+233|Feriado de primavera
+234|Feriado de verão
+235|Feriado de Santa Brígida
+236|Feriado de maio
+237|Feriado de junho
+238|Feriado de agosto
+239|Feriado de outubro
+240|{o} pagos contam como dinheiro recebido na data deles
+241|Dinheiro que entra e que sai, mês a mês
+242|Dinheiro que entra
+243|Dinheiro que sai
+244|Você ficou com
+245|Aguardando pagamento
+246|Últimos {n} meses
+247|Entrou: {m}
+248|Saiu: {m}
+249|Este mês
+250|Nada este mês ainda.
+251|O que você comprou ou pagou
+252|Caixas de bolo, taxa da barraca
+253|Quanto
+254|Que dia
+255|Excluir isto
+256|Adicionar
+257|Escreva quanto foi.
+258|Para que foi
+259|Venda de bolos, gorjetas
+260|Gorjeta
+261|Nenhum dinheiro registrado ainda
+262|{n} coisas para comprar
+263|{n} coisa para comprar
+264|Adicionar por foto
+265|Adicionar {sa}
+266|Lista de compras
+267|Para seus {o} das próximas {n} semanas, cerca de {m}
+268|Para seus {o} das próximas {n} semanas
+269|O que seus {o} precisam aparece aqui sozinho
+270|Coisas que você precisa comprar
+271|Adicione algo para comprar
+272|O que você tem
+273|Menos
+274|Mais
+275|Você tem o que precisa
+276|Nada para comprar agora.
+277|Sem preço ainda
+278|Você mede em
+279|Quando você compra
+280|Você recebe
+281|Quanto você recebe
+282|unidades
+283|por
+284|Quanto você tem agora
+285|Adicionar {sa}
+286|Escreva o nome.
+287|xícaras
+288|unidade
+289|tabletes
+290|dúzia
+291|Nome
+292|Quantidade
+293|Unidade
+294|Preço
+295|Editar {sa}
+296|Farinha
+297|Açúcar
+298|Tire um print de um recibo, de um pedido on-line ou de uma lista do que você precisa. O app lê e preenche os nomes, quantidades e preços para você.
+299|Tire um print de um recibo, de um pedido on-line ou de uma lista do que você precisa. O app lê e preenche os nomes, quantidades e preços para você.
+300|Cole um print aqui
+301|Pressione
+302|, solte uma imagem ou clique para escolher
+303|Dica:
+304|tira um print
+305|Ou digite ou cole a lista como texto
+306|Ler esta lista
+307|Lendo sua imagem...
+308|Isso pode levar alguns segundos. Na primeira vez, o leitor também é carregado da internet.
+309|Adicionar uma linha
+310|Tentar outra imagem
+311|Adicionar a {S}
+312|Marque pelo menos um item para adicionar.
+313|Atualiza o preço
+314|Sua imagem
+315|Não conseguimos ler a imagem. Ler imagens precisa de internet na primeira vez. Você pode digitar ou colar a lista abaixo.
+316|Não encontramos itens com preço nessa imagem. Tente um print mais nítido ou corrija o texto abaixo e clique em Ler esta lista.
+317|Quanto cada {pa} realmente custa e quanto cobrar
+318|Seu salário
+319|por hora
+320|Lucro extra
+321|Seu tempo
+322|Custo real
+323|Você cobra
+324|Sugerido
+325|Cobre {m}
+326|Sem preço ainda
+327|Não definido
+328|Você ganha {m}, um pouco abaixo da meta
+329|Você ganha {m} cada vez
+330|Você perde {m} cada vez
+331|Usar o preço sugerido
+332|O custo real são seus {s} mais seu tempo. O preço sugerido soma o lucro escolhido, arredondado para cima até o próximo dólar.
+333|Adicione seus {p} primeiro
+334|Quando você adicionar o que vai em cada um, esta página calcula seus custos e um preço justo.
+335|Ir para {P}
+336|{n} abertos, {n} concluídos
+337|Do Google Forms
+338|Adicionar {oa}
+339|+ Adicionar {oa}
+340|Abertos
+341|Todos
+342|Novo
+343|Em andamento
+344|Pago
+345|Editar
+346|Status
+347|Limpar {o} concluídos ({n})
+348|Voltar para Meu dia
+349|Editar {oa}
+350|Nome do {ca}
+351|Telefone ou e-mail (opcional)
+352|{n}-{n}-{n} ou um e-mail
+353|O que querem
+354|Data de entrega
+355|Hora (opcional)
+356|Sem hora
+357|Detalhes extras
+358|Sabor do bolo
+359|Quer perguntar mais alguma coisa em cada {oa}?
+360|Mensagem no bolo
+361|Alergias
+362|Retirada ou entrega
+363|Outra coisa
+364|Notas (opcional)
+365|Mais alguma coisa para lembrar
+366|Salvar alterações
+367|Cancelar
+368|Excluir este {oa}
+369|Voltar para {O}
+370|Adicionar {oa}
+371|{n} {o} excluídos
+372|Trazer {o} do seu Google Forms
+373|Cada pessoa que preencheu seu formulário aparece aqui como um novo {oa}. Você pode fazer isso quando quiser. Os que já foram trazidos não serão adicionados de novo.
+374|Baixe suas respostas
+375|Abra seu Google Forms e clique em
+376|Respostas
+377|Clique em
+378|Ver no Planilhas
+379|(ou
+380|Vincular ao Planilhas
+381|na primeira vez).
+382|Na planilha, clique em
+383|Arquivo
+384|, depois
+385|Fazer download
+386|Escolha esse arquivo
+387|Escolha seu arquivo
+388|ou arraste para cá
+389|Diga ao app onde vai cada resposta
+390|Adivinhamos cada pergunta. Mude as que parecerem erradas.
+391|Escolha a pergunta que tem o nome do {ca}.
+392|Nada para hoje
+393|{n} pessoa
+394|{n} pessoas
+395|Adicionar um {ca}
+396|Encontrar alguém
+397|Mais recentes
+398|Mais {o}
+399|Gastaram mais
+400|De A a Z
+401|Sem telefone ou e-mail ainda
+402|total
+403|Adicionar {ca}
+404|Deixa pra lá
+405|Voltar para {C}
+406|primeiro {oa}
+407|{O} dessa pessoa
+408|Todo mundo que compra de você, em um só lugar
+409|Nenhum {ca} ainda
+410|Adicione as pessoas para quem você trabalha, com telefone ou e-mail, para ficarem todas em um só lugar.
+411|Mantenha todas as pessoas para quem você trabalha em um só lugar.
+412|{n} {p}
+413|Adicionar {pa}
+414|Rende {n}
+415|{n} {s}
+416|Custa {m}
+417|Sem preço
+418|Voltar para {P}
+419|Quanto você cobra
+420|Quanto rende
+421|{n} bolo, {n} cupcakes
+422|Horas que leva
+423|O que vai nele
+424|Nada adicionado ainda. Escolha entre seus {s} abaixo ou adicione um novo.
+425|+ Adicionar {sa}
+426|Passos
+427|(um por linha)
+428|Adicionar {pa}
+429|Dê um nome para salvar.
+430|Os ingredientes de uma fornada custam
+431|Busque tudo no seu app ou encontre lugares perto de você
+432|Buscar {o}, {c}, {p}, tarefas
+433|Buscar {c}, {p}, tarefas
+434|Buscar
+435|Perto de você
+436|Feiras livres
+437|Abre o Google Maps
+438|Feiras de artesanato
+439|Lojas de {s}
+440|Lugares para vender
+441|Crie um e depois imprima ou salve como PDF
+442|Recibo
+443|Qual {oa}
+444|Imprimir
+445|Para
+446|Data
+447|Item
+448|Total
+449|Ainda não pago
+450|Obrigado pelo seu {oa}!
+451|Uma nota no final
+452|{Oa} com {n} dias de antecedência. Mensagem para {n}-{n}-{n}
+453|Peça com {n} dias de antecedência. Mensagem para {n}-{n}-{n}
+454|Nenhum resultado
+455|Trocar imagem
+456|Remover imagem
+457|Seus negócios
+458|Aberto agora
+459|Adicionar outro negócio
+460|Seus outros negócios continuam salvos
+461|Este negócio
+462|Nome do negócio e país
+463|{B} · Estados Unidos
+464|{B} · Canadá
+465|{B} · México
+466|{B} · Reino Unido
+467|{B} · Irlanda
+468|{B} · Austrália
+469|{B} · Nova Zelândia
+470|{B} · Sem feriados
+471|Tipo de negócio e palavras
+472|Aparência
+473|Cores e fonte
+474|Muda com a hora do dia
+475|Idioma
+476|English, Español, Français, 中文, Tiếng Việt, 한국어, Tagalog, Русский, 日本語, Português, Deutsch
+477|Pip, seu ajudante
+478|Aparece com dicas sobre seu negócio
+479|Metas
+480|Com o que você quer ajuda
+481|Nenhuma escolhida ainda
+482|Backup
+483|Salvar um backup
+484|Você ainda não salvou nenhum
+485|Carregar um backup
+486|Recupere tudo de um arquivo de backup
+487|Salvo hoje
+488|Salvo ontem
+489|Salvo há {n} dias
+490|Excluir {B}
+491|Voltar para Configurações
+492|Isso apaga tudo em {B}. Clique de novo para excluir
+493|Tipo de negócio
+494|Seu negócio
+495|Cores
+496|Que tipo de negócio é?
+497|O Biz Studio usa as palavras certas para seu negócio, como {P} para uma confeitaria ou Horários para um salão.
+498|Confeitaria caseira
+499|Refeições e bufê
+500|Velas e artesanato
+501|Arte e encomendas
+502|Costura e roupas
+503|Unhas
+504|Cabelo
+505|Cílios e maquiagem
+506|Aulas particulares
+507|Aulas de música e dança
+508|Treino físico
+509|Fotografia
+510|Cuidado de pets
+511|Limpeza
+512|Jardinagem
+513|Festas e eventos
+514|Que tipo de negócio?
+515|Conserto de bicicletas, banho e tosa, barraca de limonada...
+516|Conte o que você faz e vamos preencher as palavras certas.
+517|O que você vende ou oferece
+518|O que as pessoas reservam ou pedem
+519|As pessoas com quem você trabalha
+520|O que você usa para trabalhar
+521|Continuar
+522|Qual é o nome do seu negócio?
+523|Esse nome aparece nos seus recibos, cardápios e no topo do app. Você pode mudar depois.
+524|Nome do negócio
+525|Onde você está?
+526|Estados Unidos
+527|Canadá
+528|México
+529|Reino Unido
+530|Irlanda
+531|Austrália
+532|Nova Zelândia
+533|Outro lugar (sem feriados)
+534|Vamos colocar os feriados do seu país no seu calendário.
+535|Foto de perfil (opcional)
+536|Adicionar uma imagem ou logo
+537|Se pular, suas iniciais aparecem no lugar.
+538|Voltar
+539|Escreva o nome do negócio para continuar.
+540|Deixe do seu jeito
+541|Escolha suas cores. Cada uma vem com uma fonte combinando, e o app todo muda quando você clica.
+542|Simples
+543|Clássico
+544|Ardósia
+545|Sálvia
+546|Cereja
+547|Doces
+548|Morango
+549|Matcha
+550|Mirtilo
+551|Limão
+552|Caramelo
+553|Chiclete
+554|Natureza
+555|Oceano
+556|Floresta
+557|Pôr do sol
+558|Deserto
+559|Céu
+560|Fortes
+561|Galáxia
+562|Tropical
+563|Retrô
+564|Arco-íris
+565|Personalizado
+566|Cor principal
+567|Cor de destaque
+568|Mudar com a hora do dia
+569|Quente de manhã, claro à tarde e calmo à noite.
+570|Prévia
+571|{o} a entregar
+572|nesta semana
+573|A seguir
+574|Cookies com gotas de chocolate
+575|Amigável
+576|Arredondada
+577|Divertida
+578|Elegante
+579|Moderna
+580|Fonte
+581|Com o que você quer ajuda?
+582|Escolha quantas quiser. O Biz Studio coloca essas primeiro e dá dicas para elas.
+583|Mais alguma coisa? (opcional)
+584|Quero vender na feira livre neste verão
+585|Pular por agora
+586|Concluir
+587|Eu esqueço {o} ou datas de entrega
+588|Não sei quanto cobrar pelo meu trabalho
+589|Meus {s} acabam
+590|Quero fazer meu negócio crescer
+591|Não tenho tempo suficiente
+592|Minhas informações estão espalhadas
+593|Quero controlar meu dinheiro
+594|Quero que meu negócio pareça profissional
+595|Olhe seu calendário toda manhã. Você recebe lembretes extras antes dos seus {o}.
+596|Adicione quanto você paga pelos {s} em Preços e lucro, e o Biz Studio vai sugerir preços justos.
+597|Veja sua lista de {s} alguns dias antes dos dias cheios para comprar com antecedência.
+598|Use o Buscar para descobrir feiras e eventos onde você pode vender.
+599|Sua lista de tarefas coloca o mais urgente primeiro, então você sempre sabe o que fazer.
+600|Guarde todos os seus {o} e {c} aqui em vez de em mensagens e notas.
+601|Guarde seus {c}, tarefas e eventos aqui em vez de em mensagens e notas.
+602|Contas soma o que entra e o que sai, para você ver seu lucro de verdade.
+603|Faça recibos, cardápios e listas de preços com seus {p} em poucos cliques.
+604|Abrir calendário
+605|Abrir preços e lucro
+606|Abrir tarefas
+607|Abrir contas
+608|Abrir busca
+609|Abrir recibos e cardápios
+610|Atenção! {n} {o} estão atrasados.
+611|Você tem {n} {o} para hoje. Você consegue!
+612|{n} {o} são para amanhã. Hora de se preparar!
+613|Você tem {n} coisas na sua lista para hoje.
+614|Você tem {n} coisa na sua lista para hoje.
+615|{n} {o} concluídos esperam pagamento.
+616|Adicione seu primeiro {oa} e eu ajudo você a acompanhar.
+617|Adicione seus {p} para eu calcular quanto custam para você.
+618|Adicione quanto você paga pelos {s} e eu faço sua lista de compras.
+619|Faz tempo desde seu último backup. Salve um em Configurações para não perder nada!
+620|Adicione uma imagem do seu negócio em Configurações. Ela aparece nos recibos também!
+621|Clique em alguém para ver todos os {o} dessa pessoa.
+622|Clique em um dia e depois em Adicionar para colocar um evento ou tarefa.
+623|Imprima um cardápio e leve para a próxima feira.
+624|Tente buscar um nome, um {pa} ou qualquer coisa.
+625|Registre o que você gasta em Dinheiro que sai, para saber com quanto ficou de verdade.
+626|Você está indo muito bem. Continue assim!
+627|Nada urgente agora. Bom trabalho!
+628|Tudo em dia! Que tal um lanchinho?
+629|Nada na sua lista para hoje.
+630|Adicione uma tarefa acima para começar.
+631|Adicione uma tarefa acima. Quando tiver {o} chegando, as tarefas deles aparecem aqui sozinhas.
+632|Nenhuma nota adesiva ainda
+633|Notas e lembretes rápidos, da cor que você quiser.
+634|Seu calendário está livre
+635|Nada na sua lista ainda
+636|Nada para comprar
+637|Nenhum preço calculado ainda
+638|Encontre qualquer coisa
+639|Nada para imprimir ainda
+640|Feito: $1
+641|Não feito: $1
+642|Marcar como importante: $1
+643|Desmarcar: $1
+644|Excluir $1
+645|Remover $1
+646|Editar $1
+647|Tarefa: $1
+648|Nota adesiva: $1
+649|Você comprou $1, $2 adicionados às Contas
+650|Você comprou $1
+651|$1 agora custa $2
+652|Último: $1
+653|Adicionar $1 para $2
+654|$2 de $1 marcado como $3
+655|Fazer $1 para $2
+656|$1, comprar $2
+657|Precisa de $1, tem $2. Para $3
+658|$1 por $2 $3
+659|$1 às $2
+660|$1 para $2
+661|Atenção! $2 de $1 está atrasado.
+662|$2 de $1 é para hoje às $3.
+663|$2 de $1 é para hoje.
+664|Não esqueça: $2 de $1 é para amanhã.
+665|Hoje: $1 às $2. Divirta-se!
+666|Hoje: $1. Divirta-se!
+667|Você marcou "$1" como importante. E mais $2.
+668|Você marcou "$1" como importante.
+669|Está acabando $1 e mais $2 para seus próximos $3.
+670|Está acabando $1 para seus próximos $2.
+671|O $2 de $1 está pronto, mas ainda não foi pago.
+672|Fazer $1 custa mais do que você cobra. Vamos resolver isso!
+673|Você poderia cobrar um pouco mais por $1.
+674|$1: $2 ($3)
+675|Voltar para $1
+676|$1 adicionados a $2 e $3 preços atualizados
+677|$1 adicionados a $2
+678|$1 preços atualizados
+679|Adicionar $1 a $2
+680|Encontramos $1. Confira os nomes, quantidades e preços e corrija o que parecer errado. Desmarque o que não quiser.
+681|$1 com a fonte $2
+682|Confeitaria caseira: $1
+683|Limpeza: $1
+684|Pular $1
+685|Você comprou $1
+`;
+
+// German
+var LANG_DE = `
+0|So
+1|Mo
+2|Di
+3|Mi
+4|Do
+5|Fr
+6|Sa
+7|Mein Tag
+8|Für dich ausgewählt
+9|Kalender
+10|To-do-Liste
+11|Preise und Gewinn
+12|Buchhaltung
+13|Arbeit
+14|Haftnotizen
+15|Geschäft
+16|{S} und Einkauf
+17|Wachsen
+18|Suche
+19|Belege und Menüs
+20|Einstellungen
+21|Geld
+22|Menü
+23|Menüs
+24|Guten Morgen
+25|Guten Tag
+26|Guten Abend
+27|Guten Morgen!
+28|{o} fällig heute
+29|{oa} fällig heute
+30|Aufgaben für heute
+31|Aufgabe für heute
+32|diesen Monat eingenommen
+33|Dinge zu kaufen
+34|Ding zu kaufen
+35|{n} {oa} ist überfällig. Tippe zum Ansehen.
+36|{n} {o} sind überfällig. Tippe zum Ansehen.
+37|Heute zu tun
+38|Alle ansehen
+39|Diese Woche
+40|Termine heute
+41|Termin heute
+42|Heute nichts. {n} stehen an.
+43|Dein Fokus
+44|Schließen
+45|Zeig mir
+46|Nächster Tipp
+47|Tipps von Pip
+48|Pip
+49|Heute
+50|Morgen
+51|Gestern
+52|Überfällig
+53|Kein Datum
+54|Irgendwann
+55|Überfällig, war am {d}
+56|{Oa} fällig {d}
+57|{Oa} fällig {d} um {t}
+58|{n} Tage überfällig
+59|{n} Tag überfällig
+60|Heute fällig
+61|Morgen fällig
+62|Morgen um {t} fällig
+63|Heute um {t} fällig
+64|In {n} Tagen fällig
+65|In {n} Tagen um {t} fällig
+66|Fällig {d}
+67|Fällig {d} um {t}
+68|War fällig {d}
+69|War fällig {d} um {t}
+70|{d} um {t}
+71|Als wichtig markieren
+72|Markierung entfernen
+73|Löschen
+74|Erledigt
+75|Nicht erledigt
+76|Aufgabe hinzufügen
+77|Neue Aufgabe
+78|Was musst du tun?
+79|Mehr Mehl kaufen
+80|Wichtig
+81|Markiere sie, damit sie oben bleibt
+82|Aufgabe hinzufügen
+83|Schreib auf, was du tun musst.
+84|Erledigte löschen ({n})
+85|{n} Dinge heute zu tun
+86|{n} Ding heute zu tun
+87|{n} Aufgaben gelöscht
+88|{n} Aufgabe gelöscht
+89|Hier ist gerade nichts.
+90|Rückgängig
+91|Keine Aufgaben
+92|Heute nichts zu tun
+93|Alles erledigt!
+94|Neue Notiz
+95|Hier schreiben...
+96|Haftnotiz
+97|Auf den Bildschirm holen
+98|Farbe und löschen
+99|Im Kalender ansehen
+100|Gelb
+101|Pfirsich
+102|Rosa
+103|Lavendel
+104|Blau
+105|Minze
+106|Limette
+107|Sand
+108|Beliebige Farbe wählen
+109|Farbe
+110|Im Kalender: {d}
+111|Notiz löschen
+112|Zum Kalender hinzufügen
+113|In Haftnotizen öffnen
+114|Auf einen anderen Tag legen
+115|Welcher Tag?
+116|Aus dem Kalender nehmen
+117|Speichern
+118|Am {d} zum Kalender hinzugefügt
+119|Aus dem Kalender genommen
+120|Notiz gelöscht
+121|Wähle einen Tag.
+122|{n} Notiz. Zeige auf eine Notiz, um sie auf den Bildschirm zu holen.
+123|{n} Notizen. Zeige auf eine Notiz, um sie auf den Bildschirm zu holen.
+124|Schnelle Notizen und Erinnerungen in jeder Farbe
+125|Noch keine Notizen. Klicke auf +, um eine hinzuzufügen.
+126|Dein Browser hat das Notizfenster blockiert. Erlaube Pop-ups für diese Seite und versuch es noch einmal.
+127|Kalenderansicht
+128|Tag
+129|Woche
+130|Monat
+131|Jahr
+132|Letzter Monat
+133|Nächster Monat
+134|Vortag
+135|Nächster Tag
+136|Letzte Woche
+137|Nächste Woche
+138|Letztes Jahr
+139|Nächstes Jahr
+140|Hinzufügen
+141|Diesen Tag ansehen
+142|Zu diesem Tag hinzufügen
+143|Zum {d} hinzufügen
+144|Diesen Monat ansehen
+145|{n} Dinge diese Woche geplant
+146|{n} Ding diese Woche geplant
+147|Diese Woche noch nichts geplant
+148|{n} Dinge geplant
+149|{n} Ding geplant
+150|Noch nichts geplant
+151|Punkte zeigen Tage mit Plänen. Feiertage sind gelb.
+152|Noch nichts fällig im {d}
+153|Noch nichts geplant im {d}
+154|Nichts geplant. Ein freier Tag!
+155|{n} {o} fällig im {d}
+156|{n} {oa} fällig im {d}
+157|{n} Termin im {d}
+158|{n} Termine im {d}
+159|Termin
+160|Aufgabe
+161|Termin bearbeiten
+162|Neuer Termin
+163|Was ist los?
+164|Um wie viel Uhr?
+165|(kannst du weglassen)
+166|Um wie viel Uhr? (kannst du weglassen)
+167|Wo?
+168|Park an der Hauptstraße
+169|Diesen Termin löschen
+170|Termin hinzufügen
+171|Termin gelöscht
+172|Schreib auf, was los ist.
+173|Ganztägig
+174|Jederzeit
+175|Bauernmarkt
+176|Was hinzufügen
+177|Uhrzeit
+178|Wo
+179|Titel
+180|(optional)
+181|Abgehakt
+182|Neujahr
+183|Martin-Luther-King-Tag
+184|Valentinstag
+185|Presidents' Day
+186|St. Patrick's Day
+187|Ostern
+188|Ostersonntag
+189|Ostermontag
+190|Karfreitag
+191|Gründonnerstag
+192|Muttertag
+193|Memorial Day
+194|Vatertag
+195|Juneteenth
+196|Unabhängigkeitstag
+197|Tag der Arbeit
+198|Tag der indigenen Völker
+199|Halloween
+200|Veteranentag
+201|Thanksgiving
+202|Black Friday
+203|Small Business Saturday
+204|Heiligabend
+205|Weihnachten
+206|Weihnachten
+207|Silvester
+208|Zweiter Weihnachtstag
+209|Familientag
+210|Victoria Day
+211|Canada Day
+212|Civic Holiday
+213|Tag der Arbeit
+214|Tag der Wahrheit und Versöhnung
+215|Gedenktag
+216|Heilige Drei Könige
+217|Tag der Verfassung
+218|Geburtstag von Benito Juárez
+219|Kindertag
+220|Cinco de Mayo
+221|Tag der Toten
+222|Tag der Revolution
+223|Tag der Jungfrau von Guadalupe
+224|Australia Day
+225|Anzac Day
+226|Geburtstag des Königs
+227|Waitangi Day
+228|Tag nach Neujahr
+229|Bonfire Night
+230|Gedenksonntag
+231|Stephanstag
+232|Feiertag Anfang Mai
+233|Frühlingsfeiertag
+234|Sommerfeiertag
+235|Feiertag der heiligen Brigid
+236|Maifeiertag
+237|Junifeiertag
+238|Augustfeiertag
+239|Oktoberfeiertag
+240|Bezahlte {o} zählen am Fälligkeitstag als Einnahmen
+241|Einnahmen und Ausgaben, Monat für Monat
+242|Einnahmen
+243|Ausgaben
+244|Übrig für dich
+245|Wartet auf Zahlung
+246|Letzte {n} Monate
+247|Ein: {m}
+248|Aus: {m}
+249|Dieser Monat
+250|Diesen Monat noch nichts.
+251|Was du gekauft oder bezahlt hast
+252|Tortenkartons, Standgebühr
+253|Wie viel
+254|Welcher Tag
+255|Das löschen
+256|Hinzufügen
+257|Schreib auf, wie viel es war.
+258|Wofür
+259|Kuchenverkauf, Trinkgeld
+260|Trinkgeld
+261|Noch kein Geld erfasst
+262|{n} Dinge zu kaufen
+263|{n} Ding zu kaufen
+264|Aus einem Bild hinzufügen
+265|{sa} hinzufügen
+266|Einkaufsliste
+267|Für deine {o} in den nächsten {n} Wochen, etwa {m}
+268|Für deine {o} in den nächsten {n} Wochen
+269|Was deine {o} brauchen, erscheint hier von selbst
+270|Was du kaufen musst
+271|Etwas zum Kaufen hinzufügen
+272|Was du hast
+273|Weniger
+274|Mehr
+275|Du hast, was du brauchst
+276|Gerade nichts zu kaufen.
+277|Noch kein Preis
+278|Du misst es in
+279|Wenn du es kaufst
+280|Du bekommst
+281|Wie viel du bekommst
+282|Einheiten
+283|für
+284|Wie viel du gerade hast
+285|{sa} hinzufügen
+286|Schreib den Namen.
+287|Tassen
+288|Stück
+289|Stangen
+290|Dutzend
+291|Name
+292|Menge
+293|Einheit
+294|Preis
+295|{sa} bearbeiten
+296|Mehl
+297|Zucker
+298|Mach einen Screenshot von einem Beleg, einer Online-Bestellung oder einer Liste mit dem, was du brauchst. Die App liest ihn und füllt Namen, Mengen und Preise für dich aus.
+299|Mach einen Screenshot von einem Beleg, einer Online-Bestellung oder einer Liste mit dem, was du brauchst. Die App liest ihn und füllt Namen, Mengen und Preise für dich aus.
+300|Screenshot hier einfügen
+301|Drücke
+302|, zieh ein Bild hierher oder klicke zum Auswählen
+303|Tipp:
+304|macht einen Screenshot
+305|Oder tipp oder füg die Liste als Text ein
+306|Diese Liste lesen
+307|Dein Bild wird gelesen...
+308|Das kann ein paar Sekunden dauern. Beim ersten Mal wird der Leser auch aus dem Internet geladen.
+309|Zeile hinzufügen
+310|Anderes Bild probieren
+311|Zu {S} hinzufügen
+312|Hake mindestens eine Sache an.
+313|Aktualisiert den Preis
+314|Dein Bild
+315|Das Bild konnte nicht gelesen werden. Beim ersten Lesen braucht es Internet. Du kannst die Liste unten eintippen oder einfügen.
+316|In dem Bild wurden keine Artikel mit Preisen gefunden. Probier einen schärferen Screenshot oder korrigier den Text unten und klicke auf Diese Liste lesen.
+317|Was jedes {pa} dich wirklich kostet und was du verlangen solltest
+318|Dein Stundenlohn
+319|pro Stunde
+320|Gewinn obendrauf
+321|Deine Zeit
+322|Echte Kosten
+323|Du verlangst
+324|Vorschlag
+325|Verlange lieber {m}
+326|Noch kein Preis festgelegt
+327|Nicht festgelegt
+328|Du verdienst {m}, etwas unter deinem Ziel
+329|Du verdienst jedes Mal {m}
+330|Du verlierst jedes Mal {m}
+331|Vorgeschlagenen Preis nehmen
+332|Die echten Kosten sind deine {s} plus deine Zeit. Der vorgeschlagene Preis rechnet deinen Gewinn drauf und rundet auf den nächsten Dollar auf.
+333|Füg zuerst deine {p} hinzu
+334|Sobald du einträgst, was in jedes kommt, berechnet diese Seite deine Kosten und einen fairen Preis.
+335|Zu {P}
+336|{n} offen, {n} fertig
+337|Aus Google Formulare
+338|{oa} hinzufügen
+339|+ {oa} hinzufügen
+340|Offen
+341|Alle
+342|Neu
+343|In Arbeit
+344|Bezahlt
+345|Bearbeiten
+346|Status
+347|Fertige {o} löschen ({n})
+348|Zurück zu Mein Tag
+349|{oa} bearbeiten
+350|Name ({ca})
+351|Telefon oder E-Mail (optional)
+352|{n}-{n}-{n} oder eine E-Mail
+353|Was sie möchten
+354|Fälligkeitsdatum
+355|Uhrzeit (optional)
+356|Keine Uhrzeit
+357|Weitere Details
+358|Kuchengeschmack
+359|Möchtest du bei jedem {oa} noch etwas anderes fragen?
+360|Text auf dem Kuchen
+361|Allergien
+362|Abholung oder Lieferung
+363|Etwas anderes
+364|Notizen (optional)
+365|Sonst noch etwas zu merken
+366|Änderungen speichern
+367|Abbrechen
+368|Diesen {oa} löschen
+369|Zurück zu {O}
+370|{oa} hinzufügen
+371|{n} {o} gelöscht
+372|{o} aus deinem Google-Formular holen
+373|Jede Person, die dein Formular ausgefüllt hat, erscheint hier als neuer {oa}. Du kannst das jederzeit wiederholen. Schon geholte werden nicht doppelt hinzugefügt.
+374|Lade deine Antworten herunter
+375|Öffne dein Google-Formular und klicke auf
+376|Antworten
+377|Klicke auf
+378|In Tabellen ansehen
+379|(oder
+380|Mit Tabellen verknüpfen
+381|beim ersten Mal).
+382|Klicke in der Tabelle auf
+383|Datei
+384|, dann
+385|Herunterladen
+386|Wähle diese Datei
+387|Datei auswählen
+388|oder hierher ziehen
+389|Sag der App, wohin jede Antwort gehört
+390|Wir haben jede Frage geraten. Ändere alles, was falsch aussieht.
+391|Wähle die Frage mit dem Namen ({ca}).
+392|Heute nichts fällig
+393|{n} Person
+394|{n} Personen
+395|{ca} hinzufügen
+396|Jemanden finden
+397|Neueste
+398|Meiste {o}
+399|Haben am meisten ausgegeben
+400|A bis Z
+401|Noch kein Telefon oder E-Mail
+402|gesamt
+403|{ca} hinzufügen
+404|Doch nicht
+405|Zurück zu {C}
+406|erster {oa}
+407|Ihre {o}
+408|Alle, die bei dir bestellen, an einem Ort
+409|Noch keine {c}
+410|Füg die Leute hinzu, für die du arbeitest, mit Telefon oder E-Mail, damit alle an einem Ort sind.
+411|Behalte alle, für die du arbeitest, an einem Ort.
+412|{n} {p}
+413|{pa} hinzufügen
+414|Ergibt {n}
+415|{n} {s}
+416|Kostet {m}
+417|Kein Preis
+418|Zurück zu {P}
+419|Was du verlangst
+420|Wie viel es ergibt
+421|{n} Kuchen, {n} Cupcakes
+422|Stunden, die du brauchst
+423|Was hineinkommt
+424|Noch nichts hinzugefügt. Wähle aus deinen {s} unten oder füg ein neues hinzu.
+425|+ {sa} hinzufügen
+426|Schritte
+427|(einer pro Zeile)
+428|{pa} hinzufügen
+429|Gib ihm einen Namen, um es zu speichern.
+430|Zutaten für eine Ladung kosten
+431|Durchsuche alles in deiner App oder finde Orte in deiner Nähe
+432|{o}, {c}, {p}, Aufgaben suchen
+433|{c}, {p}, Aufgaben suchen
+434|Suchen
+435|In deiner Nähe
+436|Bauernmärkte
+437|Öffnet Google Maps
+438|Handwerksmärkte
+439|{S}-Läden
+440|Orte zum Verkaufen
+441|Erstell einen und drucke ihn dann oder speichere ihn als PDF
+442|Beleg
+443|Welcher {oa}
+444|Drucken
+445|Für
+446|Datum
+447|Artikel
+448|Summe
+449|Noch nicht bezahlt
+450|Danke für deinen {oa}!
+451|Eine Notiz unten
+452|{Oa} {n} Tage vorher. SMS an {n}-{n}-{n}
+453|{n} Tage vorher bestellen. SMS an {n}-{n}-{n}
+454|Keine Ergebnisse
+455|Bild ändern
+456|Bild entfernen
+457|Deine Geschäfte
+458|Gerade offen
+459|Weiteres Geschäft hinzufügen
+460|Deine anderen Geschäfte bleiben gespeichert
+461|Dieses Geschäft
+462|Name des Geschäfts und Land
+463|{B} · USA
+464|{B} · Kanada
+465|{B} · Mexiko
+466|{B} · Großbritannien
+467|{B} · Irland
+468|{B} · Australien
+469|{B} · Neuseeland
+470|{B} · Keine Feiertage
+471|Art des Geschäfts und Wörter
+472|Aussehen
+473|Farben und Schrift
+474|Ändert sich mit der Tageszeit
+475|Sprache
+476|English, Español, Français, 中文, Tiếng Việt, 한국어, Tagalog, Русский, 日本語, Português, Deutsch
+477|Pip, dein Helfer
+478|Taucht mit Tipps zu deinem Geschäft auf
+479|Ziele
+480|Wobei du Hilfe willst
+481|Noch nichts ausgewählt
+482|Sicherung
+483|Sicherung speichern
+484|Du hast noch keine gespeichert
+485|Sicherung laden
+486|Alles aus einer Sicherungsdatei zurückholen
+487|Heute gespeichert
+488|Gestern gespeichert
+489|Vor {n} Tagen gespeichert
+490|{B} löschen
+491|Zurück zu den Einstellungen
+492|Das löscht alles in {B}. Klicke noch mal, um es zu löschen
+493|Art des Geschäfts
+494|Dein Geschäft
+495|Farben
+496|Was für ein Geschäft ist es?
+497|Biz Studio benutzt die richtigen Wörter für dein Geschäft, zum Beispiel {P} für eine Bäckerei oder Termine für einen Salon.
+498|Backen zu Hause
+499|Essen und Catering
+500|Kerzen und Basteln
+501|Kunst und Auftragsarbeiten
+502|Nähen und Kleidung
+503|Nägel
+504|Haare
+505|Wimpern und Make-up
+506|Nachhilfe
+507|Musik- und Tanzunterricht
+508|Fitnesstraining
+509|Fotografie
+510|Tierbetreuung
+511|Putzen
+512|Garten
+513|Partys und Events
+514|Was für ein Geschäft?
+515|Fahrradreparatur, Hundepflege, Limonadenstand...
+516|Erzähl uns, was du machst, und wir setzen passende Wörter ein.
+517|Was du verkaufst oder anbietest
+518|Was Leute buchen oder bestellen
+519|Die Leute, mit denen du arbeitest
+520|Was du für die Arbeit benutzt
+521|Weiter
+522|Wie heißt dein Geschäft?
+523|Dieser Name steht auf deinen Belegen, Menüs und oben in der App. Du kannst ihn später ändern.
+524|Name des Geschäfts
+525|Wo bist du?
+526|USA
+527|Kanada
+528|Mexiko
+529|Großbritannien
+530|Irland
+531|Australien
+532|Neuseeland
+533|Woanders (keine Feiertage)
+534|Wir tragen die Feiertage deines Landes in deinen Kalender ein.
+535|Profilbild (optional)
+536|Bild oder Logo hinzufügen
+537|Wenn du das überspringst, werden deine Initialen angezeigt.
+538|Zurück
+539|Gib einen Namen für dein Geschäft ein, um weiterzumachen.
+540|Mach es zu deinem
+541|Wähle deine Farben. Jede hat eine passende Schrift, und die ganze App ändert sich beim Klicken.
+542|Schlicht
+543|Klassisch
+544|Schiefer
+545|Salbei
+546|Kirsche
+547|Süßes
+548|Erdbeere
+549|Matcha
+550|Blaubeere
+551|Zitrone
+552|Karamell
+553|Kaugummi
+554|Natur
+555|Ozean
+556|Wald
+557|Sonnenuntergang
+558|Wüste
+559|Himmel
+560|Kräftig
+561|Galaxie
+562|Tropisch
+563|Retro
+564|Regenbogen
+565|Eigene
+566|Hauptfarbe
+567|Akzentfarbe
+568|Mit der Tageszeit ändern
+569|Warm am Morgen, hell am Nachmittag und ruhig am Abend.
+570|Vorschau
+571|{o} fällig
+572|diese Woche
+573|Als Nächstes
+574|Schokoladenkekse
+575|Freundlich
+576|Rund
+577|Verspielt
+578|Elegant
+579|Modern
+580|Schrift
+581|Wobei möchtest du Hilfe?
+582|Wähle so viele, wie du willst. Biz Studio zeigt sie zuerst und gibt dir Tipps dazu.
+583|Noch etwas anderes? (optional)
+584|Ich möchte diesen Sommer auf dem Bauernmarkt verkaufen
+585|Erst mal überspringen
+586|Fertig
+587|Ich vergesse {o} oder Termine
+588|Ich weiß nicht, wie ich meine Preise festlegen soll
+589|Mir gehen die {s} aus
+590|Ich möchte mein Geschäft wachsen lassen
+591|Ich habe nicht genug Zeit
+592|Meine Infos sind überall verstreut
+593|Ich möchte mein Geld im Blick behalten
+594|Mein Geschäft soll professionell aussehen
+595|Schau jeden Morgen in deinen Kalender. Vor fälligen {o} bekommst du extra Erinnerungen.
+596|Trag unter Preise und Gewinn ein, was du für {s} zahlst, und Biz Studio schlägt faire Preise vor.
+597|Schau dir deine {s}-Liste ein paar Tage vor vollen Tagen an, damit du vorher einkaufen kannst.
+598|Finde mit der Suche Märkte und Events, auf denen du verkaufen kannst.
+599|Deine To-do-Liste zeigt das Dringendste zuerst, damit du immer weißt, was als Nächstes kommt.
+600|Behalte alle deine {o} und {c} hier statt in Nachrichten und Notizen.
+601|Behalte deine {c}, Aufgaben und Termine hier statt in Nachrichten und Notizen.
+602|Die Buchhaltung rechnet Einnahmen und Ausgaben zusammen, damit du deinen echten Gewinn siehst.
+603|Mach mit ein paar Klicks Belege, Menüs und Preislisten aus deinen {p}.
+604|Kalender öffnen
+605|Preise und Gewinn öffnen
+606|To-do-Liste öffnen
+607|Buchhaltung öffnen
+608|Suche öffnen
+609|Belege und Menüs öffnen
+610|Achtung! {n} {o} sind überfällig.
+611|Du hast heute {n} {o} fällig. Du schaffst das!
+612|{n} {o} sind morgen fällig. Zeit, sich vorzubereiten!
+613|Du hast heute {n} Dinge auf deiner Liste.
+614|Du hast heute {n} Ding auf deiner Liste.
+615|{n} fertige {o} warten auf Bezahlung.
+616|Füg deinen ersten {oa} hinzu, und ich helfe dir, den Überblick zu behalten.
+617|Füg deine {p} hinzu, damit ich ausrechnen kann, was sie dich kosten.
+618|Trag ein, was du für deine {s} zahlst, und ich mache deine Einkaufsliste.
+619|Deine letzte Sicherung ist schon eine Weile her. Speichere eine in den Einstellungen, damit nichts verloren geht!
+620|Füg in den Einstellungen ein Bild für dein Geschäft hinzu. Es kommt auch auf deine Belege!
+621|Klicke auf jemanden, um alle seine {o} an einem Ort zu sehen.
+622|Klicke auf einen Tag und dann auf Hinzufügen, um einen Termin oder eine Aufgabe einzutragen.
+623|Druck ein Menü aus und nimm es zu deinem nächsten Markt mit.
+624|Such mal nach einem Namen, einem {pa} oder irgendwas anderem.
+625|Trag Ausgaben unter Ausgaben ein, damit du weißt, was dir wirklich bleibt.
+626|Du machst das super. Weiter so!
+627|Gerade nichts Dringendes. Gute Arbeit!
+628|Alles erledigt! Gönn dir einen Snack.
+629|Heute steht nichts auf deiner Liste.
+630|Füg oben eine Aufgabe hinzu, um loszulegen.
+631|Füg oben eine Aufgabe hinzu. Wenn {o} anstehen, erscheinen ihre Aufgaben hier von selbst.
+632|Noch keine Haftnotizen
+633|Schnelle Notizen und Erinnerungen in jeder Farbe.
+634|Dein Kalender ist frei
+635|Noch nichts auf deiner Liste
+636|Nichts zu kaufen
+637|Noch keine Preise berechnet
+638|Alles finden
+639|Noch nichts zum Drucken
+640|Erledigt: $1
+641|Nicht erledigt: $1
+642|Als wichtig markieren: $1
+643|Markierung entfernen: $1
+644|$1 löschen
+645|$1 entfernen
+646|$1 bearbeiten
+647|Aufgabe: $1
+648|Haftnotiz: $1
+649|$1 gekauft, $2 zur Buchhaltung hinzugefügt
+650|$1 gekauft
+651|$1 kostet jetzt $2
+652|Zuletzt: $1
+653|$1 für $2 hinzufügen
+654|$2 von $1 als $3 markiert
+655|$1 für $2 machen
+656|$1, $2 kaufen
+657|Brauchst $1, hast $2. Für $3
+658|$1 für $2 $3
+659|$1 um $2
+660|$1 für $2
+661|Achtung! $2 von $1 ist überfällig.
+662|$2 von $1 ist heute um $3 fällig.
+663|$2 von $1 ist heute fällig.
+664|Nicht vergessen: $2 von $1 ist morgen fällig.
+665|Heute: $1 um $2. Viel Spaß!
+666|Heute: $1. Viel Spaß!
+667|Du hast „$1“ als wichtig markiert. Und $2 weitere.
+668|Du hast „$1“ als wichtig markiert.
+669|Dir gehen $1 und $2 weitere für deine nächsten $3 aus.
+670|Dir geht $1 für deine nächsten $2 aus.
+671|$2 von $1 ist fertig, aber noch nicht bezahlt.
+672|$1 kostet dich mehr, als du verlangst. Lass uns das ändern!
+673|Für $1 könntest du etwas mehr verlangen.
+674|$1: $2 ($3)
+675|Zurück zu $1
+676|$1 zu $2 hinzugefügt und $3 Preise aktualisiert
+677|$1 zu $2 hinzugefügt
+678|$1 Preise aktualisiert
+679|$1 zu $2 hinzufügen
+680|$1 gefunden. Prüf die Namen, Mengen und Preise und korrigier, was falsch aussieht. Entferne den Haken bei allem, was du nicht willst.
+681|$1 mit der Schrift $2
+682|Backen zu Hause: $1
+683|Putzen: $1
+684|$1 überspringen
+685|$1 gekauft
+`;
