@@ -98,6 +98,7 @@ const ICONS = {
   cart: '<circle cx="9" cy="20" r="1.3"/><circle cx="18" cy="20" r="1.3"/><path d="M2 3h3l2.5 12h11l2-8H6"/>',
   flag: '<path d="M5 21V4"/><path d="M5 4h12l-2.5 4.5L17 13H5"/>',
   tick: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  link: '<path d="M10 14a4.5 4.5 0 0 0 6.4 0l3.2-3.2a4.5 4.5 0 0 0-6.4-6.4L12 5.6"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3.2 3.2a4.5 4.5 0 0 0 6.4 6.4L12 18.4"/>',
   pin: '<path d="M9 3h6l-1 6 3.5 3.5h-11L10 9z"/><path d="M12 12.5V21"/>',
   check: '<rect x="3" y="3" width="18" height="18" rx="4"/><path d="m8 12 3 3 5-6"/>',
   calendar: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>',
@@ -409,7 +410,7 @@ const GOALS = [
     label: "I don't know how to price my work",
     focus: ['pricing', 'bookkeeping'],
     tip: (w) => 'Add what you pay for ' + w.supplies.toLowerCase() + ' in Pricing and profit, and Biz Studio will suggest fair prices.' },
-  { id: 'supplies', color: 'pink', icon: 'cart',
+  { id: 'supplies', color: 'pink', icon: 'cart', needs: 'checklist',
     label: (w) => 'I run out of ' + w.supplies.toLowerCase(),
     focus: ['checklist', 'products'],
     tip: (w) => 'Look at your ' + w.supplies.toLowerCase() + ' list a few days before busy days so you can shop ahead.' },
@@ -445,6 +446,7 @@ function findGoal(id) {
 function focusSections() {
   const ids = [];
   profile.goals.forEach(function (goalId) {
+    if (!goalFits(findGoal(goalId))) return;
     findGoal(goalId).focus.forEach(function (id) {
       if (!ids.includes(id)) ids.push(id);
     });
@@ -786,6 +788,102 @@ function fillKey(template, values) {
 
 // A few newer labels, in every language (same order as OWN_WORD_LANGS)
 const EXTRA_TEXT = {
+  "Add the hours it takes, so your pay is part of the price.": ["Agrega las horas que te toma, para que tu pago cuente en el precio.", "Ajoutez le temps passé pour que votre salaire compte dans le prix.", "填上要花几小时，你的工钱才会算进价格。", "Thêm số giờ làm để tiền công của bạn được tính vào giá.", "걸리는 시간을 넣으면 내 인건비가 가격에 들어가요.", "Ilagay kung ilang oras ito, para kasama ang bayad mo sa presyo.", "Укажите, сколько часов это занимает, чтобы ваша оплата вошла в цену.", "かかる時間を入れると、あなたの時給が価格に入ります。", "Adicione as horas que leva, para seu pagamento entrar no preço.", "Trag die Stunden ein, damit dein Lohn im Preis steckt.", "Aggiungi le ore che servono, così la tua paga entra nel prezzo.", "Isi berapa jam waktunya, supaya upahmu masuk ke harga.", "Вкажіть, скільки годин це займає, щоб ваша оплата увійшла в ціну.", "इसमें लगने वाले घंटे डालें, ताकि आपकी मेहनत की कीमत जुड़ जाए।"],
+  "{n} tray, serves {n}": ["{n} charola, para {n}", "{n} plateau, pour {n}", "{n}盘，够{n}人吃", "{n} khay, cho {n} người", "{n}판, {n}인분", "{n} tray, para sa {n}", "{n} поднос, на {n} человек", "{n}トレー、{n}人分", "{n} bandeja, serve {n}", "{n} Platte, für {n}", "{n} vassoio, per {n}", "{n} nampan, untuk {n} orang", "{n} піднос, на {n} людей", "{n} ट्रे, {n} लोगों के लिए"],
+  "{n} candles, {n} bracelets": ["{n} velas, {n} pulseras", "{n} bougies, {n} bracelets", "{n}支蜡烛，{n}条手链", "{n} cây nến, {n} vòng tay", "양초 {n}개, 팔찌 {n}개", "{n} kandila, {n} bracelet", "{n} свечей, {n} браслета", "キャンドル{n}個、ブレスレット{n}本", "{n} velas, {n} pulseiras", "{n} Kerzen, {n} Armbänder", "{n} candele, {n} braccialetti", "{n} lilin, {n} gelang", "{n} свічок, {n} браслети", "{n} मोमबत्तियाँ, {n} ब्रेसलेट"],
+  "{n} batch": ["{n} tanda", "{n} fournée", "{n}批", "{n} mẻ", "{n}회분", "{n} batch", "{n} партия", "{n}回分", "{n} lote", "{n} Charge", "{n} lotto", "{n} adonan", "{n} партія", "{n} बैच"],
+  "Anything else you want to remember for every {oa}? Tap one to add it.": ["¿Algo más que quieras recordar en cada {oa}? Toca uno para agregarlo.", "Autre chose à retenir pour chaque {oa} ? Touchez pour l'ajouter.", "每个{oa}还有什么要记住的？点一下就能添加。", "Còn gì cần nhớ cho mỗi {oa}? Chạm để thêm.", "{oa}마다 기억할 게 더 있나요? 눌러서 추가하세요.", "May iba ka pang gustong tandaan sa bawat {oa}? I-tap para idagdag.", "Что ещё запоминать для каждого: {oa}? Нажмите, чтобы добавить.", "{oa}ごとに覚えておきたいことは？タップして追加。", "Mais algo para lembrar em cada {oa}? Toque para adicionar.", "Noch etwas, das du dir bei jedem {oa} merken willst? Tippe zum Hinzufügen.", "Altro da ricordare per ogni {oa}? Tocca per aggiungerlo.", "Ada lagi yang perlu diingat untuk setiap {oa}? Ketuk untuk menambah.", "Що ще запам'ятовувати для кожного: {oa}? Натисніть, щоб додати.", "हर {oa} के लिए और कुछ याद रखना है? जोड़ने के लिए टैप करें।"],
+  "Deposit paid": ["Anticipo pagado", "Acompte payé", "已付定金", "Đã đặt cọc", "선금 결제됨", "Bayad na ang deposit", "Предоплата внесена", "前金支払い済み", "Sinal pago", "Anzahlung bezahlt", "Acconto pagato", "DP sudah dibayar", "Передоплату внесено", "एडवांस दिया गया"],
+  "Entry instructions": ["Cómo entrar", "Instructions d'accès", "进门说明", "Cách vào nhà", "출입 방법", "Paano pumasok", "Как попасть внутрь", "入り方", "Como entrar", "Zugang", "Istruzioni d'accesso", "Cara masuk", "Як потрапити всередину", "अंदर आने का तरीका"],
+  "First visit": ["Primera visita", "Première visite", "首次到访", "Lần đầu", "첫 방문", "Unang punta", "Первый визит", "初回", "Primeira visita", "Erster Besuch", "Prima visita", "Kunjungan pertama", "Перший візит", "पहली बार"],
+  "Gift wrap": ["Envoltura de regalo", "Emballage cadeau", "礼品包装", "Gói quà", "선물 포장", "Gift wrap", "Подарочная упаковка", "ギフト包装", "Embrulho para presente", "Geschenkverpackung", "Confezione regalo", "Bungkus kado", "Подарункова упаковка", "गिफ़्ट रैप"],
+  "Goal": ["Meta", "Objectif", "目标", "Mục tiêu", "목표", "Layunin", "Цель", "目標", "Meta", "Ziel", "Obiettivo", "Target", "Мета", "लक्ष्य"],
+  "Hair length": ["Largo del cabello", "Longueur des cheveux", "头发长度", "Độ dài tóc", "머리 길이", "Haba ng buhok", "Длина волос", "髪の長さ", "Comprimento do cabelo", "Haarlänge", "Lunghezza dei capelli", "Panjang rambut", "Довжина волосся", "बालों की लंबाई"],
+  "Location": ["Lugar", "Lieu", "地点", "Địa điểm", "장소", "Lugar", "Место", "場所", "Local", "Ort", "Luogo", "Lokasi", "Місце", "जगह"],
+  "Number of guests": ["Número de invitados", "Nombre d'invités", "客人数", "Số khách", "손님 수", "Bilang ng bisita", "Число гостей", "ゲストの人数", "Número de convidados", "Gästezahl", "Numero di ospiti", "Jumlah tamu", "Кількість гостей", "मेहमानों की संख्या"],
+  "Number of people": ["Número de personas", "Nombre de personnes", "人数", "Số người", "인원 수", "Bilang ng tao", "Число людей", "人数", "Número de pessoas", "Personenzahl", "Numero di persone", "Jumlah orang", "Кількість людей", "लोगों की संख्या"],
+  "Number of rooms": ["Número de cuartos", "Nombre de pièces", "房间数", "Số phòng", "방 개수", "Bilang ng kuwarto", "Число комнат", "部屋数", "Número de cômodos", "Zimmeranzahl", "Numero di stanze", "Jumlah kamar", "Кількість кімнат", "कमरों की संख्या"],
+  "Online or in person": ["En línea o en persona", "En ligne ou en personne", "线上还是线下", "Online hay trực tiếp", "온라인 또는 대면", "Online o personal", "Онлайн или очно", "オンラインか対面か", "Online ou presencial", "Online oder vor Ort", "Online o di persona", "Online atau tatap muka", "Онлайн чи наживо", "ऑनलाइन या आमने-सामने"],
+  "Personalized text": ["Texto personalizado", "Texte personnalisé", "定制文字", "Chữ riêng", "맞춤 문구", "Personalized na text", "Персональная надпись", "名入れの文字", "Texto personalizado", "Personalisierter Text", "Testo personalizzato", "Teks khusus", "Персональний напис", "पर्सनलाइज़्ड टेक्स्ट"],
+  "Pet size": ["Tamaño de la mascota", "Taille de l'animal", "宠物体型", "Kích cỡ thú cưng", "반려동물 크기", "Laki ng alaga", "Размер питомца", "ペットの大きさ", "Porte do pet", "Größe des Tiers", "Taglia dell'animale", "Ukuran hewan", "Розмір тварини", "पालतू का आकार"],
+  "Pets in home": ["Mascotas en casa", "Animaux à la maison", "家里的宠物", "Thú cưng trong nhà", "집에 있는 반려동물", "Alagang hayop sa bahay", "Животные дома", "家のペット", "Animais em casa", "Haustiere im Haus", "Animali in casa", "Hewan di rumah", "Тварини вдома", "घर में पालतू"],
+  "Products used": ["Productos usados", "Produits utilisés", "使用的产品", "Sản phẩm đã dùng", "사용한 제품", "Mga produktong ginamit", "Использованные средства", "使った製品", "Produtos usados", "Verwendete Produkte", "Prodotti usati", "Produk yang dipakai", "Використані засоби", "इस्तेमाल किए गए प्रोडक्ट"],
+  "Reference photo sent": ["Foto de referencia enviada", "Photo de référence envoyée", "已发参考图", "Đã gửi ảnh mẫu", "참고 사진 받음", "Naipadala ang reference photo", "Пример фото прислан", "参考写真あり", "Foto de referência enviada", "Referenzfoto geschickt", "Foto di riferimento inviata", "Foto referensi sudah dikirim", "Фото-приклад надіслано", "रेफ़रेंस फ़ोटो भेजी गई"],
+  "Scent": ["Aroma", "Parfum", "香味", "Mùi hương", "향", "Amoy", "Аромат", "香り", "Aroma", "Duft", "Profumo", "Aroma", "Аромат", "ख़ुशबू"],
+  "Session length": ["Duración de la sesión", "Durée de la séance", "课时长度", "Thời lượng buổi", "세션 시간", "Haba ng session", "Длительность занятия", "セッションの長さ", "Duração da sessão", "Dauer der Einheit", "Durata della sessione", "Lama sesi", "Тривалість заняття", "सेशन की अवधि"],
+  "Size": ["Tamaño", "Taille", "尺寸", "Kích cỡ", "크기", "Laki", "Размер", "サイズ", "Tamanho", "Größe", "Taglia", "Ukuran", "Розмір", "साइज़"],
+  "Special care": ["Cuidados especiales", "Soins particuliers", "特别照顾", "Chăm sóc đặc biệt", "특별 관리", "Espesyal na alaga", "Особый уход", "特別なケア", "Cuidados especiais", "Besondere Pflege", "Cure speciali", "Perawatan khusus", "Особливий догляд", "ख़ास देखभाल"],
+  "Special requests": ["Pedidos especiales", "Demandes spéciales", "特别要求", "Yêu cầu đặc biệt", "특별 요청", "Espesyal na hiling", "Особые пожелания", "特別なリクエスト", "Pedidos especiais", "Sonderwünsche", "Richieste speciali", "Permintaan khusus", "Особливі побажання", "ख़ास अनुरोध"],
+  "Style notes": ["Notas de estilo", "Notes de style", "风格备注", "Ghi chú phong cách", "스타일 메모", "Mga tala sa istilo", "Заметки о стиле", "スタイルのメモ", "Notas de estilo", "Stilnotizen", "Note di stile", "Catatan gaya", "Нотатки про стиль", "स्टाइल नोट्स"],
+  "Subject": ["Materia", "Matière", "科目", "Môn học", "과목", "Asignatura", "Предмет", "科目", "Matéria", "Fach", "Materia", "Mata pelajaran", "Предмет", "विषय"],
+  "Theme": ["Tema", "Thème", "主题", "Chủ đề", "테마", "Tema", "Тема", "テーマ", "Tema", "Motto", "Tema", "Tema", "Тема", "थीम"],
+  // Made for each kind of business: About them, booking again, and more
+  "About them": ["Sobre esta persona", "À propos", "关于这个人", "Về người này", "이 사람에 대해", "Tungkol sa kanila", "О человеке", "この人について", "Sobre a pessoa", "Über die Person", "Su questa persona", "Tentang mereka", "Про людину", "इनके बारे में"],
+  "Time to book again": ["Hora de volver a agendar", "À reprogrammer", "该再预约了", "Đến lúc hẹn lại", "다시 예약할 때예요", "Oras na para mag-book ulit", "Пора записать снова", "そろそろ次の予約を", "Hora de agendar de novo", "Zeit für einen neuen Termin", "È ora di riprenotare", "Saatnya pesan lagi", "Час записати знову", "फिर से बुक करने का समय"],
+  "It's been a while since their last visit.": ["Hace tiempo que no vienen.", "Leur dernière visite remonte à un moment.", "他们上次来已经有一段时间了。", "Đã lâu rồi họ chưa quay lại.", "마지막 방문 후 시간이 꽤 지났어요.", "Matagal na mula noong huli nilang punta.", "Они давно не приходили.", "前回から少し時間がたっています。", "Faz um tempo desde a última visita.", "Der letzte Besuch ist schon eine Weile her.", "È passato un po' dall'ultima visita.", "Sudah lama sejak kunjungan terakhir mereka.", "Вони давно не приходили.", "इन्हें आए हुए काफ़ी समय हो गया है।"],
+  "Book again": ["Agendar otra vez", "Reprogrammer", "再次预约", "Hẹn lại", "다시 예약", "Mag-book ulit", "Записать снова", "もう一度予約", "Agendar de novo", "Erneut buchen", "Prenota di nuovo", "Pesan lagi", "Записати знову", "फिर से बुक करें"],
+  "Not now": ["Ahora no", "Pas maintenant", "以后再说", "Để sau", "나중에", "Hindi muna", "Не сейчас", "今はしない", "Agora não", "Nicht jetzt", "Non ora", "Nanti saja", "Не зараз", "अभी नहीं"],
+  "Book the next one": ["Agendar el siguiente", "Prévoir le suivant", "预约下一次", "Hẹn buổi tiếp theo", "다음 예약 잡기", "I-book ang susunod", "Записать на следующий раз", "次の予約を入れる", "Agendar o próximo", "Den nächsten buchen", "Prenota il prossimo", "Pesan berikutnya", "Записати на наступний раз", "अगला बुक करें"],
+  "What you use": ["Lo que usas", "Ce que vous utilisez", "你会用到的东西", "Những thứ bạn dùng", "사용하는 것", "Mga ginagamit mo", "Что вы используете", "使うもの", "O que você usa", "Was du brauchst", "Cosa usi", "Yang kamu pakai", "Що ви використовуєте", "आप क्या इस्तेमाल करते हैं"],
+  "Add how long it takes with Edit.": ["Agrega cuánto tarda con Editar.", "Ajoutez la durée avec Modifier.", "点“编辑”添加所需时间。", "Thêm thời gian thực hiện bằng nút Sửa.", "편집에서 걸리는 시간을 추가하세요.", "Idagdag kung gaano katagal gamit ang Edit.", "Укажите, сколько это занимает, через «Изменить».", "「編集」でかかる時間を追加しましょう。", "Adicione quanto tempo leva em Editar.", "Füge über Bearbeiten hinzu, wie lange es dauert.", "Aggiungi quanto tempo serve con Modifica.", "Tambahkan berapa lama waktunya lewat Edit.", "Додайте, скільки це триває, через «Змінити».", "Edit से बताएँ कि इसमें कितना समय लगता है।"],
+  "to book again": ["por volver a agendar", "à reprogrammer", "位该再预约", "người cần hẹn lại", "명 다시 예약 필요", "na dapat i-book ulit", "пора записать", "人に次の予約を", "para agendar de novo", "für neuen Termin", "da riprenotare", "perlu dipesan lagi", "час записати", "फिर से बुक करने हैं"],
+  "Favorite flavors": ["Sabores favoritos", "Saveurs préférées", "喜欢的口味", "Vị yêu thích", "좋아하는 맛", "Paboritong flavor", "Любимые вкусы", "好きな味", "Sabores favoritos", "Lieblingssorten", "Gusti preferiti", "Rasa favorit", "Улюблені смаки", "पसंदीदा फ़्लेवर"],
+  "Birthday": ["Cumpleaños", "Anniversaire", "生日", "Sinh nhật", "생일", "Kaarawan", "День рождения", "誕生日", "Aniversário", "Geburtstag", "Compleanno", "Ulang tahun", "День народження", "जन्मदिन"],
+  "Diet": ["Dieta", "Régime", "饮食", "Chế độ ăn", "식단", "Diyeta", "Питание", "食事制限", "Dieta", "Ernährung", "Dieta", "Pola makan", "Харчування", "खान-पान"],
+  "Usual group size": ["Tamaño usual del grupo", "Taille habituelle du groupe", "通常人数", "Số người thường có", "보통 인원", "Karaniwang dami ng tao", "Обычно человек", "いつもの人数", "Tamanho usual do grupo", "Übliche Gruppengröße", "Numero abituale di persone", "Jumlah orang biasanya", "Зазвичай людей", "आम तौर पर कितने लोग"],
+  "Favorite colors or scents": ["Colores o aromas favoritos", "Couleurs ou parfums préférés", "喜欢的颜色或香味", "Màu hoặc mùi yêu thích", "좋아하는 색이나 향", "Paboritong kulay o amoy", "Любимые цвета или ароматы", "好きな色や香り", "Cores ou aromas favoritos", "Lieblingsfarben oder -düfte", "Colori o profumi preferiti", "Warna atau aroma favorit", "Улюблені кольори чи аромати", "पसंदीदा रंग या ख़ुशबू"],
+  "Style they like": ["Estilo que le gusta", "Style préféré", "喜欢的风格", "Phong cách họ thích", "좋아하는 스타일", "Istilong gusto nila", "Любимый стиль", "好きなスタイル", "Estilo que gosta", "Lieblingsstil", "Stile preferito", "Gaya yang mereka suka", "Улюблений стиль", "पसंदीदा स्टाइल"],
+  "Where they found you": ["Cómo te encontró", "Comment ils vous ont trouvé", "从哪里知道你", "Họ biết đến bạn ở đâu", "어디서 알게 됐는지", "Saan ka nila nakita", "Откуда узнали о вас", "どこで知ったか", "Como te encontrou", "Wie sie dich gefunden haben", "Come ti ha trovato", "Tahu kamu dari mana", "Звідки дізналися про вас", "आपके बारे में कहाँ से पता चला"],
+  "Measurements": ["Medidas", "Mensurations", "尺寸数据", "Số đo", "치수", "Sukat", "Мерки", "採寸", "Medidas", "Maße", "Misure", "Ukuran badan", "Мірки", "नाप"],
+  "Sizes": ["Tallas", "Tailles", "尺码", "Cỡ", "사이즈", "Mga size", "Размеры", "サイズ", "Tamanhos", "Größen", "Taglie", "Ukuran", "Розміри", "साइज़"],
+  "Nail shape": ["Forma de uñas", "Forme des ongles", "甲型", "Dáng móng", "네일 모양", "Hugis ng kuko", "Форма ногтей", "爪の形", "Formato da unha", "Nagelform", "Forma delle unghie", "Bentuk kuku", "Форма нігтів", "नाखून का आकार"],
+  "Favorite colors": ["Colores favoritos", "Couleurs préférées", "喜欢的颜色", "Màu yêu thích", "좋아하는 색", "Paboritong kulay", "Любимые цвета", "好きな色", "Cores favoritas", "Lieblingsfarben", "Colori preferiti", "Warna favorit", "Улюблені кольори", "पसंदीदा रंग"],
+  "Hair type": ["Tipo de cabello", "Type de cheveux", "发质", "Loại tóc", "모발 타입", "Uri ng buhok", "Тип волос", "髪質", "Tipo de cabelo", "Haartyp", "Tipo di capelli", "Jenis rambut", "Тип волосся", "बालों का प्रकार"],
+  "Color formula": ["Fórmula de color", "Formule de couleur", "染发配方", "Công thức màu", "컬러 레시피", "Formula ng kulay", "Формула окрашивания", "カラーの配合", "Fórmula de cor", "Farbrezeptur", "Formula colore", "Formula warna", "Формула фарбування", "कलर फ़ॉर्मूला"],
+  "Lash style": ["Estilo de pestañas", "Style de cils", "睫毛款式", "Kiểu mi", "속눈썹 스타일", "Istilo ng pilikmata", "Стиль ресниц", "まつげのスタイル", "Estilo de cílios", "Wimpernstil", "Stile delle ciglia", "Gaya bulu mata", "Стиль вій", "पलकों का स्टाइल"],
+  "Skin type": ["Tipo de piel", "Type de peau", "肤质", "Loại da", "피부 타입", "Uri ng balat", "Тип кожи", "肌質", "Tipo de pele", "Hauttyp", "Tipo di pelle", "Jenis kulit", "Тип шкіри", "त्वचा का प्रकार"],
+  "Grade": ["Grado", "Classe", "年级", "Lớp", "학년", "Grado", "Класс", "学年", "Série", "Klasse", "Classe", "Kelas", "Клас", "कक्षा"],
+  "School": ["Escuela", "École", "学校", "Trường", "학교", "Paaralan", "Школа", "学校", "Escola", "Schule", "Scuola", "Sekolah", "Школа", "स्कूल"],
+  "Parent or guardian": ["Padre, madre o tutor", "Parent ou tuteur", "家长或监护人", "Phụ huynh", "보호자", "Magulang o guardian", "Родитель или опекун", "保護者", "Pai, mãe ou responsável", "Eltern oder Erziehungsberechtigte", "Genitore o tutore", "Orang tua atau wali", "Батьки чи опікун", "माता-पिता या अभिभावक"],
+  "Instrument": ["Instrumento", "Instrument", "乐器", "Nhạc cụ", "악기", "Instrumento", "Инструмент", "楽器", "Instrumento", "Instrument", "Strumento", "Alat musik", "Інструмент", "वाद्य"],
+  "Level": ["Nivel", "Niveau", "水平", "Trình độ", "레벨", "Antas", "Уровень", "レベル", "Nível", "Niveau", "Livello", "Tingkat", "Рівень", "स्तर"],
+  "Injuries or limits": ["Lesiones o límites", "Blessures ou limites", "伤病或限制", "Chấn thương hoặc hạn chế", "부상이나 제한", "Pinsala o limitasyon", "Травмы или ограничения", "けがや制限", "Lesões ou limites", "Verletzungen oder Einschränkungen", "Infortuni o limiti", "Cedera atau batasan", "Травми чи обмеження", "चोट या सीमाएँ"],
+  "Favorite locations": ["Lugares favoritos", "Lieux préférés", "喜欢的地点", "Địa điểm yêu thích", "좋아하는 장소", "Paboritong lugar", "Любимые места", "好きな場所", "Locais favoritos", "Lieblingsorte", "Luoghi preferiti", "Lokasi favorit", "Улюблені місця", "पसंदीदा जगहें"],
+  "Social media": ["Redes sociales", "Réseaux sociaux", "社交媒体", "Mạng xã hội", "SNS", "Social media", "Соцсети", "SNS", "Redes sociais", "Social Media", "Social", "Media sosial", "Соцмережі", "सोशल मीडिया"],
+  "Pet name": ["Nombre de la mascota", "Nom de l'animal", "宠物名字", "Tên thú cưng", "반려동물 이름", "Pangalan ng alaga", "Кличка питомца", "ペットの名前", "Nome do pet", "Name des Tiers", "Nome dell'animale", "Nama hewan", "Кличка тварини", "पालतू का नाम"],
+  "Breed": ["Raza", "Race", "品种", "Giống", "품종", "Lahi", "Порода", "品種", "Raça", "Rasse", "Razza", "Ras", "Порода", "नस्ल"],
+  "Vet phone": ["Teléfono del veterinario", "Téléphone du vétérinaire", "兽医电话", "SĐT bác sĩ thú y", "수의사 전화번호", "Telepono ng vet", "Телефон ветеринара", "獣医の電話番号", "Telefone do veterinário", "Telefon Tierarzt", "Telefono del veterinario", "Telepon dokter hewan", "Телефон ветеринара", "पशु डॉक्टर का फ़ोन"],
+  "Feeding and meds": ["Comida y medicinas", "Repas et médicaments", "喂食和用药", "Cho ăn và thuốc", "급식과 약", "Pagkain at gamot", "Кормление и лекарства", "食事と薬", "Comida e remédios", "Futter und Medikamente", "Cibo e medicine", "Makan dan obat", "Годування й ліки", "खाना और दवाइयाँ"],
+  "Address": ["Dirección", "Adresse", "地址", "Địa chỉ", "주소", "Address", "Адрес", "住所", "Endereço", "Adresse", "Indirizzo", "Alamat", "Адреса", "पता"],
+  "Door code or key": ["Código de puerta o llave", "Code ou clé", "门禁码或钥匙", "Mã cửa hoặc chìa khóa", "도어 코드 또는 열쇠", "Door code o susi", "Код двери или ключ", "ドアの暗証番号や鍵", "Código da porta ou chave", "Türcode oder Schlüssel", "Codice porta o chiave", "Kode pintu atau kunci", "Код дверей чи ключ", "दरवाज़े का कोड या चाबी"],
+  "Pets in the home": ["Mascotas en casa", "Animaux à la maison", "家里的宠物", "Thú cưng trong nhà", "집에 있는 반려동물", "Alagang hayop sa bahay", "Животные дома", "家のペット", "Animais em casa", "Haustiere im Haus", "Animali in casa", "Hewan di rumah", "Тварини вдома", "घर में पालतू"],
+  "Gate code": ["Código del portón", "Code du portail", "大门密码", "Mã cổng", "대문 비밀번호", "Gate code", "Код ворот", "門の暗証番号", "Código do portão", "Tor-Code", "Codice cancello", "Kode gerbang", "Код воріт", "गेट कोड"],
+  "Yard size": ["Tamaño del jardín", "Taille du jardin", "院子大小", "Diện tích sân", "마당 크기", "Laki ng bakuran", "Размер двора", "庭の広さ", "Tamanho do quintal", "Gartengröße", "Dimensione del giardino", "Luas halaman", "Розмір двору", "आँगन का आकार"],
+  "Event date": ["Fecha del evento", "Date de l'événement", "活动日期", "Ngày sự kiện", "행사 날짜", "Petsa ng event", "Дата мероприятия", "イベントの日", "Data do evento", "Veranstaltungsdatum", "Data dell'evento", "Tanggal acara", "Дата події", "इवेंट की तारीख"],
+  "Venue": ["Lugar", "Lieu", "场地", "Địa điểm", "장소", "Venue", "Место", "会場", "Local", "Ort", "Location", "Tempat", "Місце", "स्थान"],
+  "Theme or colors": ["Tema o colores", "Thème ou couleurs", "主题或颜色", "Chủ đề hoặc màu", "테마나 색상", "Tema o kulay", "Тема или цвета", "テーマや色", "Tema ou cores", "Motto oder Farben", "Tema o colori", "Tema atau warna", "Тема чи кольори", "थीम या रंग"],
+  "What are you looking for?": ["¿Qué estás buscando?", "Que cherchez-vous ?", "你在找什么？", "Bạn đang tìm gì?", "무엇을 찾고 있나요?", "Ano ang hinahanap mo?", "Что вы ищете?", "何をお探しですか？", "O que você está procurando?", "Wonach suchst du?", "Cosa stai cercando?", "Kamu cari apa?", "Що ви шукаєте?", "आप क्या ढूँढ रहे हैं?"],
+  // Find near you (the same for every business)
+  "Print shops": ["Imprentas", "Imprimeries", "打印店", "Tiệm in", "인쇄소", "Mga print shop", "Типографии", "印刷所", "Gráficas", "Druckereien", "Tipografie", "Percetakan", "Друкарні", "प्रिंट शॉप"],
+  "Business events": ["Eventos de negocios", "Événements pro", "商业活动", "Sự kiện kinh doanh", "비즈니스 행사", "Mga business event", "Деловые мероприятия", "ビジネスイベント", "Eventos de negócios", "Business-Events", "Eventi per aziende", "Acara bisnis", "Ділові заходи", "बिज़नेस इवेंट"],
+  "Small business help": ["Ayuda para pequeños negocios", "Aide aux petites entreprises", "小企业帮助", "Hỗ trợ doanh nghiệp nhỏ", "소상공인 지원", "Tulong sa maliit na negosyo", "Помощь малому бизнесу", "小規模ビジネス支援", "Ajuda para pequenos negócios", "Hilfe für Kleinunternehmen", "Aiuto per piccole imprese", "Bantuan usaha kecil", "Допомога малому бізнесу", "छोटे व्यवसाय के लिए मदद"],
+  // Words with the business's own words in them
+  '{c}': ["{c}", "{c}", "{c}", "{c}", "{c}", "{c}", "{c}", "{c}", "{c}", "{c}", "{c}", "{c}", "{c}", "{c}"],
+  '{oa}': ["{oa}", "{oa}", "{oa}", "{oa}", "{oa}", "{oa}", "{oa}", "{oa}", "{oa}", "{oa}", "{oa}", "{oa}", "{oa}", "{oa}"],
+  '{n} {o} coming up': ["{n} {o} por venir", "{n} {o} à venir", "即将到来的{o}：{n}", "{n} {o} sắp tới", "다가오는 {o} {n}개", "{n} paparating na {o}", "Скоро: {o} — {n}", "今後の{o}：{n}件", "{n} {o} por vir", "Demnächst: {n} {o}", "{n} {o} in arrivo", "{n} {o} mendatang", "Скоро: {o} — {n}", "{n} आने वाले {o}"],
+  '{n} {oa} coming up': ["{n} {oa} por venir", "{n} {oa} à venir", "即将到来的{oa}：{n}", "{n} {oa} sắp tới", "다가오는 {oa} {n}개", "{n} paparating na {oa}", "Скоро: {oa} — {n}", "今後の{oa}：{n}件", "{n} {oa} por vir", "Demnächst: {n} {oa}", "{n} {oa} in arrivo", "{n} {oa} mendatang", "Скоро: {oa} — {n}", "{n} आने वाले {oa}"],
+  // Sticky notes linked to customers and orders
+  "Link to...": ["Vincular a...", "Lier à...", "关联到...", "Liên kết với...", "연결하기...", "I-link sa...", "Связать с...", "リンク先...", "Vincular a...", "Verknüpfen mit...", "Collega a...", "Tautkan ke...", "Пов'язати з...", "इससे जोड़ें..."],
+  "Change link": ["Cambiar vínculo", "Changer le lien", "更改关联", "Đổi liên kết", "연결 바꾸기", "Palitan ang link", "Изменить связь", "リンクを変更", "Mudar vínculo", "Verknüpfung ändern", "Cambia collegamento", "Ubah tautan", "Змінити зв'язок", "जोड़ बदलें"],
+  "Link this note": ["Vincular esta nota", "Lier cette note", "关联这张便签", "Liên kết ghi chú này", "이 메모 연결하기", "I-link ang note na ito", "Связать заметку", "このメモをリンク", "Vincular esta nota", "Notiz verknüpfen", "Collega questa nota", "Tautkan catatan ini", "Пов'язати нотатку", "यह नोट जोड़ें"],
+  "Who or what is this note about?": ["¿De quién o de qué trata esta nota?", "De qui ou de quoi parle cette note ?", "这张便签是关于谁或什么的？", "Ghi chú này về ai hoặc việc gì?", "이 메모는 누구 또는 무엇에 관한 건가요?", "Tungkol kanino o saan ang note na ito?", "О ком или о чём эта заметка?", "このメモは誰・何についてですか？", "Sobre quem ou o quê é esta nota?", "Um wen oder was geht es in dieser Notiz?", "Di chi o di cosa parla questa nota?", "Catatan ini tentang siapa atau apa?", "Про кого чи про що ця нотатка?", "यह नोट किसके या किस बारे में है?"],
+  "Not linked": ["Sin vincular", "Non liée", "未关联", "Chưa liên kết", "연결 안 됨", "Hindi naka-link", "Без связи", "リンクなし", "Sem vínculo", "Nicht verknüpft", "Non collegata", "Tidak ditautkan", "Без зв'язку", "नहीं जुड़ा"],
+  "Note linked": ["Nota vinculada", "Note liée", "便签已关联", "Đã liên kết ghi chú", "메모를 연결했어요", "Na-link ang note", "Заметка связана", "メモをリンクしました", "Nota vinculada", "Notiz verknüpft", "Nota collegata", "Catatan ditautkan", "Нотатку пов'язано", "नोट जुड़ गया"],
+  "Link removed": ["Vínculo quitado", "Lien retiré", "已取消关联", "Đã bỏ liên kết", "연결을 해제했어요", "Inalis ang link", "Связь удалена", "リンクを外しました", "Vínculo removido", "Verknüpfung entfernt", "Collegamento rimosso", "Tautan dihapus", "Зв'язок прибрано", "जोड़ हटा दिया"],
+  "Add a note": ["Agregar una nota", "Ajouter une note", "添加便签", "Thêm ghi chú", "메모 추가", "Magdagdag ng note", "Добавить заметку", "メモを追加", "Adicionar nota", "Notiz hinzufügen", "Aggiungi una nota", "Tambah catatan", "Додати нотатку", "नोट जोड़ें"],
+  "Nothing to link to yet.": ["Todavía no hay nada que vincular.", "Rien à lier pour l'instant.", "还没有可以关联的内容。", "Chưa có gì để liên kết.", "아직 연결할 항목이 없어요.", "Wala pang maili-link.", "Пока не с чем связать.", "まだリンクできるものがありません。", "Ainda não há nada para vincular.", "Noch nichts zum Verknüpfen.", "Ancora niente da collegare.", "Belum ada yang bisa ditautkan.", "Поки нема з чим пов'язати.", "अभी जोड़ने के लिए कुछ नहीं है।"],
+  "Jot down anything to remember about them, like what they like or allergies.": ["Anota lo que quieras recordar de esta persona, como sus gustos o alergias.", "Notez ce qu'il faut retenir sur cette personne, comme ses goûts ou ses allergies.", "记下关于这个人要记住的事，比如喜好或过敏。", "Ghi lại những điều cần nhớ về người này, như sở thích hay dị ứng.", "이 사람에 대해 기억할 것을 적어 두세요. 좋아하는 것이나 알레르기 같은 것이요.", "Isulat ang gusto mong tandaan tungkol sa kanila, gaya ng gusto nila o allergy.", "Запишите, что важно помнить об этом человеке: что любит, аллергии.", "好みやアレルギーなど、この人について覚えておきたいことをメモしましょう。", "Anote o que quiser lembrar sobre a pessoa, como gostos ou alergias.", "Notiere, was du dir über die Person merken willst, z. B. Vorlieben oder Allergien.", "Annota cosa ricordare su questa persona, come gusti o allergie.", "Catat hal yang perlu diingat tentang mereka, seperti kesukaan atau alergi.", "Запишіть, що варто пам'ятати про цю людину: що любить, алергії.", "इनके बारे में याद रखने वाली बातें लिखें, जैसे पसंद या एलर्जी।"],
+  "Jot down anything to remember for this one. It shows up on your Sticky notes too.": ["Anota lo que quieras recordar para este. También aparece en tus Notas adhesivas.", "Notez ce qu'il faut retenir pour celui-ci. La note apparaît aussi dans vos Notes.", "记下这一项要记住的事。它也会出现在你的便签里。", "Ghi lại điều cần nhớ cho việc này. Nó cũng hiện trong Ghi chú dán của bạn.", "이 건에 대해 기억할 것을 적어 두세요. 스티커 메모에도 보여요.", "Isulat ang gusto mong tandaan para dito. Lalabas din ito sa Sticky notes mo.", "Запишите, что важно помнить. Заметка появится и в разделе «Заметки».", "これについて覚えておきたいことをメモしましょう。付箋にも表示されます。", "Anote o que quiser lembrar sobre este. Também aparece nas suas Notas adesivas.", "Notiere, was du dir dazu merken willst. Es erscheint auch bei deinen Notizzetteln.", "Annota cosa ricordare per questo. Appare anche nei tuoi Post-it.", "Catat hal yang perlu diingat untuk ini. Juga muncul di Catatan tempel kamu.", "Запишіть, що варто пам'ятати. Нотатка з'явиться і в розділі «Нотатки».", "इसके लिए याद रखने वाली बातें लिखें। यह आपके स्टिकी नोट्स में भी दिखेगा।"],
   'Country': ['País', 'Pays', '国家', 'Quốc gia', '나라', 'Bansa', 'Страна', '国', 'País', 'Land', 'Paese', 'Negara', 'Країна', 'देश'],
   'Words': ['Palabras', 'Mots', '用词', 'Từ ngữ', '단어', 'Mga salita', 'Слова', '言葉', 'Palavras', 'Wörter', 'Parole', 'Kata-kata', 'Слова', 'शब्द'],
   // Sticky notes: checklists, pins, search
@@ -887,6 +985,7 @@ function translateText(text) {
   }
   const k = textKey(trimmed);
   if (Object.prototype.hasOwnProperty.call(dict, k.key)) return text.replace(trimmed, fillKey(dict[k.key], k.values));
+  if (EXTRA_TEXT[k.key] && extraAt > -1) return text.replace(trimmed, fillKey(EXTRA_TEXT[k.key][extraAt], k.values));
   // "Tuesday, Christmas" and lists like "Goal one, Goal two"
   const dated = k.key.match(/^\{d\}, (.+)$/);
   if (dated && Object.prototype.hasOwnProperty.call(dict, dated[1])) return text.replace(trimmed, fillKey('{d}, ' + dict[dated[1]], k.values));
@@ -1851,6 +1950,7 @@ function showGoalsPage() {
 
   const grid = document.getElementById('goal-grid');
   GOALS.forEach(function (goal) {
+    if (!goalFits(goal)) return; // like "I run out of materials" for tutoring
     const card = document.createElement('button');
     card.className = 'goal-card ' + goal.color;
     card.dataset.id = goal.id;
@@ -1977,14 +2077,59 @@ const NO_PRINTABLES = ['tutoring', 'music', 'fitness', 'pets', 'cleaning', 'yard
 // For "Something else": words that mean they sell things people would want a receipt or menu for
 const SELLS_THINGS = /\b(sell|selling|shop|store|stand|booth|market|bake|baked|bakery|cake|cookie|cupcake|bread|pie|treat|candy|chocolate|snack|food|meal|lunch|catering|cater|drink|coffee|tea|lemonade|smoothie|juice|jewel|jewelry|bracelet|necklace|earring|craft|handmade|make|making|shirt|clothes|clothing|hat|bag|sticker|print|poster|art|painting|candle|soap|plant|flower|menu|restaurant|cafe|truck|merch|product)/;
 
-function hiddenSections() {
+// What each kind of business needs, beyond its words:
+//   batch: things are made in batches ("Makes 12"), so the How much it makes box shows
+//   noShopping: they don't use up supplies on each job, so there's no shopping list
+//   about: what to remember about each person, shown on their page
+//   next: days until the usual next visit (for "Book the next one")
+//   rebook: days after their last visit to remind you to book them again
+//   booked: people book a time with them, so it's a "Date", not a "Due date"
+const KITS = {
+  bakery:   { batch: true, about: ['Allergies', 'Favorite flavors', 'Birthday'] },
+  catering: { batch: true, about: ['Allergies', 'Diet', 'Usual group size'] },
+  craft:    { batch: true, about: ['Favorite colors or scents', 'Birthday'] },
+  art:      { about: ['Style they like', 'Where they found you'] },
+  clothing: { about: ['Measurements', 'Sizes'] },
+  nails:    { booked: true, about: ['Nail shape', 'Favorite colors', 'Allergies'], next: 21, rebook: 21 },
+  hair:     { booked: true, about: ['Hair type', 'Color formula', 'Allergies'], next: 42, rebook: 42 },
+  beauty:   { booked: true, about: ['Lash style', 'Skin type', 'Allergies'], next: 21, rebook: 21 },
+  tutoring: { booked: true, noShopping: true, about: ['Grade', 'School', 'Parent or guardian', 'Goals'], next: 7, rebook: 14 },
+  music:    { booked: true, noShopping: true, about: ['Instrument', 'Level', 'Parent or guardian'], next: 7, rebook: 14 },
+  fitness:  { booked: true, noShopping: true, about: ['Goals', 'Injuries or limits'], next: 7, rebook: 14 },
+  photo:    { booked: true, noShopping: true, about: ['Favorite locations', 'Social media'] },
+  pets:     { booked: true, about: ['Pet name', 'Breed', 'Vet phone', 'Feeding and meds'], next: 7, rebook: 28 },
+  cleaning: { about: ['Address', 'Door code or key', 'Pets in the home'] },
+  yard:     { about: ['Address', 'Gate code', 'Yard size'] },
+  events:   { booked: true, about: ['Event date', 'Venue', 'Theme or colors'] },
+  other:    { about: ['Birthday'] },
+};
+
+// The kind of business, with "Something else" matched to the closest kind when we can tell
+function realType() {
   let type = profile.businessType;
   if (type === 'other') {
     const guess = guessType(profile.otherType || '');
     type = guess ? guess.id : 'other';
   }
+  return type;
+}
+function kit() {
+  const k = KITS[realType()] || KITS.other;
+  // Their own kind of business that makes things to sell gets the batch box too
+  if (realType() === 'other' && SELLS_THINGS.test((profile.otherType || '').toLowerCase())) return Object.assign({ batch: true }, k);
+  return k;
+}
+
+// Goals that only make sense with a section this business has
+function goalFits(goal) {
+  return !goal.needs || !hiddenSections().includes(goal.needs);
+}
+
+function hiddenSections() {
+  const type = realType();
   const hidden = NO_ORDERS_TAB.includes(type) ? ['orders'] : [];
   if (NO_PRINTABLES.includes(type)) hidden.push('printables');
+  if ((KITS[type] || {}).noShopping) hidden.push('checklist');
   // Their own kind of business that we couldn't match: only keep it if they sell things
   if (type === 'other' && !SELLS_THINGS.test((profile.otherType || '').toLowerCase())) hidden.push('printables');
   return hidden;
@@ -3256,6 +3401,16 @@ function orderRow(order) {
     chip.textContent = text;
     chipBox.appendChild(chip);
   });
+  // Sticky notes about this order
+  const orderNotes = notesForOrder(order);
+  if (orderNotes.length) {
+    const chip = document.createElement('span');
+    chip.className = 'mini-chip note-count';
+    chip.title = 'Sticky notes';
+    chip.innerHTML = icon('note') + '<span></span>';
+    chip.querySelector('span').textContent = orderNotes.length;
+    chipBox.appendChild(chip);
+  }
   if (!chipBox.children.length) chipBox.remove();
 
   // Change the status right from the list
@@ -3378,6 +3533,7 @@ function showOrderForm(page) {
       <div class="form-actions">
         <button class="btn" id="o-save"></button>
         <button class="btn secondary" id="o-cancel">Cancel</button>
+        <button class="btn secondary with-icon" id="o-next" hidden>${icon('calendar')}<span>Book the next one</span></button>
         <span class="spacer"></span>
         <button class="link-btn delete-btn" id="o-delete" hidden></button>
       </div>
@@ -3391,6 +3547,7 @@ function showOrderForm(page) {
   page.querySelector('label[for="o-item"]').textContent = 'What they want';
   page.querySelector('#o-item').placeholder = findType(profile.businessType).samples[0];
   page.querySelector('#o-save').textContent = isNew ? 'Add ' + oneOrder() : 'Save changes';
+  if (kit().booked) page.querySelector('label[for="o-due"]').textContent = 'Date';
 
   // Fill in the boxes
   const fields = ['customer', 'contact', 'item', 'due', 'time', 'price', 'notes'];
@@ -3523,6 +3680,36 @@ function showOrderForm(page) {
       leaveOrderForm();
       deleteOrders([order.id]);
     });
+
+    // What to remember about this person, right under the title
+    const chips = factChips(personKey(order.customer));
+    if (chips) page.querySelector('.order-form h1').after(chips);
+
+    // Regular visits: start the next one, same person and service, at the usual gap
+    if (kit().next) {
+      const next = page.querySelector('#o-next');
+      next.hidden = false;
+      next.addEventListener('click', function () {
+        const now = {};
+        fields.forEach(function (name) { now[name] = page.querySelector('#o-' + name).value.trim(); });
+        leaveOrderForm();
+        // The usual gap after this one, but never a day that's already gone by
+        let nextDay = addDays(now.due || todayText(), kit().next);
+        if (nextDay < todayText()) nextDay = todayText();
+        bookAgain({ name: now.customer, contact: now.contact }, { item: now.item, price: now.price, time: now.time, customer: now.customer }, nextDay);
+      });
+    }
+
+    // Sticky notes for this order, and the ones about this person
+    const key = personKey(order.customer);
+    page.querySelector('.order-form').appendChild(linkedNotesSection({
+      about: function (note) {
+        return !!note.link && ((note.link.kind === 'order' && note.link.id === order.id) || (note.link.kind === 'customer' && note.link.key === key));
+      },
+      hideLink: function (note) { return note.link.kind === 'order'; },
+      link: { kind: 'order', id: order.id },
+      empty: 'Jot down anything to remember for this one. It shows up on your Sticky notes too.',
+    }));
   }
 }
 
@@ -4341,6 +4528,7 @@ function showCustomer(page, p) {
         <button class="btn secondary small" id="person-edit">Edit</button>
       </header>
       <div id="person-edit-box"></div>
+      <div id="person-about"></div>
 
       <div class="stat-tiles">
         <div class="stat-tile sky"><b id="t-count"></b><span id="t-count-label"></span></div>
@@ -4418,6 +4606,16 @@ function showCustomer(page, p) {
   }
 
   page.querySelector('#person-edit').addEventListener('click', function () { showPersonEdit(page, p); });
+  page.querySelector('#person-about').replaceWith(aboutCard(p));
+
+  // Sticky notes about them (and their orders)
+  page.querySelector('.person-page').appendChild(linkedNotesSection({
+    about: function (note) { return noteIsAbout(note, p.key); },
+    hideLink: function (note) { return note.link.kind === 'customer'; },
+    orderTagItemOnly: true,
+    link: { kind: 'customer', key: p.key, name: p.name },
+    empty: 'Jot down anything to remember about them, like what they like or allergies.',
+  }));
 
   // No orders or jobs for this business: just their info and a way to remove them
   if (!usesOrders()) {
@@ -4425,6 +4623,130 @@ function showCustomer(page, p) {
     page.querySelector('.person-orders-head').remove();
     box.remove();
   }
+}
+
+// ---------- What to remember about each person (different for each kind of business) ----------
+// Saved with the person: customerInfo[key].facts = { "Allergies": "nuts", ... }
+function personFacts(key) {
+  const info = customerInfo[key];
+  return (info && info.facts) || {};
+}
+
+// "About them": a few boxes to fill in, like Nail shape and Allergies for a nail business
+function aboutCard(p) {
+  const box = document.createElement('section');
+  box.className = 'about-card';
+  box.innerHTML = '<h2>' + icon(findType(realType()).icon) + '<span>About them</span></h2><div class="about-grid"></div>';
+  const grid = box.querySelector('.about-grid');
+  const facts = personFacts(p.key);
+  let timer = null;
+  kit().about.forEach(function (label, i) {
+    const cell = document.createElement('div');
+    cell.innerHTML = '<label class="label"></label><input class="input" autocomplete="off">';
+    const id = 'about-' + i;
+    cell.querySelector('label').textContent = label;
+    cell.querySelector('label').htmlFor = id;
+    const input = cell.querySelector('input');
+    input.id = id;
+    input.value = facts[label] || '';
+    input.addEventListener('input', function () {
+      if (!customerInfo[p.key]) customerInfo[p.key] = { name: p.name, contact: '', notes: '', added: false };
+      const saved = customerInfo[p.key];
+      saved.facts = saved.facts || {};
+      if (input.value.trim()) saved.facts[label] = input.value; else delete saved.facts[label];
+      clearTimeout(timer);
+      timer = setTimeout(saveCustomerInfo, 300);
+    });
+    input.addEventListener('blur', function () { clearTimeout(timer); saveCustomerInfo(); });
+    grid.appendChild(cell);
+  });
+  return box;
+}
+
+// The filled-in facts as little chips (for the order form), or null if there are none
+function factChips(key) {
+  const facts = personFacts(key);
+  const labels = kit().about.filter(function (label) { return facts[label]; });
+  if (!labels.length) return null;
+  const row = document.createElement('div');
+  row.className = 'about-chips';
+  labels.forEach(function (label) {
+    const chip = document.createElement('span');
+    chip.className = 'about-chip' + (label === 'Allergies' ? ' warn' : '');
+    chip.innerHTML = '<b></b><span data-own-words></span>';
+    chip.querySelector('b').textContent = label;
+    chip.querySelector('span').textContent = facts[label];
+    row.appendChild(chip);
+  });
+  return row;
+}
+
+// ---------- Booking people again (nails, hair, lessons, pet care...) ----------
+const REBOOK_SKIP_KEY = 'bizStudio.rebookSkip'; // person key -> the order they were reminded about
+function loadRebookSkip() {
+  try { return JSON.parse(store.getItem(REBOOK_SKIP_KEY)) || {}; } catch (error) { return {}; }
+}
+
+// People whose last visit was a while ago and who have nothing booked
+function dueToRebook() {
+  const days = kit().rebook;
+  if (!days || !usesOrders()) return [];
+  const today = todayText();
+  const skip = loadRebookSkip();
+  return allCustomers().map(function (p) {
+    if (p.orders.some(function (o) { return o.due >= today && o.status !== 'cancelled'; })) return null;
+    const last = p.orders.find(function (o) { return o.due < today; });
+    if (!last || skip[p.key] === last.id) return null;
+    const since = -daysUntil(last.due);
+    if (since < days || since > days * 4) return null;
+    return { person: p, last: last, since: since };
+  }).filter(Boolean).sort(function (a, b) { return b.since - a.since; });
+}
+
+// Starts a new booking for someone, filled in like their last one
+function bookAgain(p, last, due) {
+  orderPrefill = {
+    customer: p.name || last.customer,
+    contact: p.contact || last.contact || '',
+    item: last.item,
+    price: last.price,
+    time: last.time || '',
+  };
+  if (due) orderPrefill.due = due;
+  openOrderForm('new');
+}
+
+// The "Time to book again" box on My Day
+function rebookBox() {
+  const due = dueToRebook();
+  if (!due.length) return null;
+  const box = document.createElement('section');
+  box.className = 'rebook-box';
+  box.innerHTML = '<div class="section-head"><h2 class="tips-title">Time to book again</h2></div><p class="rebook-sub">It\'s been a while since their last visit.</p><div class="rebook-list"></div>';
+  const list = box.querySelector('.rebook-list');
+  due.slice(0, 4).forEach(function (r) {
+    const card = document.createElement('div');
+    card.className = 'rebook-card ' + personColor(r.person.key);
+    card.innerHTML = `
+      <span class="initials"></span>
+      <div class="rebook-text"><b></b><span></span></div>
+      <button class="btn small">Book again</button>
+      <button class="link-btn rebook-skip">Not now</button>
+    `;
+    card.querySelector('.initials').textContent = initialsOf(r.person.name);
+    card.querySelector('b').textContent = r.person.name;
+    card.querySelector('.rebook-text span').textContent = 'Last: ' + r.last.item + ', ' + shortDate(r.last.due);
+    card.querySelector('.btn').addEventListener('click', function () { bookAgain(r.person, r.last); });
+    card.querySelector('.rebook-skip').addEventListener('click', function () {
+      const skip = loadRebookSkip();
+      skip[r.person.key] = r.last.id;
+      try { store.setItem(REBOOK_SKIP_KEY, JSON.stringify(skip)); } catch (error) { /* fine */ }
+      card.classList.add('leaving');
+      setTimeout(function () { showPage(); }, 250);
+    });
+    list.appendChild(card);
+  });
+  return box;
 }
 
 // Changing someone's name or phone/email
@@ -4476,12 +4798,19 @@ function showPersonEdit(page, p) {
       contact: contactBox.value.trim(),
       notes: [other.notes, old.notes].filter(Boolean).join('\n'),
       added: !!(old.added || other.added),
+      facts: Object.assign({}, other.facts, old.facts),
     };
     saveCustomerInfo();
 
     // Their orders get the new name too
     p.orders.forEach(function (o) { o.customer = name; });
     saveOrders();
+
+    // And so do the sticky notes about them
+    notes.forEach(function (n) {
+      if (n.link && n.link.kind === 'customer' && n.link.key === p.key) { n.link.key = newKey; n.link.name = name; }
+    });
+    saveNotes();
 
     customerView = newKey;
     showPage();
@@ -4548,7 +4877,6 @@ const COUNTRIES = [
   { id: 'GB', label: 'United Kingdom' },
   { id: 'US', label: 'United States' },
   { id: 'VN', label: 'Vietnam' },
-  { id: 'none', label: 'Somewhere else (no holidays)' },
 ];
 function findCountry(id) {
   return COUNTRIES.find(function (c) { return c.id === id; }) || COUNTRIES.find(function (c) { return c.id === 'US'; });
@@ -4594,7 +4922,8 @@ function pickCountry() {
 }
 
 function myCountry() {
-  return profile.country || guessCountry();
+  // An old "Somewhere else" choice (no longer offered) falls back to a guess
+  return profile.country && profile.country !== 'none' ? profile.country : guessCountry();
 }
 
 const holidayCache = {};
@@ -6184,7 +6513,7 @@ function showProduct(page, p) {
   page.querySelector('#product-back span').textContent = 'Back to ' + w.products;
   page.querySelector('h1').textContent = p.name;
   page.querySelector('.product-head-text p').textContent = [p.makes ? 'Makes ' + p.makes : '', p.hours ? 'Takes about ' + niceNumber(p.hours) + (Number(p.hours) === 1 ? ' hour' : ' hours') : '']
-    .filter(Boolean).join('. ') || 'Add how much it makes and how long it takes with Edit.';
+    .filter(Boolean).join('. ') || (kit().batch ? 'Add how much it makes and how long it takes with Edit.' : 'Add how long it takes with Edit.');
   page.querySelector('#pt-price').textContent = p.price ? money(p.price * productScale) : 'Not set';
   page.querySelector('#pt-cost').textContent = money(cost);
   page.querySelector('#pt-cost-label').textContent = w.supplies.toLowerCase() + ' cost';
@@ -6296,6 +6625,15 @@ function showProductForm(page, p) {
   page.querySelector('.uses-edit h2').textContent = 'What goes in it';
   page.querySelector('#pf-save').textContent = isNew ? 'Add ' + oneProduct() : 'Save changes';
   ['name', 'price', 'makes', 'hours', 'steps'].forEach(function (f) { page.querySelector('#pf-' + f).value = draft[f] || ''; });
+  // Services and lessons aren't made in batches, and nothing "goes in" them
+  // An example that fits what they make
+  const makesExample = { catering: '1 tray, serves 20', craft: '6 candles, 2 bracelets' }[realType()];
+  if (makesExample) page.querySelector('#pf-makes').placeholder = makesExample;
+  else if (realType() !== 'bakery') page.querySelector('#pf-makes').placeholder = '1 batch';
+  if (!kit().batch) {
+    page.querySelector('#pf-makes').parentElement.remove();
+    page.querySelector('.uses-edit h2').textContent = 'What you use';
+  }
 
   // Ingredient rows: amount, unit (from the ingredient), name, remove
   const rows = page.querySelector('#uses-rows');
@@ -6369,7 +6707,7 @@ function showProductForm(page, p) {
     }
     draft.name = name;
     draft.price = page.querySelector('#pf-price').value ? Number(page.querySelector('#pf-price').value) : '';
-    draft.makes = page.querySelector('#pf-makes').value.trim();
+    draft.makes = page.querySelector('#pf-makes') ? page.querySelector('#pf-makes').value.trim() : (draft.makes || '');
     draft.hours = page.querySelector('#pf-hours').value ? Number(page.querySelector('#pf-hours').value) : '';
     draft.steps = page.querySelector('#pf-steps').value.trim();
     draft.uses = draft.uses.filter(function (u) { return Number(u.amount) > 0; });
@@ -7030,17 +7368,20 @@ function showPricing(page) {
   const extra = page.querySelector('#profit-rate');
   pay.value = set.hourly;
   extra.value = set.extra;
+  // The numbers below update as you type, with a little flash so you can see what changed
+  let rateTimer = null;
   function saveRates() {
     profile.hourlyPay = Number(pay.value) || 0;
     profile.profitWanted = Number(extra.value) || 0;
-    saveProfile();
-    drawList();
+    clearTimeout(rateTimer);
+    rateTimer = setTimeout(saveProfile, 300);
+    drawList(true);
   }
-  pay.addEventListener('change', saveRates);
-  extra.addEventListener('change', saveRates);
+  pay.addEventListener('input', saveRates);
+  extra.addEventListener('input', saveRates);
 
   const box = page.querySelector('#price-list');
-  function drawList() {
+  function drawList(flash) {
     box.innerHTML = '';
     if (!products.length) {
       box.innerHTML = '<div class="empty mint"><span class="empty-icon">' + icon('tag') + '</span><h3></h3><p></p><button class="btn" id="go-products"></button></div>';
@@ -7078,8 +7419,25 @@ function showPricing(page) {
           <span><small>You charge</small><b class="n-price"></b></span>
           <span class="pc-suggest"><small>Suggested</small><b class="n-suggest"></b></span>
         </div>
+        <div class="pc-hours">
+          <label><span>Hours it takes you</span><input class="input" type="number" min="0" step="0.25" placeholder="0"></label>
+          <span class="pc-hint" hidden>Add the hours it takes, so your pay is part of the price.</span>
+        </div>
         <button class="btn small" hidden>Use the suggested price</button>
       `;
+      // How long it takes, right here, so "Pay yourself" counts
+      const hours = card.querySelector('.pc-hours input');
+      hours.value = p.hours || '';
+      card.querySelector('.pc-hint').hidden = !!Number(p.hours);
+      hours.addEventListener('change', function () {
+        p.hours = hours.value === '' ? '' : Math.max(0, Number(hours.value) || 0);
+        saveProducts();
+        drawList();
+        const again = box.querySelector('.price-card[data-id="' + p.id + '"]');
+        if (again) again.classList.add('flash');
+      });
+      card.dataset.id = p.id;
+      if (flash) card.classList.add('flash');
       card.querySelector('.pc-head b').textContent = p.name;
       card.querySelector('.pc-note').textContent = note;
       card.querySelector('.pc-numbers small').textContent = w.supplies;
@@ -7491,14 +7849,15 @@ function showFinder(page) {
     </section>
   `;
   const input = page.querySelector('#finder-input');
-  input.placeholder = 'Search ' + (usesOrders() ? [w.orders, w.customers, w.products, 'tasks'] : [w.customers, w.products, 'tasks']).map(function (x) { return x.toLowerCase(); }).join(', ');
+  input.placeholder = 'What are you looking for?'; // the same for every business
   input.value = finderText;
 
   const near = [
-    { label: 'Farmers markets', q: 'farmers markets near me', color: 'mint' },
-    { label: 'Craft fairs', q: 'craft fairs near me', color: 'lilac' },
-    { label: w.supplies + ' stores', q: findType(profile.businessType).label + ' ' + w.supplies.toLowerCase() + ' supply store near me', color: 'peach' },
-    { label: 'Places to sell', q: 'pop up markets for small businesses near me', color: 'sky' },
+    // The same for every kind of business
+    { label: w.supplies + ' stores', q: w.supplies.toLowerCase() + ' store near me', color: 'peach' },
+    { label: 'Print shops', q: 'print shop for business cards and flyers near me', color: 'lilac' },
+    { label: 'Business events', q: 'small business networking events near me', color: 'mint' },
+    { label: 'Small business help', q: 'small business development center near me', color: 'sky' },
   ];
   near.forEach(function (n) {
     const a = document.createElement('a');
@@ -7507,13 +7866,21 @@ function showFinder(page) {
     a.target = '_blank';
     a.rel = 'noopener';
     a.innerHTML = '<span class="near-icon">' + icon('search') + '</span><b></b><span>Opens Google Maps</span>';
+    a.style.setProperty('--i', page.querySelectorAll('.near-card').length); // for the one-after-another animation
     a.querySelector('b').textContent = n.label;
     page.querySelector('#near-grid').appendChild(a);
   });
 
   const results = page.querySelector('#finder-results');
+  const finderBox = page.querySelector('.finder-box');
+  let lastFound = null; // what was showing, so results only animate in when they change
+  let typingTimer = null;
   function search() {
     finderText = input.value;
+    // The search glass wiggles while you type
+    finderBox.classList.add('typing');
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(function () { finderBox.classList.remove('typing'); }, 500);
     results.innerHTML = '';
     const q = input.value.trim().toLowerCase();
     if (!q) return;
@@ -7533,8 +7900,20 @@ function showFinder(page) {
       .map(function (s) { return { main: s.name, sub: 'You have ' + niceNumber(s.have || 0) + ' ' + s.unit, go: function () { goTo('checklist'); } }; }) });
     groups.push({ title: 'Tasks', color: 'mint', items: tasks.filter(function (t) { return has(t.text); })
       .map(function (t) { return { main: t.text, sub: t.done ? 'Done' : t.due ? niceDate(t.due) : 'No date', go: function () { goTo('todo'); } }; }) });
+    groups.push({ title: 'Sticky notes', color: 'lilac', items: notes.filter(function (n) { const l = noteLink(n); return has(n.text, l && l.title); })
+      .map(function (n) {
+        const l = noteLink(n);
+        return {
+          main: n.text.replace(/\s+/g, ' ').trim().slice(0, 90),
+          sub: l ? l.title : n.date ? niceDate(n.date) : 'Sticky note',
+          go: function () { noteSearch = input.value.trim(); goTo('notes'); setTimeout(function () { focusNoteNow(n); }, 50); },
+        };
+      }) });
 
     const found = groups.filter(function (g) { return g.items.length; });
+    const now = found.map(function (g) { return g.title + g.items.length; }).join('|');
+    results.classList.toggle('still', now === lastFound);
+    lastFound = now;
     if (!found.length) {
       results.innerHTML = '<p class="list-empty finder-none"></p>';
       results.firstChild.textContent = 'Nothing matches "' + input.value.trim() + '".';
@@ -7546,9 +7925,11 @@ function showFinder(page) {
       section.innerHTML = '<h2><span class="group-dot"></span><span></span><b class="group-count"></b></h2><div class="finder-list"></div>';
       section.querySelector('h2 span:nth-child(2)').textContent = g.title;
       section.querySelector('.group-count').textContent = g.items.length;
-      g.items.slice(0, 8).forEach(function (item) {
+      section.style.setProperty('--g', results.children.length);
+      g.items.slice(0, 8).forEach(function (item, i) {
         const b = document.createElement('button');
         b.className = 'finder-item';
+        b.style.setProperty('--i', i);
         b.innerHTML = '<b></b><span></span>';
         b.querySelector('b').textContent = item.main;
         b.querySelector('span').textContent = item.sub;
@@ -7619,7 +8000,11 @@ function showMyDay(page) {
       : { n: events.filter(function (e) { return e.date === today; }).length, label: events.filter(function (e) { return e.date === today; }).length === 1 ? 'event today' : 'events today', color: 'butter', go: 'calendar' },
     { n: todayTasks.length, label: todayTasks.length === 1 ? 'task for today' : 'tasks for today', color: 'sky', go: 'todo' },
     { n: money(thisMonth.moneyIn), label: 'paid to you this month', color: 'mint', go: 'bookkeeping' },
-    { n: toBuy, label: toBuy === 1 ? 'thing to buy' : 'things to buy', color: 'peach', go: 'checklist' },
+    hiddenSections().includes('checklist')
+      ? (kit().rebook
+        ? { n: dueToRebook().length, label: 'to book again', color: 'peach', go: 'customers' }
+        : { n: allCustomers().length, label: w.customers.toLowerCase(), color: 'peach', go: 'customers' })
+      : { n: toBuy, label: toBuy === 1 ? 'thing to buy' : 'things to buy', color: 'peach', go: 'checklist' },
   ].forEach(function (t) {
     const b = document.createElement('button');
     b.className = 'day-tile ' + t.color;
@@ -7697,6 +8082,8 @@ function showMyDay(page) {
   }
   two.appendChild(orderBox);
 
+  const rebook = rebookBox();
+  if (rebook) page.appendChild(rebook);
   page.appendChild(stickyBoard());
   showGoalTips(page);
 }
@@ -7749,12 +8136,12 @@ function deleteNote(note) {
   saveList(NOTES_KEY, notes);
   const win = noteWindows[note.id];
   if (win && !win.closed) win.close();
-  if (currentSection === 'myday' || currentSection === 'notes') showPage();
+  refreshNoteViews();
   if (note.text.trim()) {
     showUndo('Note deleted', function () {
       notes.splice(Math.max(0, index), 0, note);
       saveNotes();
-      showPage();
+      refreshNoteViews(true);
     });
   }
 }
@@ -7791,7 +8178,7 @@ function colorPicker(doc, current, onPick) {
 }
 
 // The little "..." menu: colors, calendar and Delete
-function noteMenu(doc, note, onColor, onDelete, onCalendar, onList, onTodo) {
+function noteMenu(doc, note, onColor, onDelete, onCalendar, onList, onTodo, onLink) {
   const menu = doc.createElement('div');
   menu.className = 'note-menu';
   menu.hidden = true;
@@ -7817,11 +8204,17 @@ function noteMenu(doc, note, onColor, onDelete, onCalendar, onList, onTodo) {
   todo.className = 'note-menu-delete note-menu-cal';
   todo.innerHTML = icon('check') + '<span>Make it a to-do</span>';
   todo.addEventListener('click', function () { menu.hidden = true; onTodo(); });
+  // Link it to a customer or an order
+  const link = doc.createElement('button');
+  link.className = 'note-menu-delete note-menu-cal';
+  link.innerHTML = icon('link') + '<span></span>';
+  link.querySelector('span').textContent = noteLink(note) ? 'Change link' : 'Link to...';
+  link.addEventListener('click', function () { menu.hidden = true; onLink(); });
   const del = doc.createElement('button');
   del.className = 'note-menu-delete';
   del.innerHTML = icon('trash') + '<span>Delete note</span>';
   del.addEventListener('click', function () { menu.hidden = true; onDelete(); });
-  menu.append(title, colorPicker(doc, note.color, picked), cal, list, todo, del);
+  menu.append(title, colorPicker(doc, note.color, picked), cal, list, todo, link, del);
   return menu;
 }
 
@@ -7859,11 +8252,11 @@ function noteToTodo(note) {
   });
   added.forEach(function (t) { tasks.push(t); });
   saveTasks();
-  showPage();
+  refreshNoteViews(true);
   showUndo('Added to your To-do list', function () {
     tasks = tasks.filter(function (t) { return added.indexOf(t) === -1; });
     saveTasks();
-    showPage();
+    refreshNoteViews(true);
   });
 }
 
@@ -7965,8 +8358,8 @@ function pickNoteDay(note) {
           saveNotes();
           box.close();
           box.remove();
-          showPage();
-          showUndo('Taken off the calendar', function () { note.date = was; saveNotes(); showPage(); });
+          refreshNoteViews(true);
+          showUndo('Taken off the calendar', function () { note.date = was; saveNotes(); refreshNoteViews(true); });
         });
       }
     },
@@ -7976,7 +8369,7 @@ function pickNoteDay(note) {
       if (!note.text.trim()) note.text = 'Note';
       note.date = day;
       saveNotes();
-      showPage();
+      refreshNoteViews(true);
       showUndo('Added to the calendar on ' + niceDate(day), null);
     },
   });
@@ -7988,6 +8381,177 @@ function showNoteOnCalendar(note) {
   const d = toDate(note.date);
   calendarMonth = dateText(new Date(d.getFullYear(), d.getMonth(), 1));
   goTo('calendar');
+}
+
+// ---------- Notes linked to customers and orders ----------
+// note.link is { kind: 'customer', key, name } or { kind: 'order', id }.
+// Returns what the note's tag shows and where clicking it goes, or null if it isn't linked (or the order is gone).
+function noteLink(note) {
+  const link = note.link;
+  if (!link) return null;
+  if (link.kind === 'order') {
+    const order = orders.find(function (o) { return o.id === link.id; });
+    if (!order) return null;
+    return {
+      text: (order.customer.split(' ')[0] || order.customer) + ': ' + order.item,
+      title: order.customer + ': ' + order.item,
+      icon: 'receipt', order: order,
+      go: function () { openOrderForm(order.id); },
+    };
+  }
+  if (link.kind === 'customer') {
+    const person = findCustomer(link.key);
+    const name = person ? person.name : link.name;
+    if (!name) return null;
+    return {
+      text: name, title: name, icon: 'users', key: link.key,
+      go: function () { customerView = link.key; goTo('customers'); },
+    };
+  }
+  return null;
+}
+
+// Is this note about this person (or one of their orders)?
+function noteIsAbout(note, key) {
+  const linked = noteLink(note);
+  if (!linked) return false;
+  if (linked.key) return linked.key === key;
+  return !!linked.order && personKey(linked.order.customer) === key;
+}
+
+// How many notes are about an order (for the little note count on order rows)
+function notesForOrder(order) {
+  return notes.filter(function (n) { return n.link && n.link.kind === 'order' && n.link.id === order.id; });
+}
+
+// Pick who or what a note is about
+function pickNoteLink(note) {
+  window.focus();
+  const w = words();
+  const people = allCustomers().sort(function (a, b) { return a.name.localeCompare(b.name); });
+  const openOrders = usesOrders()
+    ? orders.slice().sort(function (a, b) { return (b.due || '').localeCompare(a.due || ''); })
+    : [];
+  if (!people.length && !openOrders.length) {
+    showUndo('Nothing to link to yet.', null);
+    return;
+  }
+  openWindow({
+    title: 'Link this note',
+    saveLabel: 'Save',
+    html: `
+      <label class="label" for="note-link">Who or what is this note about?</label>
+      <select class="input" id="note-link"></select>
+    `,
+    fill: function (box) {
+      const select = box.querySelector('#note-link');
+      function add(into, value, text) {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = text;
+        into.appendChild(option);
+      }
+      function group(title) {
+        const g = document.createElement('optgroup');
+        g.label = title;
+        select.appendChild(g);
+        return g;
+      }
+      add(select, '', 'Not linked');
+      if (people.length) {
+        const g = group(w.customers);
+        people.forEach(function (p) { add(g, 'c:' + p.key, p.name); });
+      }
+      if (openOrders.length) {
+        const g = group(w.orders);
+        openOrders.forEach(function (o) {
+          add(g, 'o:' + o.id, o.customer + ': ' + o.item + (o.due ? ' (' + shortDate(o.due) + ')' : ''));
+        });
+      }
+      const now = noteLink(note);
+      select.value = !now ? '' : note.link.kind === 'order' ? 'o:' + note.link.id : 'c:' + note.link.key;
+      if (select.selectedIndex < 0) select.value = '';
+      select.focus();
+    },
+    onSave: function (box) {
+      const value = box.querySelector('#note-link').value;
+      const was = note.link;
+      if (!value) delete note.link;
+      else if (value.indexOf('o:') === 0) note.link = { kind: 'order', id: value.slice(2) };
+      else {
+        const person = people.find(function (p) { return 'c:' + p.key === value; });
+        note.link = { kind: 'customer', key: value.slice(2), name: person ? person.name : '' };
+      }
+      if (!note.text.trim()) note.text = 'Note';
+      saveNotes();
+      refreshNoteViews(true);
+      showUndo(note.link ? 'Note linked' : 'Link removed', function () {
+        if (was) note.link = was; else delete note.link;
+        saveNotes();
+        refreshNoteViews(true);
+      });
+    },
+  });
+}
+
+// Sticky notes inside another page (a customer's page or an order).
+// options: { about: function (note) -> true/false, link: what new notes get linked to, empty: text when there are none }
+const noteSections = [];
+function linkedNotesSection(options) {
+  const box = document.createElement('section');
+  box.className = 'linked-notes';
+  function draw() {
+    box.innerHTML = `
+      <div class="linked-notes-head">
+        <h2>${icon('note')}<span>Sticky notes</span></h2>
+        <button type="button" class="btn secondary small with-icon">${icon('plus')}<span>Add a note</span></button>
+      </div>
+      <div class="notes-grid"></div>
+    `;
+    const grid = box.querySelector('.notes-grid');
+    const mine = notes.filter(options.about)
+      .sort(function (a, b) { return (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0); });
+    mine.forEach(function (note) {
+      const card = noteCard(note, options.hideLink && options.hideLink(note));
+      // On a person's page, an order tag just says what the order is (their name is already on top)
+      const tag = card.querySelector('.note-link span');
+      const linked = noteLink(note);
+      if (tag && options.orderTagItemOnly && linked && linked.order) tag.textContent = linked.order.item;
+      grid.appendChild(card);
+    });
+    if (!mine.length) {
+      const none = document.createElement('p');
+      none.className = 'notes-empty';
+      none.textContent = options.empty;
+      grid.appendChild(none);
+    }
+    box.querySelector('.btn').addEventListener('click', function () {
+      const note = addNote(null);
+      note.link = Object.assign({}, options.link);
+      saveNotes();
+      draw();
+      focusNoteNow(note);
+    });
+  }
+  box.redraw = draw;
+  draw();
+  noteSections.push(box);
+  return box;
+}
+
+// After a note changes: redraw the page if it's all notes, or just the note sections on other pages
+// (so a half-filled order form isn't wiped). force: redraw even the calendar and other pages.
+function refreshNoteViews(force) {
+  for (let i = noteSections.length - 1; i >= 0; i--) {
+    if (!document.body.contains(noteSections[i])) noteSections.splice(i, 1);
+  }
+  const typing = document.activeElement && document.activeElement.closest && document.activeElement.closest('.linked-notes .note');
+  if (currentSection === 'myday' || currentSection === 'notes') { showPage(); return; }
+  if (noteSections.length) {
+    if (!typing) noteSections.forEach(function (box) { box.redraw(); });
+    return;
+  }
+  if (force) showPage();
 }
 
 // ---------- The notes on My Day, and on the Sticky notes page ----------
@@ -8007,7 +8571,8 @@ function stickyBoard(big) {
   if (big) box.querySelector('.notes-head h2').remove();
   const grid = box.querySelector('.notes-grid');
   if (!notes.length) {
-    grid.innerHTML = '<p class="notes-empty">No notes yet. Click <b>+</b> to add one.</p>';
+    grid.innerHTML = '<p class="notes-empty"></p>';
+    grid.firstChild.textContent = 'No notes yet. Click + to add one.';
   }
   // Pinned notes come first
   notes.slice().sort(function (a, b) { return (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0); })
@@ -8069,10 +8634,11 @@ function focusNoteNow(note) {
   if (typing) typing.focus();
 }
 
-function noteCard(note) {
+function noteCard(note, hideLink) {
   const card = document.createElement('div');
   card.className = 'note';
   card.dataset.note = note.id;
+  if (hideLink) card.dataset.hideLink = '1';
   card.style.setProperty('--note', noteColor(note.color));
   card.innerHTML = `
     <textarea class="note-text" aria-label="Sticky note" placeholder="Write here..."></textarea>
@@ -8112,10 +8678,12 @@ function noteCard(note) {
     if (text) note.text = text.value;
     note.pinned = !note.pinned;
     saveNotes();
-    showPage();
+    refreshNoteViews(true);
   });
 
-  // Its day on the calendar, if it has one
+  // Tags at the bottom: its day on the calendar, and who or what it's about
+  const tags = document.createElement('div');
+  tags.className = 'note-tags';
   if (note.date) {
     const tag = document.createElement('button');
     tag.className = 'note-date';
@@ -8123,8 +8691,22 @@ function noteCard(note) {
     tag.innerHTML = icon('calendar') + '<span></span>';
     tag.querySelector('span').textContent = niceDate(note.date);
     tag.addEventListener('click', function () { showNoteOnCalendar(note); });
+    tags.appendChild(tag);
+  }
+  const linked = noteLink(note);
+  if (linked && !card.dataset.hideLink) {
+    const chip = document.createElement('button');
+    chip.className = 'note-date note-link';
+    chip.title = linked.title;
+    chip.dataset.ownWords = '';
+    chip.innerHTML = icon(linked.icon) + '<span></span>';
+    chip.querySelector('span').textContent = linked.text;
+    chip.addEventListener('click', function () { if (text) note.text = text.value; saveNotes(); linked.go(); });
+    tags.appendChild(chip);
+  }
+  if (tags.children.length) {
     card.classList.add('has-date');
-    card.appendChild(tag);
+    card.appendChild(tags);
   }
 
   // Color dots on the note, shown while you're writing in it
@@ -8177,11 +8759,14 @@ function noteCard(note) {
   }, function () {
     if (text) note.text = text.value;
     toggleNoteList(note);
-    showPage();
+    refreshNoteViews(true);
     focusNoteNow(note);
   }, function () {
     if (text) note.text = text.value;
     noteToTodo(note);
+  }, function () {
+    if (text) note.text = text.value;
+    pickNoteLink(note);
   });
   card.appendChild(menu);
 
@@ -8245,9 +8830,9 @@ function popOutNote(note) {
       notes = notes.filter(function (n) { return n !== note; });
       saveList(NOTES_KEY, notes);
     }
-    if (currentSection === 'myday' || currentSection === 'notes') showPage();
+    refreshNoteViews();
   });
-  if (currentSection === 'myday' || currentSection === 'notes') showPage();
+  refreshNoteViews();
 }
 
 function drawNoteWindow(note) {
@@ -8292,7 +8877,7 @@ function drawNoteWindow(note) {
     toggleNoteList(note);
     drawNoteWindow(note);
     refreshBoardSoon();
-  }, function () { noteToTodo(note); });
+  }, function () { noteToTodo(note); }, function () { pickNoteLink(note); });
   doc.body.appendChild(menu);
 
   doc.querySelector('[data-act="new"]').addEventListener('click', function () { popOutNote(addNote(note)); refreshBoardSoon(); });
@@ -8323,7 +8908,7 @@ let boardRefresh = null;
 function refreshBoardSoon() {
   clearTimeout(boardRefresh);
   boardRefresh = setTimeout(function () {
-    if ((currentSection === 'myday' || currentSection === 'notes') && !(document.activeElement && document.activeElement.closest && document.activeElement.closest('.note'))) showPage();
+    if (!(document.activeElement && document.activeElement.closest && document.activeElement.closest('.note'))) refreshNoteViews();
   }, 400);
 }
 
@@ -8626,7 +9211,7 @@ function showSettings(page) {
     ? 'Changes with the time of day'
     : theme.label + ' with the ' + findFont(profile.font).label + ' font';
 
-  const goalNames = profile.goals.map(function (id) { return say(findGoal(id).label); });
+  const goalNames = profile.goals.filter(function (id) { return goalFits(findGoal(id)); }).map(function (id) { return say(findGoal(id).label); });
   if (profile.customGoal) goalNames.push(profile.customGoal);
   box.querySelector('#row-goals').textContent = goalNames.length > 0 ? goalNames.join(', ') : 'None picked yet';
 
@@ -8736,6 +9321,7 @@ function showGoalTips(page) {
 
   profile.goals.forEach(function (goalId) {
     const goal = findGoal(goalId);
+    if (!goalFits(goal)) return;
     const hidden = hiddenSections();
     const target = findSection(goal.focus.find(function (id) { return !hidden.includes(id); }) || 'myday');
     const card = document.createElement('div');
