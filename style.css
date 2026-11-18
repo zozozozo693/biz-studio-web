@@ -3361,3 +3361,87 @@ kbd {
 .setup-lang .input, .setup-lang .fancy-select, .setup-lang button { min-width: 140px; }
 .lang-row { cursor: default; }
 .lang-row .lang-select, .lang-row .fancy-select { width: 170px; flex: none; margin-left: auto; }
+
+/* =========================================
+   STICKY NOTES: checklists, pins and search
+   ========================================= */
+.note-list {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 12px 14px 18px;
+  overflow: auto;
+}
+.note.has-date .note-list { padding-bottom: 44px; }
+.note:focus-within .note-list { padding-bottom: 46px; }
+.note-item { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
+.note-check {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 2px solid rgba(0, 0, 0, 0.45);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.5);
+  color: transparent;
+  cursor: pointer;
+}
+.note-check svg { width: 14px; height: 14px; stroke-width: 3; }
+.note-check:hover { border-color: #2b2b2b; }
+.note-item.done .note-check { background: #2b2b2b; border-color: #2b2b2b; color: #fff; }
+.note-item-text {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 0;
+  border: none;
+  background: transparent;
+  color: #2b2b2b;
+  font-family: 'Nunito', 'Figtree', 'Segoe UI', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  outline: none;
+}
+.note-item-text::placeholder { color: rgba(0, 0, 0, 0.35); }
+.note-item.done .note-item-text { text-decoration: line-through; opacity: 0.55; }
+.notes-panel.big .note-item-text { font-size: 19px; }
+.note-add-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 4px 2px;
+  border: none;
+  background: none;
+  color: rgba(0, 0, 0, 0.5);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.note-add-item svg { width: 14px; height: 14px; }
+.note-add-item:hover { color: #2b2b2b; }
+
+/* Pinned notes: the pin stays showing */
+.note-tool[data-act="pin"][aria-pressed="true"] { background: #2b2b2b; color: #fff; }
+.note.pinned .note-tools { opacity: 1; }
+.note.pinned .note-tools .note-tool:not([data-act="pin"]) { display: none; }
+.note.pinned:hover .note-tools .note-tool, .note.pinned:focus-within .note-tools .note-tool { display: grid; }
+
+/* Search on the Sticky notes page */
+.notes-head-tools { display: flex; align-items: center; gap: 12px; }
+.notes-search { position: relative; display: block; }
+.notes-search svg { position: absolute; left: 14px; top: 50%; width: 18px; height: 18px; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+.notes-search .input { width: 240px; padding-left: 42px; border-radius: 999px; }
+.notes-no-match { grid-column: 1 / -1; }
+@media (max-width: 640px) {
+  .notes-search .input { width: 160px; }
+}
+.note-item { align-items: flex-start; }
+.note-check { margin-top: 3px; }
+.note-item-text { line-height: 1.3; resize: none; overflow: hidden; display: block; }
+/* Room for the pin on pinned notes */
+.note.pinned .note-text, .note.pinned .note-list { padding-right: 46px; }

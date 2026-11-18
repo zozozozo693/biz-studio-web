@@ -98,6 +98,7 @@ const ICONS = {
   cart: '<circle cx="9" cy="20" r="1.3"/><circle cx="18" cy="20" r="1.3"/><path d="M2 3h3l2.5 12h11l2-8H6"/>',
   flag: '<path d="M5 21V4"/><path d="M5 4h12l-2.5 4.5L17 13H5"/>',
   tick: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  pin: '<path d="M9 3h6l-1 6 3.5 3.5h-11L10 9z"/><path d="M12 12.5V21"/>',
   check: '<rect x="3" y="3" width="18" height="18" rx="4"/><path d="m8 12 3 3 5-6"/>',
   calendar: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>',
   tag: '<path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1.5"/>',
@@ -543,6 +544,10 @@ const LANGUAGES = [
   { id: 'ja', label: '日本語' },
   { id: 'pt', label: 'Português' },
   { id: 'de', label: 'Deutsch' },
+  { id: 'it', label: 'Italiano' },
+  { id: 'id', label: 'Bahasa Indonesia' },
+  { id: 'uk', label: 'Українська' },
+  { id: 'hi', label: 'हिन्दी' },
 ];
 let appLanguage = 'en';
 try { appLanguage = localStorage.getItem('bizStudio.language') || 'en'; } catch (error) { /* fine */ }
@@ -561,6 +566,10 @@ function appLocale() {
   if (appLanguage === 'ja') return 'ja-JP';
   if (appLanguage === 'pt') return 'pt-BR';
   if (appLanguage === 'de') return 'de-DE';
+  if (appLanguage === 'it') return 'it-IT';
+  if (appLanguage === 'id') return 'id-ID';
+  if (appLanguage === 'uk') return 'uk-UA';
+  if (appLanguage === 'hi') return 'hi-IN';
   return 'en-US';
 }
 
@@ -632,7 +641,37 @@ const OWN_WORDS_MORE = {
   'Jobs': ['Mga trabaho', 'Заказы', '仕事', 'Serviços', 'Aufträge'], 'Job': ['Trabaho', 'Заказ', '仕事', 'Serviço', 'Auftrag'],
 };
 Object.keys(OWN_WORDS_MORE).forEach(function (k) { OWN_WORDS[k] = OWN_WORDS[k].concat(OWN_WORDS_MORE[k]); });
-const OWN_WORD_LANGS = ['es', 'fr', 'zh', 'vi', 'ko', 'tl', 'ru', 'ja', 'pt', 'de'];
+// ...and Italian, Indonesian, Ukrainian, Hindi
+const OWN_WORDS_MORE2 = {
+  'Recipes': ['Ricette', 'Resep', 'Рецепти', 'रेसिपी'], 'Recipe': ['Ricetta', 'Resep', 'Рецепт', 'रेसिपी'],
+  'Orders': ['Ordini', 'Pesanan', 'Замовлення', 'ऑर्डर'], 'Order': ['Ordine', 'Pesanan', 'Замовлення', 'ऑर्डर'],
+  'Customers': ['Clienti', 'Pelanggan', 'Клієнти', 'ग्राहक'], 'Customer': ['Cliente', 'Pelanggan', 'Клієнт', 'ग्राहक'],
+  'Ingredients': ['Ingredienti', 'Bahan', 'Інгредієнти', 'सामग्री'], 'Ingredient': ['Ingrediente', 'Bahan', 'Інгредієнт', 'सामग्री'],
+  'Classes': ['Corsi', 'Kelas', 'Заняття', 'क्लास'], 'Class': ['Corso', 'Kelas', 'Заняття', 'क्लास'],
+  'Sessions': ['Sessioni', 'Sesi', 'Сеанси', 'सेशन'], 'Session': ['Sessione', 'Sesi', 'Сеанс', 'सेशन'],
+  'Clients': ['Clienti', 'Klien', 'Клієнти', 'क्लाइंट'], 'Client': ['Cliente', 'Klien', 'Клієнт', 'क्लाइंट'],
+  'Equipment': ['Attrezzatura', 'Peralatan', 'Обладнання', 'उपकरण'],
+  'Lessons': ['Lezioni', 'Les', 'Уроки', 'पाठ'], 'Lesson': ['Lezione', 'Les', 'Урок', 'पाठ'],
+  'Bookings': ['Prenotazioni', 'Pemesanan', 'Записи', 'बुकिंग'], 'Booking': ['Prenotazione', 'Pemesanan', 'Запис', 'बुकिंग'],
+  'Students': ['Studenti', 'Murid', 'Учні', 'छात्र'], 'Student': ['Studente', 'Murid', 'Учень', 'छात्र'],
+  'Materials': ['Materiali', 'Bahan', 'Матеріали', 'सामग्री'], 'Material': ['Materiale', 'Bahan', 'Матеріал', 'सामग्री'],
+  'Menu items': ['Piatti', 'Menu', 'Страви', 'व्यंजन'], 'Menu item': ['Piatto', 'Menu', 'Страва', 'व्यंजन'],
+  'Packages': ['Pacchetti', 'Paket', 'Пакети', 'पैकेज'], 'Package': ['Pacchetto', 'Paket', 'Пакет', 'पैकेज'],
+  'Events': ['Eventi', 'Acara', 'Заходи', 'इवेंट'], 'Event': ['Evento', 'Acara', 'Захід', 'इवेंट'],
+  'Shoots': ['Servizi fotografici', 'Sesi foto', 'Зйомки', 'शूट'], 'Shoot': ['Servizio fotografico', 'Sesi foto', 'Зйомка', 'शूट'],
+  'Gear': ['Attrezzatura', 'Peralatan', 'Техніка', 'उपकरण'],
+  'Pieces': ['Opere', 'Karya', 'Роботи', 'कृतियाँ'], 'Piece': ['Opera', 'Karya', 'Робота', 'कृति'],
+  'Commissions': ['Commissioni', 'Pesanan karya', 'Замовлення', 'कमीशन'], 'Commission': ['Commissione', 'Pesanan karya', 'Замовлення', 'कमीशन'],
+  'Art supplies': ['Materiale artistico', 'Alat seni', 'Художні матеріали', 'कला सामग्री'], 'Art supply': ['Materiale artistico', 'Alat seni', 'Художній матеріал', 'कला सामग्री'],
+  'Products': ['Prodotti', 'Produk', 'Товари', 'प्रोडक्ट'], 'Product': ['Prodotto', 'Produk', 'Товар', 'प्रोडक्ट'],
+  'Supplies': ['Forniture', 'Perlengkapan', 'Витратні матеріали', 'सामान'], 'Supply': ['Fornitura', 'Perlengkapan', 'Витратний матеріал', 'सामान'],
+  'Services': ['Servizi', 'Layanan', 'Послуги', 'सेवाएँ'], 'Service': ['Servizio', 'Layanan', 'Послуга', 'सेवा'],
+  'Appointments': ['Appuntamenti', 'Janji temu', 'Записи', 'अपॉइंटमेंट'], 'Appointment': ['Appuntamento', 'Janji temu', 'Запис', 'अपॉइंटमेंट'],
+  'Pet owners': ['Proprietari', 'Pemilik hewan', 'Власники тварин', 'पालतू के मालिक'], 'Pet owner': ['Proprietario', 'Pemilik hewan', 'Власник тварини', 'पालतू का मालिक'],
+  'Jobs': ['Lavori', 'Pekerjaan', 'Замовлення', 'काम'], 'Job': ['Lavoro', 'Pekerjaan', 'Замовлення', 'काम'],
+};
+Object.keys(OWN_WORDS_MORE2).forEach(function (k) { OWN_WORDS[k] = OWN_WORDS[k].concat(OWN_WORDS_MORE2[k]); });
+const OWN_WORD_LANGS = ['es', 'fr', 'zh', 'vi', 'ko', 'tl', 'ru', 'ja', 'pt', 'de', 'it', 'id', 'uk', 'hi'];
 function translateWord(word) {
   const at = OWN_WORD_LANGS.indexOf(appLanguage);
   if (at === -1) return word;
@@ -662,15 +701,24 @@ const DATE_WORDS = {
     'jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez|domingo|segunda-feira|terça-feira|quarta-feira|quinta-feira|sexta-feira|sábado|dom|seg|ter|qua|qui|sex|sáb',
   de: 'Januar|Februar|März|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember|' +
     'Jan|Feb|Mär|Apr|Jun|Jul|Aug|Sept|Sep|Okt|Nov|Dez|Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag|Mo|Di|Mi|Do|Fr|Sa|So',
+  it: 'gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre|' +
+    'gen|feb|mar|apr|mag|giu|lug|ago|set|ott|nov|dic|lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica|lun|mer|gio|ven|sab|dom',
+  id: 'Januari|Februari|Maret|April|Mei|Juni|Juli|Agustus|September|Oktober|November|Desember|' +
+    'Jan|Feb|Mar|Apr|Jun|Jul|Agu|Sep|Okt|Nov|Des|Senin|Selasa|Rabu|Kamis|Jumat|Sabtu|Minggu|Sen|Sel|Rab|Kam|Jum|Sab|Min',
+  uk: 'січень|лютий|березень|квітень|травень|червень|липень|серпень|вересень|жовтень|листопад|грудень|' +
+    'січня|лютого|березня|квітня|травня|червня|липня|серпня|вересня|жовтня|листопада|грудня|' +
+    'січ|лют|бер|квіт|трав|черв|лип|серп|вер|жовт|лист|груд|понеділок|вівторок|середа|четвер|пʼятниця|п\'ятниця|субота|неділя|пн|вт|ср|чт|пт|сб|нд',
+  hi: 'जनवरी|फ़रवरी|फरवरी|मार्च|अप्रैल|मई|जून|जुलाई|अगस्त|सितंबर|अक्तूबर|अक्टूबर|नवंबर|दिसंबर|' +
+    'जन॰|फ़र॰|जुल॰|अग॰|सित॰|अक्तू॰|नव॰|दिस॰|रविवार|सोमवार|मंगलवार|बुधवार|गुरुवार|शुक्रवार|शनिवार|रवि|सोम|मंगल|बुध|गुरु|शुक्र|शनि',
 };
 const dateRegexCache = {};
 function dateRegexes() {
   if (dateRegexCache[appLanguage]) return dateRegexCache[appLanguage];
   const names = '(?:' + [DATE_WORDS.en, DATE_WORDS[appLanguage]].filter(Boolean).join('|') + ')';
-  const part = '(?:' + names + '\\.?|\\d{1,4}|de|del|năm|г\\.?)';
+  const part = '(?:' + names + '\\.?|\\d{1,4}|de|del|năm|г\\.?|р\\.?)';
   dateRegexCache[appLanguage] = {
-    run: new RegExp('(?<![\\p{L}\\d])' + part + '(?:[\\s,.]+' + part + ')*(?![\\p{L}])', 'gu'),
-    has: new RegExp('(?<![\\p{L}])' + names + '(?![\\p{L}])', 'u'),
+    run: new RegExp('(?<![\\p{L}\\p{M}\\d])' + part + '(?:[\\s,.]+' + part + ')*(?![\\p{L}\\p{M}])', 'gu'),
+    has: new RegExp('(?<![\\p{L}\\p{M}])' + names + '(?![\\p{L}\\p{M}])', 'u'),
   };
   return dateRegexCache[appLanguage];
 }
@@ -710,6 +758,7 @@ function textKey(text) {
   key = key.replace(CJK_DATE, function (run) { values.push(['d', run]); return '{d}'; });
   // Times like 3:30 PM, 14 h 00, 오후 2:00, 14:00
   key = key.replace(/(?:(?:오전|오후|上午|下午)\s?)?\b\d{1,2}(?::\d{2}|\s?h\s?\d{2})(?:\s?(?:AM|PM|a\. ?m\.|p\. ?m\.|SA|CH))?/gi, function (t) { values.push(['t', t]); return '{t}'; });
+  if (appLanguage === 'id') key = key.replace(/(?<![\d$.])\b\d{1,2}\.\d{2}\b(?!\d)/g, function (t) { values.push(['t', t]); return '{t}'; });
   // Money, then other numbers
   key = key.replace(/-?\$\d[\d,]*(?:\.\d+)?/g, function (m) { values.push(['m', m]); return '{m}'; });
   key = key.replace(/(?<![{\w])\d+(?:[.,]\d+)*%?/g, function (n) { values.push(['n', n]); return '{n}'; });
@@ -735,13 +784,107 @@ function fillKey(template, values) {
     });
 }
 
+// A few newer labels, in every language (same order as OWN_WORD_LANGS)
+const EXTRA_TEXT = {
+  'Country': ['País', 'Pays', '国家', 'Quốc gia', '나라', 'Bansa', 'Страна', '国', 'País', 'Land', 'Paese', 'Negara', 'Країна', 'देश'],
+  'Words': ['Palabras', 'Mots', '用词', 'Từ ngữ', '단어', 'Mga salita', 'Слова', '言葉', 'Palavras', 'Wörter', 'Parole', 'Kata-kata', 'Слова', 'शब्द'],
+  // Sticky notes: checklists, pins, search
+  "Make it a checklist": ["Convertir en lista", "Transformer en liste", "改成清单", "Chuyển thành danh sách", "체크리스트로 바꾸기", "Gawing checklist", "Сделать списком", "チェックリストにする", "Transformar em lista", "Als Checkliste", "Trasforma in lista", "Jadikan daftar centang", "Зробити списком", "चेकलिस्ट बनाएँ"],
+  "Make it plain text": ["Convertir en texto", "Transformer en texte", "改成普通文字", "Chuyển thành văn bản", "일반 메모로 바꾸기", "Gawing simpleng text", "Сделать текстом", "普通のメモにする", "Transformar em texto", "Als normaler Text", "Trasforma in testo", "Jadikan teks biasa", "Зробити текстом", "सादा टेक्स्ट बनाएँ"],
+  "Make it a to-do": ["Convertir en pendiente", "Transformer en tâche", "加入待办事项", "Chuyển thành việc cần làm", "할 일로 만들기", "Gawing gagawin", "Сделать делом", "やることにする", "Transformar em tarefa", "Als Aufgabe", "Trasforma in attività", "Jadikan tugas", "Зробити справою", "काम बनाएँ"],
+  "Pin to top": ["Fijar arriba", "Épingler en haut", "置顶", "Ghim lên đầu", "맨 위에 고정", "I-pin sa itaas", "Закрепить сверху", "上に固定", "Fixar no topo", "Oben anheften", "Fissa in alto", "Sematkan di atas", "Закріпити вгорі", "ऊपर पिन करें"],
+  "Unpin": ["Desfijar", "Désépingler", "取消置顶", "Bỏ ghim", "고정 해제", "I-unpin", "Открепить", "固定を外す", "Desafixar", "Lösen", "Sblocca", "Lepas sematan", "Відкріпити", "पिन हटाएँ"],
+  "Add an item": ["Agregar un elemento", "Ajouter un élément", "添加一项", "Thêm một mục", "항목 추가", "Magdagdag ng item", "Добавить пункт", "項目を追加", "Adicionar item", "Punkt hinzufügen", "Aggiungi un elemento", "Tambah item", "Додати пункт", "आइटम जोड़ें"],
+  "List item": ["Elemento", "Élément", "清单项", "Mục", "항목", "Item", "Пункт", "項目", "Item", "Punkt", "Elemento", "Item", "Пункт", "आइटम"],
+  "Search notes": ["Buscar notas", "Chercher des notes", "搜索便利贴", "Tìm ghi chú", "메모 검색", "Hanapin ang notes", "Искать стикеры", "付箋を検索", "Buscar notas", "Notizen suchen", "Cerca post-it", "Cari catatan", "Шукати стікери", "नोट खोजें"],
+  "No notes match your search.": ["Ninguna nota coincide con tu búsqueda.", "Aucune note ne correspond.", "没有符合的便利贴。", "Không có ghi chú phù hợp.", "검색과 맞는 메모가 없어요.", "Walang note na tugma.", "Ничего не найдено.", "一致する付箋はありません。", "Nenhuma nota encontrada.", "Keine passenden Notizen.", "Nessun post-it trovato.", "Tidak ada catatan yang cocok.", "Нічого не знайдено.", "कोई मेल खाता नोट नहीं।"],
+  "Added to your To-do list": ["Agregado a tus pendientes", "Ajouté à ta liste de tâches", "已加入待办事项", "Đã thêm vào việc cần làm", "할 일에 추가했어요", "Naidagdag sa mga gagawin", "Добавлено в список дел", "やることリストに追加しました", "Adicionado às tarefas", "Zur To-do-Liste hinzugefügt", "Aggiunto alle cose da fare", "Ditambahkan ke daftar tugas", "Додано до списку справ", "काम की सूची में जोड़ा गया"],
+  // Country names and holidays
+  "Brazil": ["Brasil", "Brésil", "巴西", "Brazil", "브라질", "Brazil", "Бразилия", "ブラジル", "Brasil", "Brasilien", "Brasile", "Brasil", "Бразилія", "ब्राज़ील"],
+  "China": ["China", "Chine", "中国", "Trung Quốc", "중국", "China", "Китай", "中国", "China", "China", "Cina", "Tiongkok", "Китай", "चीन"],
+  "France": ["Francia", "France", "法国", "Pháp", "프랑스", "France", "Франция", "フランス", "França", "Frankreich", "Francia", "Prancis", "Франція", "फ़्रांस"],
+  "Germany": ["Alemania", "Allemagne", "德国", "Đức", "독일", "Germany", "Германия", "ドイツ", "Alemanha", "Deutschland", "Germania", "Jerman", "Німеччина", "जर्मनी"],
+  "India": ["India", "Inde", "印度", "Ấn Độ", "인도", "India", "Индия", "インド", "Índia", "Indien", "India", "India", "Індія", "भारत"],
+  "Indonesia": ["Indonesia", "Indonésie", "印度尼西亚", "Indonesia", "인도네시아", "Indonesia", "Индонезия", "インドネシア", "Indonésia", "Indonesien", "Indonesia", "Indonesia", "Індонезія", "इंडोनेशिया"],
+  "Italy": ["Italia", "Italie", "意大利", "Ý", "이탈리아", "Italya", "Италия", "イタリア", "Itália", "Italien", "Italia", "Italia", "Італія", "इटली"],
+  "Japan": ["Japón", "Japon", "日本", "Nhật Bản", "일본", "Japan", "Япония", "日本", "Japão", "Japan", "Giappone", "Jepang", "Японія", "जापान"],
+  "Philippines": ["Filipinas", "Philippines", "菲律宾", "Philippines", "필리핀", "Pilipinas", "Филиппины", "フィリピン", "Filipinas", "Philippinen", "Filippine", "Filipina", "Філіппіни", "फ़िलीपींस"],
+  "Portugal": ["Portugal", "Portugal", "葡萄牙", "Bồ Đào Nha", "포르투갈", "Portugal", "Португалия", "ポルトガル", "Portugal", "Portugal", "Portogallo", "Portugal", "Португалія", "पुर्तगाल"],
+  "South Korea": ["Corea del Sur", "Corée du Sud", "韩国", "Hàn Quốc", "대한민국", "South Korea", "Южная Корея", "韓国", "Coreia do Sul", "Südkorea", "Corea del Sud", "Korea Selatan", "Південна Корея", "दक्षिण कोरिया"],
+  "Spain": ["España", "Espagne", "西班牙", "Tây Ban Nha", "스페인", "Espanya", "Испания", "スペイン", "Espanha", "Spanien", "Spagna", "Spanyol", "Іспанія", "स्पेन"],
+  "Ukraine": ["Ucrania", "Ukraine", "乌克兰", "Ukraina", "우크라이나", "Ukraine", "Украина", "ウクライナ", "Ucrânia", "Ukraine", "Ucraina", "Ukraina", "Україна", "यूक्रेन"],
+  "Vietnam": ["Vietnam", "Viêt Nam", "越南", "Việt Nam", "베트남", "Vietnam", "Вьетнам", "ベトナム", "Vietnã", "Vietnam", "Vietnam", "Vietnam", "В'єтнам", "वियतनाम"],
+  "Carnival": ["Carnaval", "Carnaval", "狂欢节", "Lễ hội Carnival", "카니발", "Karnabal", "Карнавал", "カーニバル", "Carnaval", "Karneval", "Carnevale", "Karnaval", "Карнавал", "कार्निवल"],
+  "Tiradentes Day": ["Día de Tiradentes", "Jour de Tiradentes", "蒂拉登特斯日", "Ngày Tiradentes", "치라덴치스의 날", "Araw ni Tiradentes", "День Тирадентиса", "ティラデンテスの日", "Tiradentes", "Tiradentes-Tag", "Giorno di Tiradentes", "Hari Tiradentes", "День Тірадентіса", "तिराडेंटेस दिवस"],
+  "Corpus Christi": ["Corpus Christi", "Fête-Dieu", "基督圣体节", "Lễ Mình Máu Thánh Chúa", "성체 성혈 대축일", "Corpus Christi", "Праздник Тела Христова", "聖体の祝日", "Corpus Christi", "Fronleichnam", "Corpus Domini", "Hari Raya Tubuh Kristus", "Свято Тіла Христового", "कॉर्पस क्रिस्टी"],
+  "All Souls' Day": ["Día de los Fieles Difuntos", "Jour des Morts", "万灵节", "Lễ Các Đẳng", "위령의 날", "Araw ng mga Kaluluwa", "День поминовения усопших", "死者の日", "Finados", "Allerseelen", "Commemorazione dei defunti", "Hari Arwah", "День поминання померлих", "ऑल सोल्स डे"],
+  "Republic Day": ["Día de la República", "Fête de la République", "共和国日", "Ngày Cộng hòa", "공화국의 날", "Araw ng Republika", "День Республики", "共和国記念日", "Proclamação da República", "Tag der Republik", "Festa della Repubblica", "Hari Republik", "День Республіки", "गणतंत्र दिवस"],
+  "Black Consciousness Day": ["Día de la Conciencia Negra", "Journée de la conscience noire", "黑人觉醒日", "Ngày Ý thức Người da đen", "흑인 의식의 날", "Araw ng Kamalayang Itim", "День чёрного самосознания", "黒人意識の日", "Dia da Consciência Negra", "Tag des schwarzen Bewusstseins", "Giornata della coscienza nera", "Hari Kesadaran Kulit Hitam", "День чорної свідомості", "ब्लैक कॉन्शसनेस डे"],
+  "Lunar New Year": ["Año Nuevo Lunar", "Nouvel An lunaire", "春节", "Tết Nguyên Đán", "설날", "Bagong Taon ng Tsino", "Лунный Новый год", "旧正月", "Ano-Novo Lunar", "Mondneujahr", "Capodanno lunare", "Tahun Baru Imlek", "Місячний Новий рік", "चंद्र नव वर्ष"],
+  "Mid-Autumn Festival": ["Festival del Medio Otoño", "Fête de la mi-automne", "中秋节", "Tết Trung Thu", "추석", "Mid-Autumn Festival", "Праздник середины осени", "中秋節", "Festival do Meio do Outono", "Mondfest", "Festa di metà autunno", "Festival Pertengahan Musim Gugur", "Свято середини осені", "मध्य-शरद उत्सव"],
+  "National Day": ["Día Nacional", "Fête nationale", "国庆节", "Quốc khánh", "국경일", "Pambansang Araw", "Национальный день", "ナショナルデー", "Dia Nacional", "Nationalfeiertag", "Festa nazionale", "Hari Nasional", "Національний день", "राष्ट्रीय दिवस"],
+  "Victory Day": ["Día de la Victoria", "Fête de la Victoire", "胜利日", "Ngày Chiến thắng", "승전 기념일", "Araw ng Tagumpay", "День Победы", "戦勝記念日", "Dia da Vitória", "Tag des Sieges", "Giorno della Vittoria", "Hari Kemenangan", "День Перемоги", "विजय दिवस"],
+  "Ascension Day": ["Día de la Ascensión", "Ascension", "耶稣升天节", "Lễ Thăng Thiên", "예수 승천일", "Araw ng Pag-akyat", "Вознесение", "キリスト昇天祭", "Dia da Ascensão", "Christi Himmelfahrt", "Ascensione", "Kenaikan Isa Almasih", "Вознесіння", "स्वर्गारोहण दिवस"],
+  "Whit Monday": ["Lunes de Pentecostés", "Lundi de Pentecôte", "圣灵降临节星期一", "Thứ Hai Lễ Ngũ Tuần", "성령 강림 월요일", "Lunes ng Pentekostes", "Духов день", "聖霊降臨祭の月曜日", "Segunda-feira de Pentecostes", "Pfingstmontag", "Lunedì di Pentecoste", "Senin Pentakosta", "Духів день", "पेंटेकोस्ट सोमवार"],
+  "Bastille Day": ["Día de la Bastilla", "Fête nationale", "法国国庆日", "Ngày Bastille", "바스티유의 날", "Araw ng Bastille", "День взятия Бастилии", "パリ祭", "Dia da Bastilha", "Französischer Nationalfeiertag", "Presa della Bastiglia", "Hari Bastille", "День взяття Бастилії", "बैस्टिल दिवस"],
+  "Assumption Day": ["Asunción", "Assomption", "圣母升天节", "Lễ Đức Mẹ Lên Trời", "성모 승천 대축일", "Pag-akyat ni Maria", "Успение Богородицы", "聖母被昇天祭", "Assunção de Nossa Senhora", "Mariä Himmelfahrt", "Ferragosto", "Maria Diangkat ke Surga", "Успіння Богородиці", "असम्प्शन दिवस"],
+  "All Saints' Day": ["Día de Todos los Santos", "Toussaint", "诸圣节", "Lễ Các Thánh", "모든 성인의 날", "Araw ng mga Santo", "День всех святых", "諸聖人の日", "Dia de Todos os Santos", "Allerheiligen", "Ognissanti", "Hari Semua Orang Kudus", "День усіх святих", "ऑल सेंट्स डे"],
+  "Armistice Day": ["Día del Armisticio", "Armistice", "停战纪念日", "Ngày Đình chiến", "휴전 기념일", "Araw ng Armistice", "День перемирия", "休戦記念日", "Dia do Armistício", "Waffenstillstandstag", "Giorno dell'Armistizio", "Hari Gencatan Senjata", "День перемир'я", "युद्धविराम दिवस"],
+  "German Unity Day": ["Día de la Unidad Alemana", "Jour de l'unité allemande", "德国统一日", "Ngày Thống nhất Đức", "독일 통일의 날", "Araw ng Pagkakaisa ng Germany", "День германского единства", "ドイツ統一の日", "Dia da Unidade Alemã", "Tag der Deutschen Einheit", "Giorno dell'unità tedesca", "Hari Persatuan Jerman", "День німецької єдності", "जर्मन एकता दिवस"],
+  "Holi": ["Holi", "Holi", "洒红节", "Lễ hội Holi", "홀리", "Holi", "Холи", "ホーリー祭", "Holi", "Holi", "Holi", "Holi", "Холі", "होली"],
+  "Gandhi Jayanti": ["Gandhi Jayanti", "Gandhi Jayanti", "甘地诞辰", "Ngày sinh Gandhi", "간디 탄신일", "Gandhi Jayanti", "День рождения Ганди", "ガンジー生誕記念日", "Gandhi Jayanti", "Gandhi Jayanti", "Gandhi Jayanti", "Gandhi Jayanti", "День народження Ганді", "गांधी जयंती"],
+  "Diwali": ["Diwali", "Diwali", "排灯节", "Lễ hội Diwali", "디왈리", "Diwali", "Дивали", "ディワリ", "Diwali", "Diwali", "Diwali", "Diwali", "Дівалі", "दिवाली"],
+  "Pancasila Day": ["Día de Pancasila", "Jour de la Pancasila", "建国五项原则日", "Ngày Pancasila", "판차실라의 날", "Araw ng Pancasila", "День Панчасила", "パンチャシラの日", "Dia da Pancasila", "Pancasila-Tag", "Giorno della Pancasila", "Hari Lahir Pancasila", "День Панчасила", "पंचशील दिवस"],
+  "Liberation Day": ["Día de la Liberación", "Fête de la Libération", "解放日", "Ngày Giải phóng", "광복절", "Araw ng Paglaya", "День освобождения", "解放記念日", "Dia da Libertação", "Tag der Befreiung", "Festa della Liberazione", "Hari Pembebasan", "День визволення", "मुक्ति दिवस"],
+  "Immaculate Conception": ["Inmaculada Concepción", "Immaculée Conception", "圣母无染原罪节", "Lễ Đức Mẹ Vô Nhiễm", "무염시태 대축일", "Kalinis-linisang Paglilihi", "Непорочное зачатие", "無原罪の御宿り", "Imaculada Conceição", "Mariä Empfängnis", "Immacolata Concezione", "Maria Dikandung Tanpa Noda", "Непорочне зачаття", "निष्कलंक गर्भधारण दिवस"],
+  "Coming of Age Day": ["Día de la Mayoría de Edad", "Fête de la majorité", "成人节", "Ngày Thành niên", "성년의 날", "Araw ng Pagtanda", "День совершеннолетия", "成人の日", "Dia da Maioridade", "Tag der Volljährigkeit", "Giorno della maggiore età", "Hari Kedewasaan", "День повноліття", "वयस्कता दिवस"],
+  "National Foundation Day": ["Día de la Fundación Nacional", "Fête de la fondation nationale", "建国纪念日", "Ngày Lập quốc", "개천절", "Araw ng Pagkakatatag", "День основания государства", "建国記念の日", "Dia da Fundação Nacional", "Staatsgründungstag", "Giorno della fondazione nazionale", "Hari Berdirinya Negara", "День заснування держави", "राष्ट्रीय स्थापना दिवस"],
+  "Emperor's Birthday": ["Cumpleaños del Emperador", "Anniversaire de l'Empereur", "天皇诞辰", "Sinh nhật Thiên hoàng", "일왕 탄생일", "Kaarawan ng Emperador", "День рождения императора", "天皇誕生日", "Aniversário do Imperador", "Geburtstag des Kaisers", "Compleanno dell'Imperatore", "Hari Ulang Tahun Kaisar", "День народження імператора", "सम्राट का जन्मदिन"],
+  "Culture Day": ["Día de la Cultura", "Fête de la culture", "文化日", "Ngày Văn hóa", "문화의 날", "Araw ng Kultura", "День культуры", "文化の日", "Dia da Cultura", "Tag der Kultur", "Giornata della cultura", "Hari Kebudayaan", "День культури", "संस्कृति दिवस"],
+  "Labor Thanksgiving Day": ["Día de Acción de Gracias por el Trabajo", "Fête du travail et de la gratitude", "勤劳感谢日", "Ngày Cảm tạ Lao động", "근로감사의 날", "Araw ng Pasasalamat sa Paggawa", "День благодарности труду", "勤労感謝の日", "Dia de Ação de Graças pelo Trabalho", "Tag des Dankes für die Arbeit", "Giorno del ringraziamento per il lavoro", "Hari Syukur Pekerja", "День подяки праці", "श्रम धन्यवाद दिवस"],
+  "Independence Movement Day": ["Día del Movimiento de Independencia", "Jour du mouvement d'indépendance", "三一节", "Ngày Phong trào Độc lập", "삼일절", "Araw ng Kilusan ng Kalayaan", "День движения за независимость", "三・一節", "Dia do Movimento de Independência", "Tag der Unabhängigkeitsbewegung", "Giorno del movimento per l'indipendenza", "Hari Gerakan Kemerdekaan", "День руху за незалежність", "स्वतंत्रता आंदोलन दिवस"],
+  "Hangul Day": ["Día del Hangul", "Jour du hangeul", "韩文日", "Ngày Hangul", "한글날", "Araw ng Hangul", "День хангыля", "ハングルの日", "Dia do Hangul", "Hangeul-Tag", "Giorno dell'hangul", "Hari Hangul", "День хангиля", "हंगुल दिवस"],
+  "Day of Valor": ["Día del Valor", "Jour de la Bravoure", "英勇日", "Ngày Dũng cảm", "용맹의 날", "Araw ng Kagitingan", "День доблести", "勇者の日", "Dia do Valor", "Tag der Tapferkeit", "Giorno del Valore", "Hari Keberanian", "День звитяги", "शौर्य दिवस"],
+  "National Heroes Day": ["Día de los Héroes Nacionales", "Journée des héros nationaux", "民族英雄日", "Ngày Anh hùng Dân tộc", "국가 영웅의 날", "Araw ng mga Bayani", "День национальных героев", "国民英雄の日", "Dia dos Heróis Nacionais", "Tag der Nationalhelden", "Giornata degli eroi nazionali", "Hari Pahlawan Nasional", "День національних героїв", "राष्ट्रीय नायक दिवस"],
+  "Bonifacio Day": ["Día de Bonifacio", "Jour de Bonifacio", "博尼法西奥日", "Ngày Bonifacio", "보니파시오의 날", "Araw ni Bonifacio", "День Бонифасио", "ボニファシオの日", "Dia de Bonifacio", "Bonifacio-Tag", "Giorno di Bonifacio", "Hari Bonifacio", "День Боніфасіо", "बोनिफ़ासियो दिवस"],
+  "Rizal Day": ["Día de Rizal", "Jour de Rizal", "黎刹日", "Ngày Rizal", "리살의 날", "Araw ni Rizal", "День Рисаля", "リサールの日", "Dia de Rizal", "Rizal-Tag", "Giorno di Rizal", "Hari Rizal", "День Ризаля", "रिज़ाल दिवस"],
+  "Freedom Day": ["Día de la Libertad", "Jour de la Liberté", "自由日", "Ngày Tự do", "자유의 날", "Araw ng Kalayaan", "День свободы", "自由の日", "Dia da Liberdade", "Tag der Freiheit", "Giorno della Libertà", "Hari Kebebasan", "День свободи", "स्वतंत्रता दिवस"],
+  "Portugal Day": ["Día de Portugal", "Jour du Portugal", "葡萄牙日", "Ngày Bồ Đào Nha", "포르투갈의 날", "Araw ng Portugal", "День Португалии", "ポルトガルの日", "Dia de Portugal", "Tag Portugals", "Giorno del Portogallo", "Hari Portugal", "День Португалії", "पुर्तगाल दिवस"],
+  "Restoration of Independence": ["Restauración de la Independencia", "Restauration de l'indépendance", "恢复独立日", "Ngày Khôi phục Độc lập", "독립 회복의 날", "Pagbabalik ng Kalayaan", "День восстановления независимости", "独立回復記念日", "Restauração da Independência", "Wiederherstellung der Unabhängigkeit", "Restaurazione dell'indipendenza", "Pemulihan Kemerdekaan", "День відновлення незалежності", "स्वतंत्रता पुनर्स्थापना दिवस"],
+  "Women's Day": ["Día de la Mujer", "Journée des femmes", "妇女节", "Ngày Quốc tế Phụ nữ", "여성의 날", "Araw ng Kababaihan", "Международный женский день", "国際女性デー", "Dia da Mulher", "Frauentag", "Festa della donna", "Hari Perempuan", "Міжнародний жіночий день", "महिला दिवस"],
+  "Defenders Day": ["Día de los Defensores", "Jour des défenseurs", "保卫者日", "Ngày Những người Bảo vệ", "수호자의 날", "Araw ng mga Tagapagtanggol", "День защитников", "防衛者の日", "Dia dos Defensores", "Tag der Verteidiger", "Giorno dei Difensori", "Hari Para Pembela", "День захисників і захисниць", "रक्षक दिवस"],
+  "Reunification Day": ["Día de la Reunificación", "Jour de la réunification", "统一日", "Ngày Thống nhất", "통일의 날", "Araw ng Muling Pagkakaisa", "День объединения", "統一記念日", "Dia da Reunificação", "Tag der Wiedervereinigung", "Giorno della Riunificazione", "Hari Reunifikasi", "День возз'єднання", "पुनर्एकीकरण दिवस"],
+  "Orthodox Easter": ["Pascua ortodoxa", "Pâques orthodoxe", "东正教复活节", "Lễ Phục sinh Chính thống", "정교회 부활절", "Pasko ng Pagkabuhay (Ortodokso)", "Православная Пасха", "正教会の復活祭", "Páscoa Ortodoxa", "Orthodoxes Ostern", "Pasqua ortodossa", "Paskah Ortodoks", "Великдень", "ईस्टर (ऑर्थोडॉक्स)"],
+};
+
 function translateText(text) {
   if (appLanguage === 'en' || !text || !/[A-Za-z]/.test(text)) return null;
   const data = languageData();
   if (!data) return null;
   const dict = data.dict;
   const trimmed = text.trim();
+  const extraAt = OWN_WORD_LANGS.indexOf(appLanguage);
+  const known = function (t) {
+    if (EXTRA_TEXT[t] && extraAt > -1) return EXTRA_TEXT[t][extraAt];
+    if (Object.prototype.hasOwnProperty.call(dict, t)) return dict[t];
+    return null;
+  };
+  if (known(trimmed) !== null) return text.replace(trimmed, known(trimmed));
+  // Two holidays on one day: "Labor Day · Mother's Day"
+  if (trimmed.indexOf(' · ') > 0) {
+    const pieces = trimmed.split(' · ');
+    if (pieces.every(function (piece) { return known(piece) !== null; })) return text.replace(trimmed, pieces.map(known).join(' · '));
+  }
   if (Object.prototype.hasOwnProperty.call(dict, trimmed)) return text.replace(trimmed, dict[trimmed]);
+  // "Friday, November 27, Black Friday": a date, then a holiday
+  const lastComma = trimmed.lastIndexOf(', ');
+  if (lastComma > 0) {
+    const tail = trimmed.slice(lastComma + 2);
+    const tailText = known(tail) !== null ? known(tail) : (tail.indexOf(' · ') > 0 && tail.split(' · ').every(function (piece) { return known(piece) !== null; }) ? tail.split(' · ').map(known).join(' · ') : null);
+    if (tailText !== null && !/[A-Za-z]{3,}/.test(textKey(trimmed.slice(0, lastComma)).key.replace(/\{\w+\}/g, ''))) {
+      return text.replace(tail, tailText);
+    }
+  }
   const k = textKey(trimmed);
   if (Object.prototype.hasOwnProperty.call(dict, k.key)) return text.replace(trimmed, fillKey(dict[k.key], k.values));
   // "Tuesday, Christmas" and lists like "Goal one, Goal two"
@@ -749,18 +892,60 @@ function translateText(text) {
   if (dated && Object.prototype.hasOwnProperty.call(dict, dated[1])) return text.replace(trimmed, fillKey('{d}, ' + dict[dated[1]], k.values));
   if (k.key.indexOf(', ') > 0 && k.values.length === 0) {
     const parts = k.key.split(', ');
-    if (parts.every(function (part) { return Object.prototype.hasOwnProperty.call(dict, part); })) {
-      return text.replace(trimmed, fillKey(parts.map(function (part) { return dict[part]; }).join(', '), []));
+    if (parts.every(function (part) { return /^\{[POCSpocs]a?\}$/.test(part) || Object.prototype.hasOwnProperty.call(dict, part); })) {
+      return text.replace(trimmed, fillKey(parts.map(function (part) { return dict[part] || part; }).join(', '), []));
     }
   }
-  // Sentences with names in them
+  // "Tutoring: Lessons, Sessions, Students" (a label, then a list)
+  const labelled = k.key.match(/^([^:{}]+): (.+)$/);
+  if (labelled && Object.prototype.hasOwnProperty.call(dict, labelled[1])) {
+    const parts = labelled[2].split(', ');
+    if (parts.every(function (part) { return /^\{[POCSpocs]a?\}$/.test(part) || Object.prototype.hasOwnProperty.call(dict, part); })) {
+      return text.replace(trimmed, fillKey(dict[labelled[1]] + ': ' + parts.map(function (part) { return dict[part] || part; }).join(', '), k.values));
+    }
+  }
+  // Sentences with names in them. Any part that has its own translation (like a theme name) is translated too.
   for (let i = 0; i < data.patterns.length; i++) {
     const rule = data.patterns[i];
-    if (rule[0].test(k.key)) return text.replace(trimmed, fillKey(k.key.replace(rule[0], rule[1]), k.values));
+    const found = k.key.match(rule[0]);
+    if (!found) continue;
+    const out = rule[1].replace(/\$(\d)/g, function (all, n) { return translatePiece(found[Number(n)] || '', dict); });
+    return text.replace(trimmed, fillKey(out, k.values));
   }
   // A word on its own, like a business's own word in the menu
   if (/^[A-Z][a-z ]+$/.test(trimmed) && OWN_WORDS[trimmed]) return text.replace(trimmed, translateWord(trimmed));
   return null;
+}
+
+// The example details shown in Settings ("Add things like cake flavor"), in each language (same order as OWN_WORD_LANGS)
+const EXAMPLE_WORDS = {
+  'cake flavor': ['sabor del pastel', 'saveur du gâteau', '蛋糕口味', 'vị bánh', '케이크 맛', 'flavor ng cake', 'вкус торта', 'ケーキの味', 'sabor do bolo', 'Kuchengeschmack', 'gusto della torta', 'rasa kue', 'смак торта', 'केक का फ़्लेवर'],
+  'number of people': ['número de personas', 'nombre de personnes', '人数', 'số người', '인원 수', 'bilang ng tao', 'число гостей', '人数', 'número de pessoas', 'Personenzahl', 'numero di persone', 'jumlah orang', 'кількість гостей', 'लोगों की संख्या'],
+  'scent': ['aroma', 'parfum', '香味', 'mùi hương', '향', 'amoy', 'аромат', '香り', 'aroma', 'Duft', 'profumo', 'aroma', 'аромат', 'ख़ुशबू'],
+  'size': ['tamaño', 'taille', '尺寸', 'kích cỡ', '크기', 'laki', 'размер', 'サイズ', 'tamanho', 'Größe', 'taglia', 'ukuran', 'розмір', 'साइज़'],
+  'nail shape': ['forma de uñas', 'forme des ongles', '甲型', 'dáng móng', '네일 모양', 'hugis ng kuko', 'форма ногтей', '爪の形', 'formato da unha', 'Nagelform', 'forma delle unghie', 'bentuk kuku', 'форма нігтів', 'नाखून का आकार'],
+  'hair length': ['largo del cabello', 'longueur des cheveux', '头发长度', 'độ dài tóc', '머리 길이', 'haba ng buhok', 'длина волос', '髪の長さ', 'comprimento do cabelo', 'Haarlänge', 'lunghezza dei capelli', 'panjang rambut', 'довжина волосся', 'बालों की लंबाई'],
+  'lash style': ['estilo de pestañas', 'style de cils', '睫毛款式', 'kiểu mi', '속눈썹 스타일', 'istilo ng pilikmata', 'стиль ресниц', 'まつげのスタイル', 'estilo de cílios', 'Wimpernstil', 'stile delle ciglia', 'gaya bulu mata', 'стиль вій', 'पलकों का स्टाइल'],
+  'subject': ['materia', 'matière', '科目', 'môn học', '과목', 'asignatura', 'предмет', '科目', 'matéria', 'Fach', 'materia', 'mata pelajaran', 'предмет', 'विषय'],
+  'instrument': ['instrumento', 'instrument', '乐器', 'nhạc cụ', '악기', 'instrumento', 'инструмент', '楽器', 'instrumento', 'Instrument', 'strumento', 'alat musik', 'інструмент', 'वाद्य'],
+  'goal': ['meta', 'objectif', '目标', 'mục tiêu', '목표', 'layunin', 'цель', '目標', 'meta', 'Ziel', 'obiettivo', 'target', 'мета', 'लक्ष्य'],
+  'location': ['lugar', 'lieu', '地点', 'địa điểm', '장소', 'lugar', 'место', '場所', 'local', 'Ort', 'luogo', 'lokasi', 'місце', 'जगह'],
+  'pet name': ['nombre de la mascota', "nom de l'animal", '宠物名字', 'tên thú cưng', '반려동물 이름', 'pangalan ng alaga', 'кличка питомца', 'ペットの名前', 'nome do pet', 'Name des Tiers', "nome dell'animale", 'nama hewan', 'кличка тварини', 'पालतू का नाम'],
+  'number of rooms': ['número de cuartos', 'nombre de pièces', '房间数', 'số phòng', '방 개수', 'bilang ng kuwarto', 'число комнат', '部屋数', 'número de cômodos', 'Zimmeranzahl', 'numero di stanze', 'jumlah kamar', 'кількість кімнат', 'कमरों की संख्या'],
+  'yard size': ['tamaño del jardín', 'taille du jardin', '院子大小', 'diện tích sân', '마당 크기', 'laki ng bakuran', 'размер двора', '庭の広さ', 'tamanho do quintal', 'Gartengröße', 'dimensione del giardino', 'luas halaman', 'розмір двору', 'आँगन का आकार'],
+  'theme': ['tema', 'thème', '主题', 'chủ đề', '테마', 'tema', 'тема', 'テーマ', 'tema', 'Motto', 'tema', 'tema', 'тема', 'थीम'],
+  'pickup or delivery': ['recoger o entregar', 'ramassage ou livraison', '自取还是送货', 'tự lấy hay giao hàng', '픽업 또는 배달', 'pickup o delivery', 'самовывоз или доставка', '受け取りか配達か', 'retirada ou entrega', 'Abholung oder Lieferung', 'ritiro o consegna', 'ambil sendiri atau diantar', 'самовивіз чи доставка', 'पिकअप या डिलीवरी'],
+};
+
+// A piece of a sentence: translated if it's a known word or phrase, otherwise kept as it is
+function translatePiece(piece, dict) {
+  const example = EXAMPLE_WORDS[piece.toLowerCase()];
+  const at = OWN_WORD_LANGS.indexOf(appLanguage);
+  if (example && at > -1) return example[at];
+  if (Object.prototype.hasOwnProperty.call(dict, piece)) return dict[piece];
+  const cap = piece.charAt(0).toUpperCase() + piece.slice(1);
+  if (piece !== cap && Object.prototype.hasOwnProperty.call(dict, cap)) return dict[cap].toLowerCase();
+  return piece;
 }
 
 const SKIP_TAGS = { SCRIPT: 1, STYLE: 1, TEXTAREA: 1, INPUT: 1, OPTION: 0, CODE: 1 };
@@ -1340,7 +1525,6 @@ function showNamePage() {
 
     <label class="label" for="business-country">Where are you based?</label>
     <select id="business-country" class="input"></select>
-    <p class="field-hint">We'll put your country's holidays on your calendar.</p>
 
     <p class="label photo-label">Profile picture (optional)</p>
     <div class="photo-picker" id="photo-picker"></div>
@@ -1788,13 +1972,22 @@ function makeMenuButton(section) {
 // Tabs some kinds of business don't use. Cleaning and yard businesses
 // keep track of their jobs on the Calendar instead of a Jobs tab.
 const NO_ORDERS_TAB = ['cleaning', 'yard'];
+// Businesses that don't sell things over a counter don't need Receipts and menus
+const NO_PRINTABLES = ['tutoring', 'music', 'fitness', 'pets', 'cleaning', 'yard'];
+// For "Something else": words that mean they sell things people would want a receipt or menu for
+const SELLS_THINGS = /\b(sell|selling|shop|store|stand|booth|market|bake|baked|bakery|cake|cookie|cupcake|bread|pie|treat|candy|chocolate|snack|food|meal|lunch|catering|cater|drink|coffee|tea|lemonade|smoothie|juice|jewel|jewelry|bracelet|necklace|earring|craft|handmade|make|making|shirt|clothes|clothing|hat|bag|sticker|print|poster|art|painting|candle|soap|plant|flower|menu|restaurant|cafe|truck|merch|product)/;
+
 function hiddenSections() {
   let type = profile.businessType;
   if (type === 'other') {
-    const guess = guessType(profile.otherType);
+    const guess = guessType(profile.otherType || '');
     type = guess ? guess.id : 'other';
   }
-  return NO_ORDERS_TAB.includes(type) ? ['orders'] : [];
+  const hidden = NO_ORDERS_TAB.includes(type) ? ['orders'] : [];
+  if (NO_PRINTABLES.includes(type)) hidden.push('printables');
+  // Their own kind of business that we couldn't match: only keep it if they sell things
+  if (type === 'other' && !SELLS_THINGS.test((profile.otherType || '').toLowerCase())) hidden.push('printables');
+  return hidden;
 }
 
 // False for businesses without jobs or orders at all (cleaning, yard)
@@ -1857,6 +2050,11 @@ function showPage() {
   // A hidden tab's list opens the Calendar instead (its form still works from there)
   if (hiddenSections().includes(currentSection) && currentSection === 'orders' && orderView === null) {
     currentSection = 'calendar';
+    showMenu();
+  }
+  // A page this business doesn't use goes back to My Day
+  if (currentSection === 'printables' && hiddenSections().includes('printables')) {
+    currentSection = 'myday';
     showMenu();
   }
   const section = findSection(currentSection);
@@ -4329,18 +4527,38 @@ function weekStart(text) {
 
 // ---------- Holidays: worked out for any year, for the country they picked in setup ----------
 const COUNTRIES = [
-  { id: 'US', label: 'United States' },
-  { id: 'CA', label: 'Canada' },
-  { id: 'MX', label: 'Mexico' },
-  { id: 'GB', label: 'United Kingdom' },
-  { id: 'IE', label: 'Ireland' },
   { id: 'AU', label: 'Australia' },
+  { id: 'BR', label: 'Brazil' },
+  { id: 'CA', label: 'Canada' },
+  { id: 'CN', label: 'China' },
+  { id: 'FR', label: 'France' },
+  { id: 'DE', label: 'Germany' },
+  { id: 'IN', label: 'India' },
+  { id: 'ID', label: 'Indonesia' },
+  { id: 'IE', label: 'Ireland' },
+  { id: 'IT', label: 'Italy' },
+  { id: 'JP', label: 'Japan' },
+  { id: 'MX', label: 'Mexico' },
   { id: 'NZ', label: 'New Zealand' },
+  { id: 'PH', label: 'Philippines' },
+  { id: 'PT', label: 'Portugal' },
+  { id: 'KR', label: 'South Korea' },
+  { id: 'ES', label: 'Spain' },
+  { id: 'UA', label: 'Ukraine' },
+  { id: 'GB', label: 'United Kingdom' },
+  { id: 'US', label: 'United States' },
+  { id: 'VN', label: 'Vietnam' },
   { id: 'none', label: 'Somewhere else (no holidays)' },
 ];
 function findCountry(id) {
-  return COUNTRIES.find(function (c) { return c.id === id; }) || COUNTRIES[0];
+  return COUNTRIES.find(function (c) { return c.id === id; }) || COUNTRIES.find(function (c) { return c.id === 'US'; });
 }
+
+// Holidays that follow the moon move every year, so their dates are listed here (month-day)
+const LUNAR_NEW_YEAR = { 2025: '01-29', 2026: '02-17', 2027: '02-06', 2028: '01-26', 2029: '02-13', 2030: '02-03', 2031: '01-23', 2032: '02-11', 2033: '01-31', 2034: '02-19', 2035: '02-08' };
+const MID_AUTUMN = { 2025: '10-06', 2026: '09-25', 2027: '09-15', 2028: '10-03', 2029: '09-22', 2030: '09-12' };
+const DIWALI = { 2025: '10-20', 2026: '11-08', 2027: '10-29', 2028: '10-17', 2029: '11-05', 2030: '10-26' };
+const HOLI = { 2025: '03-14', 2026: '03-04', 2027: '03-22', 2028: '03-11', 2029: '03-01', 2030: '03-20' };
 // A good first guess, from the computer's language setting (like "en-CA")
 function guessCountry() {
   let region = '';
@@ -4349,6 +4567,32 @@ function guessCountry() {
   if (region === 'UK') region = 'GB';
   return COUNTRIES.some(function (c) { return c.id === region; }) ? region : 'US';
 }
+// Settings: change the country (for the holidays on the calendar)
+function pickCountry() {
+  openWindow({
+    title: 'Where are you based?',
+    saveLabel: 'Save',
+    html: `
+      <select class="input" id="country-pick" aria-label="Where are you based?"></select>
+    `,
+    fill: function (box) {
+      const select = box.querySelector('#country-pick');
+      COUNTRIES.forEach(function (c) {
+        const option = document.createElement('option');
+        option.value = c.id;
+        option.textContent = c.label;
+        select.appendChild(option);
+      });
+      select.value = myCountry();
+    },
+    onSave: function (box) {
+      profile.country = box.querySelector('#country-pick').value;
+      saveProfile();
+      showPage();
+    },
+  });
+}
+
 function myCountry() {
   return profile.country || guessCountry();
 }
@@ -4523,6 +4767,243 @@ function holidaysFor(year, country) {
     put(11, 25, 'Christmas Day');
     put(11, 26, 'Boxing Day');
     put(11, 31, 'New Year\'s Eve');
+  }
+  // Moving holidays from the tables above
+  function fromTable(table, name) {
+    const md = table[year];
+    if (md) put(Number(md.slice(0, 2)) - 1, Number(md.slice(3)), name);
+  }
+  // Orthodox Easter (Ukraine): worked out on the old calendar, then moved 13 days
+  function orthodoxEaster(name) {
+    const oa = year % 4, ob = year % 7, oc = year % 19;
+    const od = (19 * oc + 15) % 30, oe = (2 * oa + 4 * ob - od + 34) % 7;
+    const om = Math.floor((od + oe + 114) / 31) - 1;
+    const oday = ((od + oe + 114) % 31) + 1;
+    put(om, oday + 13, name);
+  }
+
+  if (country === 'BR') {
+    put(0, 1, 'New Year\'s Day');
+    easter(-48, 'Carnival');
+    easter(-47, 'Carnival');
+    easter(-2, 'Good Friday');
+    easter(0, 'Easter');
+    put(3, 21, 'Tiradentes Day');
+    put(4, 1, 'Labor Day');
+    put(4, nth(4, 0, 2), 'Mother\'s Day');
+    easter(60, 'Corpus Christi');
+    put(5, 12, 'Valentine\'s Day');
+    put(7, nth(7, 0, 2), 'Father\'s Day');
+    put(8, 7, 'Independence Day');
+    put(9, 12, 'Children\'s Day');
+    put(10, 2, 'All Souls\' Day');
+    put(10, 15, 'Republic Day');
+    put(10, 20, 'Black Consciousness Day');
+    put(11, 24, 'Christmas Eve');
+    put(11, 25, 'Christmas');
+    put(11, 31, 'New Year\'s Eve');
+  }
+  if (country === 'CN') {
+    put(0, 1, 'New Year\'s Day');
+    fromTable(LUNAR_NEW_YEAR, 'Lunar New Year');
+    put(2, 8, 'Women\'s Day');
+    put(4, 1, 'Labor Day');
+    put(5, 1, 'Children\'s Day');
+    fromTable(MID_AUTUMN, 'Mid-Autumn Festival');
+    put(9, 1, 'National Day');
+    put(11, 25, 'Christmas');
+  }
+  if (country === 'FR') {
+    put(0, 1, 'New Year\'s Day');
+    put(1, 14, 'Valentine\'s Day');
+    easter(0, 'Easter');
+    easter(1, 'Easter Monday');
+    put(4, 1, 'Labor Day');
+    put(4, 8, 'Victory Day');
+    easter(39, 'Ascension Day');
+    easter(50, 'Whit Monday');
+    put(4, nth(4, 0, -1), 'Mother\'s Day');
+    put(5, nth(5, 0, 3), 'Father\'s Day');
+    put(6, 14, 'Bastille Day');
+    put(7, 15, 'Assumption Day');
+    put(9, 31, 'Halloween');
+    put(10, 1, 'All Saints\' Day');
+    put(10, 11, 'Armistice Day');
+    put(11, 24, 'Christmas Eve');
+    put(11, 25, 'Christmas');
+    put(11, 31, 'New Year\'s Eve');
+  }
+  if (country === 'DE') {
+    put(0, 1, 'New Year\'s Day');
+    put(1, 14, 'Valentine\'s Day');
+    easter(-2, 'Good Friday');
+    easter(0, 'Easter Sunday');
+    easter(1, 'Easter Monday');
+    put(4, 1, 'Labor Day');
+    put(4, nth(4, 0, 2), 'Mother\'s Day');
+    easter(39, 'Ascension Day');
+    easter(50, 'Whit Monday');
+    put(9, 3, 'German Unity Day');
+    put(9, 31, 'Halloween');
+    put(11, 24, 'Christmas Eve');
+    put(11, 25, 'Christmas Day');
+    put(11, 26, 'Boxing Day');
+    put(11, 31, 'New Year\'s Eve');
+  }
+  if (country === 'IN') {
+    put(0, 1, 'New Year\'s Day');
+    put(0, 26, 'Republic Day');
+    fromTable(HOLI, 'Holi');
+    put(4, nth(4, 0, 2), 'Mother\'s Day');
+    put(7, 15, 'Independence Day');
+    put(9, 2, 'Gandhi Jayanti');
+    fromTable(DIWALI, 'Diwali');
+    put(10, 14, 'Children\'s Day');
+    put(11, 25, 'Christmas');
+  }
+  if (country === 'ID') {
+    put(0, 1, 'New Year\'s Day');
+    fromTable(LUNAR_NEW_YEAR, 'Lunar New Year');
+    easter(-2, 'Good Friday');
+    easter(0, 'Easter');
+    put(4, 1, 'Labor Day');
+    easter(39, 'Ascension Day');
+    put(5, 1, 'Pancasila Day');
+    put(7, 17, 'Independence Day');
+    put(11, 25, 'Christmas');
+  }
+  if (country === 'IT') {
+    put(0, 1, 'New Year\'s Day');
+    put(0, 6, 'Three Kings Day');
+    put(1, 14, 'Valentine\'s Day');
+    put(2, 19, 'Father\'s Day');
+    easter(0, 'Easter');
+    easter(1, 'Easter Monday');
+    put(3, 25, 'Liberation Day');
+    put(4, 1, 'Labor Day');
+    put(4, nth(4, 0, 2), 'Mother\'s Day');
+    put(5, 2, 'Republic Day');
+    put(7, 15, 'Assumption Day');
+    put(10, 1, 'All Saints\' Day');
+    put(11, 8, 'Immaculate Conception');
+    put(11, 24, 'Christmas Eve');
+    put(11, 25, 'Christmas');
+    put(11, 26, 'St. Stephen\'s Day');
+    put(11, 31, 'New Year\'s Eve');
+  }
+  if (country === 'JP') {
+    put(0, 1, 'New Year\'s Day');
+    put(0, nth(0, 1, 2), 'Coming of Age Day');
+    put(1, 11, 'National Foundation Day');
+    put(1, 14, 'Valentine\'s Day');
+    put(1, 23, 'Emperor\'s Birthday');
+    put(4, 3, 'Constitution Day');
+    put(4, 5, 'Children\'s Day');
+    put(4, nth(4, 0, 2), 'Mother\'s Day');
+    put(10, 3, 'Culture Day');
+    put(10, 23, 'Labor Thanksgiving Day');
+    put(11, 24, 'Christmas Eve');
+    put(11, 25, 'Christmas');
+    put(11, 31, 'New Year\'s Eve');
+  }
+  if (country === 'PH') {
+    put(0, 1, 'New Year\'s Day');
+    fromTable(LUNAR_NEW_YEAR, 'Lunar New Year');
+    put(1, 14, 'Valentine\'s Day');
+    easter(-3, 'Holy Thursday');
+    easter(-2, 'Good Friday');
+    easter(0, 'Easter');
+    put(3, 9, 'Day of Valor');
+    put(4, 1, 'Labor Day');
+    put(4, nth(4, 0, 2), 'Mother\'s Day');
+    put(5, 12, 'Independence Day');
+    put(5, nth(5, 0, 3), 'Father\'s Day');
+    put(7, nth(7, 1, -1), 'National Heroes Day');
+    put(10, 1, 'All Saints\' Day');
+    put(10, 30, 'Bonifacio Day');
+    put(11, 8, 'Immaculate Conception');
+    put(11, 24, 'Christmas Eve');
+    put(11, 25, 'Christmas');
+    put(11, 30, 'Rizal Day');
+    put(11, 31, 'New Year\'s Eve');
+  }
+  if (country === 'PT') {
+    put(0, 1, 'New Year\'s Day');
+    easter(-47, 'Carnival');
+    put(2, 19, 'Father\'s Day');
+    easter(-2, 'Good Friday');
+    easter(0, 'Easter');
+    put(3, 25, 'Freedom Day');
+    put(4, 1, 'Labor Day');
+    put(4, nth(4, 0, 1), 'Mother\'s Day');
+    easter(60, 'Corpus Christi');
+    put(5, 10, 'Portugal Day');
+    put(7, 15, 'Assumption Day');
+    put(9, 5, 'Republic Day');
+    put(10, 1, 'All Saints\' Day');
+    put(11, 1, 'Restoration of Independence');
+    put(11, 8, 'Immaculate Conception');
+    put(11, 24, 'Christmas Eve');
+    put(11, 25, 'Christmas');
+    put(11, 31, 'New Year\'s Eve');
+  }
+  if (country === 'KR') {
+    put(0, 1, 'New Year\'s Day');
+    fromTable(LUNAR_NEW_YEAR, 'Lunar New Year');
+    put(1, 14, 'Valentine\'s Day');
+    put(2, 1, 'Independence Movement Day');
+    put(4, 5, 'Children\'s Day');
+    put(5, 6, 'Memorial Day');
+    put(7, 15, 'Liberation Day');
+    fromTable(MID_AUTUMN, 'Mid-Autumn Festival');
+    put(9, 3, 'National Foundation Day');
+    put(9, 9, 'Hangul Day');
+    put(11, 25, 'Christmas');
+  }
+  if (country === 'ES') {
+    put(0, 1, 'New Year\'s Day');
+    put(0, 6, 'Three Kings Day');
+    put(1, 14, 'Valentine\'s Day');
+    put(2, 19, 'Father\'s Day');
+    easter(-3, 'Holy Thursday');
+    easter(-2, 'Good Friday');
+    easter(0, 'Easter');
+    put(4, 1, 'Labor Day');
+    put(4, nth(4, 0, 1), 'Mother\'s Day');
+    put(7, 15, 'Assumption Day');
+    put(9, 12, 'National Day');
+    put(10, 1, 'All Saints\' Day');
+    put(11, 6, 'Constitution Day');
+    put(11, 8, 'Immaculate Conception');
+    put(11, 24, 'Christmas Eve');
+    put(11, 25, 'Christmas');
+    put(11, 31, 'New Year\'s Eve');
+  }
+  if (country === 'UA') {
+    put(0, 1, 'New Year\'s Day');
+    put(1, 14, 'Valentine\'s Day');
+    put(2, 8, 'Women\'s Day');
+    orthodoxEaster('Orthodox Easter');
+    put(4, 1, 'Labor Day');
+    put(4, nth(4, 0, 2), 'Mother\'s Day');
+    put(5, 28, 'Constitution Day');
+    put(7, 24, 'Independence Day');
+    put(9, 1, 'Defenders Day');
+    put(11, 25, 'Christmas');
+    put(11, 31, 'New Year\'s Eve');
+  }
+  if (country === 'VN') {
+    put(0, 1, 'New Year\'s Day');
+    fromTable(LUNAR_NEW_YEAR, 'Lunar New Year');
+    put(1, 14, 'Valentine\'s Day');
+    put(2, 8, 'Women\'s Day');
+    put(3, 30, 'Reunification Day');
+    put(4, 1, 'Labor Day');
+    put(5, 1, 'Children\'s Day');
+    fromTable(MID_AUTUMN, 'Mid-Autumn Festival');
+    put(8, 2, 'National Day');
+    put(11, 24, 'Christmas Eve');
+    put(11, 25, 'Christmas');
   }
   holidayCache[cacheKey] = list;
   return list;
@@ -6883,7 +7364,7 @@ function showPrintables(page) {
     const choices = sortedOrders();
     if (!choices.length) {
       controls.innerHTML = '<p class="list-empty"></p>';
-      controls.firstChild.textContent = 'Add an ' + oneOrder() + ' first, then make a receipt for it here.';
+      controls.firstChild.textContent = 'Add ' + (/^[aeiou]/i.test(oneOrder()) ? 'an ' : 'a ') + oneOrder() + ' first, then make a receipt for it here.';
       paper.parentNode.remove();
       return;
     }
@@ -7310,7 +7791,7 @@ function colorPicker(doc, current, onPick) {
 }
 
 // The little "..." menu: colors, calendar and Delete
-function noteMenu(doc, note, onColor, onDelete, onCalendar) {
+function noteMenu(doc, note, onColor, onDelete, onCalendar, onList, onTodo) {
   const menu = doc.createElement('div');
   menu.className = 'note-menu';
   menu.hidden = true;
@@ -7327,12 +7808,137 @@ function noteMenu(doc, note, onColor, onDelete, onCalendar) {
   cal.innerHTML = icon('calendar') + '<span></span>';
   cal.querySelector('span').textContent = note.date ? 'On calendar: ' + niceDate(note.date) : 'Add to calendar';
   cal.addEventListener('click', function () { menu.hidden = true; onCalendar(); });
+  const list = doc.createElement('button');
+  list.className = 'note-menu-delete note-menu-cal';
+  list.innerHTML = icon('list') + '<span></span>';
+  list.querySelector('span').textContent = note.list ? 'Make it plain text' : 'Make it a checklist';
+  list.addEventListener('click', function () { menu.hidden = true; onList(); });
+  const todo = doc.createElement('button');
+  todo.className = 'note-menu-delete note-menu-cal';
+  todo.innerHTML = icon('check') + '<span>Make it a to-do</span>';
+  todo.addEventListener('click', function () { menu.hidden = true; onTodo(); });
   const del = doc.createElement('button');
   del.className = 'note-menu-delete';
   del.innerHTML = icon('trash') + '<span>Delete note</span>';
   del.addEventListener('click', function () { menu.hidden = true; onDelete(); });
-  menu.append(title, colorPicker(doc, note.color, picked), cal, del);
+  menu.append(title, colorPicker(doc, note.color, picked), cal, list, todo, del);
   return menu;
+}
+
+// ---------- Checklists, pins and to-dos ----------
+// A checklist note keeps its lines in note.items ({ text, done }), and note.text too (for search and the calendar)
+function syncNoteText(note) {
+  if (note.list) note.text = note.items.map(function (item) { return item.text; }).join('\n');
+}
+
+function toggleNoteList(note) {
+  if (note.list) {
+    note.text = note.items.map(function (item) { return item.text; }).filter(function (t) { return t.trim(); }).join('\n');
+    note.list = false;
+    delete note.items;
+  } else {
+    const lines = note.text.split('\n')
+      .map(function (line) { return line.replace(/^\s*([-*•]|\[[ xX]?\]|☐|☑|✓)\s*/, '').trim(); })
+      .filter(Boolean);
+    note.items = (lines.length ? lines : ['']).map(function (t) { return { text: t, done: false }; });
+    note.list = true;
+  }
+  saveNotes();
+}
+
+// Puts a note on the To-do list: one task, or one for each unchecked line of a checklist
+function noteToTodo(note) {
+  const texts = note.list
+    ? note.items.filter(function (item) { return !item.done && item.text.trim(); }).map(function (item) { return item.text.trim(); })
+    : [note.text.replace(/\s+/g, ' ').trim()].filter(Boolean);
+  window.focus();
+  if (!texts.length) { showUndo('Type what you need to do.', null); return; }
+  const stamp = Date.now();
+  const added = texts.map(function (t, i) {
+    return { id: 't' + stamp + '_' + i, text: t.slice(0, 140), due: note.date || '', done: false, flagged: !!note.pinned, created: new Date().toISOString() };
+  });
+  added.forEach(function (t) { tasks.push(t); });
+  saveTasks();
+  showPage();
+  showUndo('Added to your To-do list', function () {
+    tasks = tasks.filter(function (t) { return added.indexOf(t) === -1; });
+    saveTasks();
+    showPage();
+  });
+}
+
+// The checklist itself: a box to check and a line to type on, for each item.
+// Enter adds a new line, Backspace on an empty line removes it.
+function noteListEditor(doc, note, onChange) {
+  const box = doc.createElement('div');
+  box.className = 'note-list';
+  function draw(focusIndex) {
+    box.innerHTML = '';
+    note.items.forEach(function (item, i) {
+      const row = doc.createElement('div');
+      row.className = 'note-item' + (item.done ? ' done' : '');
+      row.innerHTML = '<button type="button" class="note-check" role="checkbox">' + icon('tick') + '</button><textarea class="note-item-text" rows="1" aria-label="List item"></textarea>';
+      const check = row.querySelector('.note-check');
+      check.setAttribute('aria-checked', item.done ? 'true' : 'false');
+      check.setAttribute('aria-label', (item.done ? 'Not done: ' : 'Done: ') + (item.text || 'List item'));
+      check.addEventListener('click', function () {
+        item.done = !item.done;
+        onChange();
+        draw();
+      });
+      const input = row.querySelector('textarea');
+      input.value = item.text;
+      // Long lines wrap: the box grows to fit
+      const fit = function () { input.style.height = 'auto'; input.style.height = input.scrollHeight + 'px'; };
+      input.addEventListener('input', fit);
+      (doc.defaultView || window).requestAnimationFrame(fit);
+      input.placeholder = i === note.items.length - 1 ? 'Write here...' : '';
+      input.addEventListener('input', function () {
+        item.text = input.value;
+        syncNoteText(note);
+        onChange(true);
+      });
+      input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          note.items.splice(i + 1, 0, { text: '', done: false });
+          onChange();
+          draw(i + 1);
+        } else if (e.key === 'Backspace' && !input.value && note.items.length > 1) {
+          e.preventDefault();
+          note.items.splice(i, 1);
+          onChange();
+          draw(Math.max(0, i - 1));
+        } else if (e.key === 'ArrowDown' && i < note.items.length - 1 && input.selectionStart === input.value.length) {
+          e.preventDefault();
+          box.querySelectorAll('.note-item-text')[i + 1].focus();
+        } else if (e.key === 'ArrowUp' && i > 0 && input.selectionStart === 0) {
+          e.preventDefault();
+          box.querySelectorAll('.note-item-text')[i - 1].focus();
+        }
+      });
+      box.appendChild(row);
+    });
+    const add = doc.createElement('button');
+    add.type = 'button';
+    add.className = 'note-add-item';
+    add.innerHTML = icon('plus') + '<span>Add an item</span>';
+    add.addEventListener('click', function () {
+      note.items.push({ text: '', done: false });
+      onChange();
+      draw(note.items.length - 1);
+    });
+    box.appendChild(add);
+    if (focusIndex !== undefined) {
+      const inputs = box.querySelectorAll('.note-item-text');
+      const target = inputs[Math.min(focusIndex, inputs.length - 1)];
+      if (target) { target.focus(); target.setSelectionRange(target.value.length, target.value.length); }
+    }
+    syncNoteText(note);
+  }
+  draw();
+  box.focusFirst = function () { draw(0); };
+  return box;
 }
 
 // Puts a note on a day in the calendar (or takes it off)
@@ -7403,7 +8009,9 @@ function stickyBoard(big) {
   if (!notes.length) {
     grid.innerHTML = '<p class="notes-empty">No notes yet. Click <b>+</b> to add one.</p>';
   }
-  notes.forEach(function (note) { grid.appendChild(noteCard(note)); });
+  // Pinned notes come first
+  notes.slice().sort(function (a, b) { return (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0); })
+    .forEach(function (note) { grid.appendChild(noteCard(note)); });
 
   // + makes a new note right away. Write first, then pick its color on the note.
   box.querySelector('#note-plus').addEventListener('click', function () {
@@ -7415,19 +8023,49 @@ function stickyBoard(big) {
 }
 
 // The Sticky notes page: all your notes, bigger
+let noteSearch = '';
 function showNotesPage(page) {
-  page.innerHTML = '<header class="page-head with-button"><div><h1>Sticky notes</h1><p></p></div></header>';
+  page.innerHTML = `
+    <header class="page-head with-button"><div><h1>Sticky notes</h1><p></p></div>
+      <div class="notes-head-tools">
+        <label class="notes-search">${icon('search')}<input class="input" type="search" placeholder="Search notes" aria-label="Search notes"></label>
+      </div>
+    </header>`;
   page.querySelector('.page-head p').textContent = notes.length
     ? notes.length + (notes.length === 1 ? ' note' : ' notes') + '. Point at a note to pop it out onto your screen.'
     : 'Quick notes and reminders, in any color you like';
   const board = stickyBoard(true);
-  page.querySelector('.page-head').appendChild(board.querySelector('.notes-add-wrap'));
+  page.querySelector('.notes-head-tools').appendChild(board.querySelector('.notes-add-wrap'));
   page.appendChild(board);
+
+  // Search: hides the notes that don't match
+  const search = page.querySelector('.notes-search input');
+  const none = document.createElement('p');
+  none.className = 'notes-empty notes-no-match';
+  none.textContent = 'No notes match your search.';
+  none.hidden = true;
+  board.querySelector('.notes-grid').appendChild(none);
+  function filter() {
+    noteSearch = search.value;
+    const q = noteSearch.trim().toLowerCase();
+    let shown = 0;
+    board.querySelectorAll('.note').forEach(function (card) {
+      const note = notes.find(function (n) { return n.id === card.dataset.note; });
+      const match = !q || (note && note.text.toLowerCase().includes(q));
+      card.hidden = !match;
+      if (match) shown++;
+    });
+    none.hidden = !q || shown > 0 || !notes.length;
+  }
+  search.value = noteSearch;
+  search.addEventListener('input', filter);
+  if (!notes.length) page.querySelector('.notes-search').hidden = true;
+  filter();
 }
 
 // Puts the cursor in a note on My Day, ready to type
 function focusNoteNow(note) {
-  const typing = document.querySelector('.note[data-note="' + note.id + '"] textarea');
+  const typing = document.querySelector('.note[data-note="' + note.id + '"] textarea, .note[data-note="' + note.id + '"] .note-item-text');
   if (typing) typing.focus();
 }
 
@@ -7439,6 +8077,7 @@ function noteCard(note) {
   card.innerHTML = `
     <textarea class="note-text" aria-label="Sticky note" placeholder="Write here..."></textarea>
     <div class="note-tools">
+      <button class="note-tool" data-act="pin">${icon('pin')}</button>
       <button class="note-tool" data-act="pop" title="Pop out onto your screen" aria-label="Pop out onto your screen">${icon('popout')}</button>
       <button class="note-tool" data-act="more" title="Color and delete" aria-label="Color and delete">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg>
@@ -7446,8 +8085,35 @@ function noteCard(note) {
     </div>
     <span class="note-fold" aria-hidden="true"></span>
   `;
-  const text = card.querySelector('textarea');
+  let text = card.querySelector('textarea');
   text.value = note.text;
+
+  // A checklist note shows its list instead of the writing area
+  let listTimer = null;
+  if (note.list) {
+    const editor = noteListEditor(document, note, function (typing) {
+      note.changed = new Date().toISOString();
+      clearTimeout(listTimer);
+      if (typing) listTimer = setTimeout(function () { saveNotes(); }, 250);
+      else saveNotes();
+    });
+    text.replaceWith(editor);
+    text = null;
+    card.classList.add('is-list');
+  }
+
+  // Pin: pinned notes stay first, on My Day too
+  const pin = card.querySelector('[data-act="pin"]');
+  pin.setAttribute('aria-pressed', note.pinned ? 'true' : 'false');
+  pin.title = note.pinned ? 'Unpin' : 'Pin to top';
+  pin.setAttribute('aria-label', pin.title);
+  if (note.pinned) card.classList.add('pinned');
+  pin.addEventListener('click', function () {
+    if (text) note.text = text.value;
+    note.pinned = !note.pinned;
+    saveNotes();
+    showPage();
+  });
 
   // Its day on the calendar, if it has one
   if (note.date) {
@@ -7471,7 +8137,8 @@ function noteCard(note) {
       card.style.setProperty('--note', noteColor(c));
       saveNotes();
       drawSwatches();
-      text.focus();
+      const back = text || card.querySelector('.note-item-text');
+      if (back) back.focus();
     }));
   }
   drawSwatches();
@@ -7480,13 +8147,13 @@ function noteCard(note) {
   if (popped) card.classList.add('popped');
 
   let timer = null;
-  text.addEventListener('input', function () {
+  if (text) text.addEventListener('input', function () {
     note.text = text.value;
     note.changed = new Date().toISOString();
     clearTimeout(timer);
     timer = setTimeout(function () { saveNotes(); }, 250);
   });
-  text.addEventListener('blur', function (e) {
+  if (text) text.addEventListener('blur', function (e) {
     clearTimeout(timer);
     if (e.relatedTarget && card.contains(e.relatedTarget)) { note.text = text.value; saveNotes(); return; }
     note.text = text.value;
@@ -7505,19 +8172,37 @@ function noteCard(note) {
     card.style.setProperty('--note', noteColor(c));
     saveNotes();
   }, function () { deleteNote(note); }, function () {
-    note.text = text.value;
+    if (text) note.text = text.value;
     pickNoteDay(note);
+  }, function () {
+    if (text) note.text = text.value;
+    toggleNoteList(note);
+    showPage();
+    focusNoteNow(note);
+  }, function () {
+    if (text) note.text = text.value;
+    noteToTodo(note);
   });
   card.appendChild(menu);
 
   card.querySelector('[data-act="more"]').addEventListener('click', function () { menu.hidden = !menu.hidden; });
   card.querySelector('[data-act="pop"]').addEventListener('click', function () {
-    note.text = text.value;
+    if (text) note.text = text.value;
     saveList(NOTES_KEY, notes);
     popOutNote(note);
   });
   card.addEventListener('focusout', function (e) {
-    if (!card.contains(e.relatedTarget)) menu.hidden = true;
+    if (card.contains(e.relatedTarget)) return;
+    menu.hidden = true;
+    // An empty checklist goes away too
+    if (note.list && !note.text.trim() && !(noteWindows[note.id] && !noteWindows[note.id].closed)) {
+      setTimeout(function () {
+        if (card.contains(document.activeElement) || note.text.trim()) return;
+        notes = notes.filter(function (n) { return n !== note; });
+        saveList(NOTES_KEY, notes);
+        card.remove();
+      }, 150);
+    }
   });
   return card;
 }
@@ -7582,27 +8267,41 @@ function drawNoteWindow(note) {
     </div>
     <textarea class="note-text" aria-label="Sticky note" placeholder="Write here..."></textarea>
   `;
-  const text = doc.querySelector('textarea');
+  let text = doc.querySelector('textarea');
   text.value = note.text;
   text.addEventListener('input', function () {
     note.text = text.value;
     saveNotes(note.id);
     refreshBoardSoon();
   });
+  if (note.list) {
+    const editor = noteListEditor(doc, note, function () {
+      saveNotes(note.id);
+      refreshBoardSoon();
+    });
+    text.replaceWith(editor);
+    text = null;
+  }
 
   const menu = noteMenu(doc, note, function (c) {
     note.color = c;
     doc.body.style.setProperty('--note', noteColor(c));
     saveNotes(note.id);
     refreshBoardSoon();
-  }, function () { deleteNote(note); }, function () { pickNoteDay(note); });
+  }, function () { deleteNote(note); }, function () { pickNoteDay(note); }, function () {
+    toggleNoteList(note);
+    drawNoteWindow(note);
+    refreshBoardSoon();
+  }, function () { noteToTodo(note); });
   doc.body.appendChild(menu);
 
   doc.querySelector('[data-act="new"]').addEventListener('click', function () { popOutNote(addNote(note)); refreshBoardSoon(); });
   doc.querySelector('[data-act="menu"]').addEventListener('click', function () { menu.hidden = !menu.hidden; });
   doc.querySelector('[data-act="close"]').addEventListener('click', function () { win.close(); });
-  text.addEventListener('focus', function () { menu.hidden = true; });
-  win.setTimeout(function () { text.focus(); text.setSelectionRange(text.value.length, text.value.length); }, 0);
+  if (text) {
+    text.addEventListener('focus', function () { menu.hidden = true; });
+    win.setTimeout(function () { text.focus(); text.setSelectionRange(text.value.length, text.value.length); }, 0);
+  }
 }
 
 // Changes made on My Day show up in the note windows (but not the one being typed in)
@@ -7611,7 +8310,11 @@ function syncNoteWindows(fromId) {
     const win = noteWindows[note.id];
     if (!win || win.closed || note.id === fromId) return;
     const text = win.document.querySelector('textarea');
+    const list = win.document.querySelector('.note-list');
+    // Switched between text and checklist somewhere else: draw the window again
+    if ((note.list && text) || (!note.list && list)) { drawNoteWindow(note); return; }
     if (text && text.value !== note.text) text.value = note.text;
+    if (list) list.replaceWith(noteListEditor(win.document, note, function () { saveNotes(note.id); refreshBoardSoon(); }));
     win.document.body.style.setProperty('--note', noteColor(note.color));
   });
 }
@@ -7662,6 +8365,20 @@ function noteWindowStyles() {
     .note-menu-delete.note-menu-cal { margin-top: 6px; }
     .note-menu-delete.note-menu-cal:hover { color: ${ink}; }
     .note-menu-delete svg { width: 16px; height: 16px; flex: none; }
+    .note-list { flex: 1; overflow: auto; padding: 8px 12px 14px; }
+    .note-item { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
+    .note-check { display: grid; place-items: center; flex: none; width: 22px; height: 22px; padding: 0; border: 2px solid rgba(0, 0, 0, 0.45);
+      border-radius: 6px; background: rgba(255, 255, 255, 0.5); color: transparent; cursor: pointer; }
+    .note-check svg { width: 14px; height: 14px; stroke-width: 3; }
+    .note-item.done .note-check { background: ${ink}; border-color: ${ink}; color: #fff; }
+    .note-item-text { flex: 1; min-width: 0; padding: 4px 0; border: none; background: transparent; color: ${ink};
+      font-family: Nunito, Figtree, 'Segoe UI', sans-serif; font-size: 18px; font-weight: 700; line-height: 1.3; outline: none;
+      resize: none; overflow: hidden; }
+    .note-item { align-items: flex-start; }
+    .note-check { margin-top: 4px; }
+    .note-item.done .note-item-text { text-decoration: line-through; opacity: 0.55; }
+    .note-add-item { display: flex; align-items: center; gap: 6px; margin-top: 4px; padding: 4px 0; border: none; background: none;
+      color: rgba(0, 0, 0, 0.5); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
   `;
 }
 
@@ -7828,12 +8545,17 @@ function showSettings(page) {
     <div class="settings-list">
       <button class="settings-row pink" data-step="1">
         <span class="nav-icon">${icon('tag')}</span>
-        <span class="row-text"><strong>Business name and country</strong><span class="row-value" id="row-name"></span></span>
+        <span class="row-text"><strong>Business name</strong><span class="row-value" id="row-name"></span></span>
+        <span class="row-arrow">${icon('chevron')}</span>
+      </button>
+      <button class="settings-row pink" id="row-country-btn">
+        <span class="nav-icon">${icon('globe')}</span>
+        <span class="row-text"><strong>Country</strong><span class="row-value" id="row-country"></span></span>
         <span class="row-arrow">${icon('chevron')}</span>
       </button>
       <button class="settings-row pink" data-step="0">
         <span class="nav-icon">${icon(type.icon)}</span>
-        <span class="row-text"><strong>Business type and words</strong><span class="row-value" id="row-type"></span></span>
+        <span class="row-text"><strong>Business type</strong><span class="row-value" id="row-type"></span></span>
         <span class="row-arrow">${icon('chevron')}</span>
       </button>
     </div>
@@ -7848,7 +8570,7 @@ function showSettings(page) {
       </button>
       <div class="settings-row mint lang-row">
         <span class="nav-icon">${icon('globe')}</span>
-        <span class="row-text"><strong>Language</strong><span class="row-value">English, Español, Français, 中文, Tiếng Việt, 한국어, Tagalog, Русский, 日本語, Português, Deutsch</span></span>
+        <span class="row-text"><strong>Language</strong></span>
         <select id="lang-pick" class="input lang-select" aria-label="Language"></select>
       </div>
       <label class="settings-row butter helper-row">
@@ -7896,8 +8618,10 @@ function showSettings(page) {
   // Text from the owner is added with textContent so it shows exactly as typed
   box.querySelector('#hero-name').textContent = profile.businessName;
   box.querySelector('#hero-type').textContent = typeName;
-  box.querySelector('#row-name').textContent = profile.businessName + ' · ' + (myCountry() === 'none' ? 'No holidays' : findCountry(myCountry()).label);
-  box.querySelector('#row-type').textContent = typeName + ': ' + (usesOrders() ? [w.products, w.orders, w.customers, w.supplies] : [w.products, w.customers, w.supplies]).join(', ');
+  box.querySelector('#row-name').textContent = profile.businessName;
+  box.querySelector('#row-country').textContent = findCountry(myCountry()).label;
+  box.querySelector('#row-type').textContent = typeName;
+  box.querySelector('#row-country-btn').addEventListener('click', pickCountry);
   box.querySelector('#row-theme').textContent = profile.changeWithTime
     ? 'Changes with the time of day'
     : theme.label + ' with the ' + findFont(profile.font).label + ' font';
@@ -8353,6 +9077,7 @@ var LANG_ES_PATTERNS = [
   [/^We found (\{n\}) things?\. (.+)$/, 'Encontramos $1. Revisa los nombres, cantidades y precios, y corrige lo que se vea mal. Desmarca lo que no quieras.'],
   [/^(.+) with the (.+) font$/, '$1 con la letra $2'], [/^Home bakery: (.+)$/, 'Pastelería en casa: $1'], [/^Cleaning: (.+)$/, 'Limpieza: $1'],
   [/^Skip (.+)$/, 'Omitir $1'], [/^Bought (.+)$/, 'Compraste $1'],
+  [/^None yet\. Add things like (.+)\.$/, 'Nada todavía. Agrega cosas como $1.'],
 ];
 
 // =========================================
@@ -8377,7 +9102,8 @@ function buildLanguage(text) {
 const languageCache = {};
 function languageData() {
   if (appLanguage === 'es') return { dict: LANG_ES, patterns: LANG_ES_PATTERNS };
-  const text = { fr: LANG_FR, zh: LANG_ZH, vi: LANG_VI, ko: LANG_KO, tl: LANG_TL, ru: LANG_RU, ja: LANG_JA, pt: LANG_PT, de: LANG_DE }[appLanguage];
+  const text = { fr: LANG_FR, zh: LANG_ZH, vi: LANG_VI, ko: LANG_KO, tl: LANG_TL, ru: LANG_RU, ja: LANG_JA, pt: LANG_PT, de: LANG_DE,
+    it: LANG_IT, id: LANG_ID, uk: LANG_UK, hi: LANG_HI }[appLanguage];
   if (!text) return null;
   if (!languageCache[appLanguage]) languageCache[appLanguage] = buildLanguage(text);
   return languageCache[appLanguage];
@@ -9071,6 +9797,7 @@ var LANG_FR = `
 683|Ménage : $1
 684|Passer $1
 685|Tu as acheté $1
+686|Rien pour l'instant. Ajoute des choses comme $1.
 `;
 
 // Chinese (Simplified)
@@ -9761,6 +10488,7 @@ var LANG_ZH = `
 683|清洁：$1
 684|跳过 $1
 685|已购买 $1
+686|还没有。可以添加像$1这样的内容。
 `;
 
 // Vietnamese
@@ -10451,6 +11179,7 @@ var LANG_VI = `
 683|Dọn dẹp: $1
 684|Bỏ qua $1
 685|Đã mua $1
+686|Chưa có. Thêm những thứ như $1.
 `;
 
 // Korean
@@ -11141,6 +11870,7 @@ var LANG_KO = `
 683|청소: $1
 684|$1 건너뛰기
 685|$1 구매
+686|아직 없어요. $1 같은 것을 추가해 보세요.
 `;
 
 // Tagalog
@@ -11831,6 +12561,7 @@ var LANG_TL = `
 683|Paglilinis: $1
 684|Laktawan ang $1
 685|Binili ang $1
+686|Wala pa. Magdagdag ng gaya ng $1.
 `;
 
 // Russian
@@ -12521,6 +13252,7 @@ var LANG_RU = `
 683|Уборка: $1
 684|Пропустить: $1
 685|Куплено: $1
+686|Пока ничего. Добавь, например, $1.
 `;
 
 // Japanese
@@ -13211,6 +13943,7 @@ var LANG_JA = `
 683|掃除：$1
 684|$1をスキップ
 685|$1を購入
+686|まだありません。$1などを追加しましょう。
 `;
 
 // Portuguese (Brazil)
@@ -13901,6 +14634,7 @@ var LANG_PT = `
 683|Limpeza: $1
 684|Pular $1
 685|Você comprou $1
+686|Nada ainda. Adicione coisas como $1.
 `;
 
 // German
@@ -14591,4 +15325,2769 @@ var LANG_DE = `
 683|Putzen: $1
 684|$1 überspringen
 685|$1 gekauft
+686|Noch nichts. Füg Dinge wie $1 hinzu.
+`;
+
+// Italian
+var LANG_IT = `
+0|Dom
+1|Lun
+2|Mar
+3|Mer
+4|Gio
+5|Ven
+6|Sab
+7|La mia giornata
+8|Scelto per te
+9|Calendario
+10|Cose da fare
+11|Prezzi e guadagni
+12|Contabilità
+13|Lavoro
+14|Post-it
+15|Attività
+16|{S} e spesa
+17|Crescere
+18|Cerca
+19|Ricevute e menù
+20|Impostazioni
+21|Soldi
+22|Menù
+23|Menù
+24|Buongiorno
+25|Buon pomeriggio
+26|Buonasera
+27|Buongiorno!
+28|{o} in scadenza oggi
+29|{oa} in scadenza oggi
+30|attività per oggi
+31|attività per oggi
+32|incassato questo mese
+33|cose da comprare
+34|cosa da comprare
+35|{n} {oa} è in ritardo. Tocca per vedere.
+36|{n} {o} sono in ritardo. Tocca per vedere.
+37|Da fare oggi
+38|Vedi tutto
+39|Questa settimana
+40|eventi oggi
+41|evento oggi
+42|Niente per oggi. {n} in arrivo.
+43|I tuoi obiettivi
+44|Chiudi
+45|Fammi vedere
+46|Consiglio successivo
+47|Consigli di Pip
+48|Pip
+49|Oggi
+50|Domani
+51|Ieri
+52|In ritardo
+53|Senza data
+54|Prima o poi
+55|In ritardo, era il {d}
+56|{Oa} per il {d}
+57|{Oa} per il {d} alle {t}
+58|{n} giorni di ritardo
+59|{n} giorno di ritardo
+60|Per oggi
+61|Per domani
+62|Per domani alle {t}
+63|Per oggi alle {t}
+64|Tra {n} giorni
+65|Tra {n} giorni alle {t}
+66|Per il {d}
+67|Per il {d} alle {t}
+68|Era per il {d}
+69|Era per il {d} alle {t}
+70|{d} alle {t}
+71|Segna come importante
+72|Togli il segno
+73|Elimina
+74|Fatto
+75|Non fatto
+76|Aggiungi un'attività
+77|Nuova attività
+78|Cosa devi fare?
+79|Comprare altra farina
+80|Importante
+81|Segnala così resta in cima
+82|Aggiungi attività
+83|Scrivi cosa devi fare.
+84|Togli le fatte ({n})
+85|{n} cose da fare oggi
+86|{n} cosa da fare oggi
+87|{n} attività eliminate
+88|{n} attività eliminata
+89|Qui non c'è niente per ora.
+90|Annulla
+91|Nessuna attività
+92|Niente da fare oggi
+93|Tutto fatto!
+94|Nuovo post-it
+95|Scrivi qui...
+96|Post-it
+97|Porta sullo schermo
+98|Colore ed elimina
+99|Vedi nel calendario
+100|Giallo
+101|Pesca
+102|Rosa
+103|Lavanda
+104|Azzurro
+105|Menta
+106|Lime
+107|Sabbia
+108|Scegli un colore qualsiasi
+109|Colore
+110|Nel calendario: {d}
+111|Elimina post-it
+112|Aggiungi al calendario
+113|Apri in Post-it
+114|Sposta a un altro giorno
+115|Che giorno?
+116|Togli dal calendario
+117|Salva
+118|Aggiunto al calendario il {d}
+119|Tolto dal calendario
+120|Post-it eliminato
+121|Scegli un giorno.
+122|{n} post-it. Passa il mouse su un post-it per portarlo sullo schermo.
+123|{n} post-it. Passa il mouse su un post-it per portarlo sullo schermo.
+124|Note e promemoria veloci, del colore che vuoi
+125|Ancora nessun post-it. Clicca + per aggiungerne uno.
+126|Il browser ha bloccato la finestra del post-it. Consenti i pop-up per questo sito e riprova.
+127|Vista calendario
+128|Giorno
+129|Settimana
+130|Mese
+131|Anno
+132|Mese scorso
+133|Mese prossimo
+134|Giorno prima
+135|Giorno dopo
+136|Settimana scorsa
+137|Settimana prossima
+138|Anno scorso
+139|Anno prossimo
+140|Aggiungi
+141|Vedi questo giorno
+142|Aggiungi a questo giorno
+143|Aggiungi al {d}
+144|Vedi questo mese
+145|{n} cose in programma questa settimana
+146|{n} cosa in programma questa settimana
+147|Ancora niente in programma questa settimana
+148|{n} cose in programma
+149|{n} cosa in programma
+150|Ancora niente in programma
+151|I puntini indicano i giorni con impegni. Le feste sono in giallo.
+152|Ancora niente per {d}
+153|Ancora niente in programma a {d}
+154|Niente in programma. Una giornata libera!
+155|{n} {o} a {d}
+156|{n} {oa} a {d}
+157|{n} evento a {d}
+158|{n} eventi a {d}
+159|Evento
+160|Attività
+161|Modifica evento
+162|Nuovo evento
+163|Cosa succede?
+164|A che ora?
+165|(puoi saltarlo)
+166|A che ora? (puoi saltarlo)
+167|Dove?
+168|Parco di via principale
+169|Elimina questo evento
+170|Aggiungi evento
+171|Evento eliminato
+172|Scrivi cosa succede.
+173|Tutto il giorno
+174|Quando vuoi
+175|Mercato contadino
+176|Cosa aggiungere
+177|Ora
+178|Dove
+179|Titolo
+180|(facoltativo)
+181|Spuntato
+182|Capodanno
+183|Giorno di Martin Luther King Jr.
+184|San Valentino
+185|Giorno dei Presidenti
+186|San Patrizio
+187|Pasqua
+188|Domenica di Pasqua
+189|Lunedì dell'Angelo
+190|Venerdì Santo
+191|Giovedì Santo
+192|Festa della Mamma
+193|Memorial Day
+194|Festa del Papà
+195|Juneteenth
+196|Festa dell'Indipendenza
+197|Festa del Lavoro
+198|Giornata dei popoli indigeni
+199|Halloween
+200|Giornata dei Veterani
+201|Giorno del Ringraziamento
+202|Black Friday
+203|Sabato delle piccole imprese
+204|Vigilia di Natale
+205|Natale
+206|Natale
+207|Vigilia di Capodanno
+208|Santo Stefano
+209|Festa della Famiglia
+210|Victoria Day
+211|Festa del Canada
+212|Festa civica
+213|Festa del Lavoro
+214|Giornata della verità e della riconciliazione
+215|Giorno della Memoria
+216|Epifania
+217|Festa della Costituzione
+218|Anniversario di Benito Juárez
+219|Giornata dei bambini
+220|Cinco de Mayo
+221|Giorno dei Morti
+222|Festa della Rivoluzione
+223|Festa della Vergine di Guadalupe
+224|Festa dell'Australia
+225|Anzac Day
+226|Compleanno del Re
+227|Waitangi Day
+228|Giorno dopo Capodanno
+229|Notte dei falò
+230|Domenica della Memoria
+231|Santo Stefano
+232|Festa di inizio maggio
+233|Festa di primavera
+234|Festa d'estate
+235|Festa di Santa Brigida
+236|Festa di maggio
+237|Festa di giugno
+238|Festa di agosto
+239|Festa di ottobre
+240|Gli {o} pagati contano come entrate alla loro data
+241|Entrate e uscite, mese per mese
+242|Entrate
+243|Uscite
+244|Ti è rimasto
+245|In attesa di pagamento
+246|Ultimi {n} mesi
+247|Entrate: {m}
+248|Uscite: {m}
+249|Questo mese
+250|Ancora niente questo mese.
+251|Cosa hai comprato o pagato
+252|Scatole per torte, affitto del banco
+253|Quanto
+254|Che giorno
+255|Elimina questo
+256|Aggiungi
+257|Scrivi quanto era.
+258|Per cosa era
+259|Vendita di dolci, mance
+260|Mancia
+261|Ancora nessun movimento registrato
+262|{n} cose da comprare
+263|{n} cosa da comprare
+264|Aggiungi da una foto
+265|Aggiungi {sa}
+266|Lista della spesa
+267|Per i tuoi {o} delle prossime {n} settimane, circa {m}
+268|Per i tuoi {o} delle prossime {n} settimane
+269|Quello che serve per i tuoi {o} compare qui da solo
+270|Cose che devi comprare
+271|Aggiungi qualcosa da comprare
+272|Quello che hai
+273|Meno
+274|Più
+275|Hai tutto quello che ti serve
+276|Niente da comprare adesso.
+277|Ancora nessun prezzo
+278|Lo misuri in
+279|Quando lo compri
+280|Ricevi
+281|Quanto ricevi
+282|unità
+283|per
+284|Quanto ne hai adesso
+285|Aggiungi {sa}
+286|Scrivi il nome.
+287|tazze
+288|pezzo
+289|panetti
+290|dozzina
+291|Nome
+292|Quantità
+293|Unità
+294|Prezzo
+295|Modifica {sa}
+296|Farina
+297|Zucchero
+298|Fai uno screenshot di uno scontrino, di un ordine online o di una lista di quello che ti serve. L'app lo legge e compila nomi, quantità e prezzi per te.
+299|Fai uno screenshot di uno scontrino, di un ordine online o di una lista di quello che ti serve. L'app lo legge e compila nomi, quantità e prezzi per te.
+300|Incolla qui uno screenshot
+301|Premi
+302|, trascina un'immagine o clicca per sceglierne una
+303|Consiglio:
+304|fa uno screenshot
+305|Oppure scrivi o incolla la lista come testo
+306|Leggi questa lista
+307|Sto leggendo l'immagine...
+308|Può volerci qualche secondo. La prima volta carica anche il lettore da internet.
+309|Aggiungi una riga
+310|Prova un'altra immagine
+311|Aggiungi a {S}
+312|Spunta almeno una cosa da aggiungere.
+313|Aggiorna il prezzo
+314|La tua immagine
+315|Non siamo riusciti a leggere l'immagine. La prima lettura richiede internet. Puoi scrivere o incollare la lista qui sotto.
+316|Nessun articolo con prezzo trovato in quell'immagine. Prova uno screenshot più nitido, oppure correggi il testo qui sotto e clicca Leggi questa lista.
+317|Quanto ti costa davvero ogni {pa} e quanto farlo pagare
+318|Paga te stesso
+319|all'ora
+320|Guadagno in più
+321|Il tuo tempo
+322|Costo reale
+323|Fai pagare
+324|Consigliato
+325|Fai pagare {m}
+326|Nessun prezzo ancora
+327|Non impostato
+328|Guadagni {m}, un po' sotto l'obiettivo
+329|Guadagni {m} ogni volta
+330|Perdi {m} ogni volta
+331|Usa il prezzo consigliato
+332|Il costo reale sono i tuoi {s} più il tuo tempo. Il prezzo consigliato aggiunge il guadagno scelto e arrotonda al dollaro successivo.
+333|Aggiungi prima i tuoi {p}
+334|Quando aggiungi cosa va in ognuno, questa pagina calcola i costi e un prezzo giusto.
+335|Vai a {P}
+336|{n} aperti, {n} finiti
+337|Da Google Moduli
+338|Aggiungi {oa}
+339|+ Aggiungi {oa}
+340|Aperti
+341|Tutti
+342|Nuovo
+343|In corso
+344|Pagato
+345|Modifica
+346|Stato
+347|Togli i {o} finiti ({n})
+348|Torna a La mia giornata
+349|Modifica {oa}
+350|Nome del {ca}
+351|Telefono o email (facoltativo)
+352|{n}-{n}-{n} o una email
+353|Cosa vogliono
+354|Data di consegna
+355|Ora (facoltativo)
+356|Nessun orario
+357|Dettagli extra
+358|Gusto della torta
+359|Vuoi chiedere altro in ogni {oa}?
+360|Scritta sulla torta
+361|Allergie
+362|Ritiro o consegna
+363|Altro
+364|Note (facoltativo)
+365|Altro da ricordare
+366|Salva modifiche
+367|Annulla
+368|Elimina questo {oa}
+369|Torna a {O}
+370|Aggiungi {oa}
+371|{n} {o} eliminati
+372|Importa {o} dal tuo Google Modulo
+373|Chi ha compilato il modulo compare qui come nuovo {oa}. Puoi rifarlo quando vuoi. Quelli già importati non verranno aggiunti due volte.
+374|Scarica le risposte
+375|Apri il tuo Google Modulo e clicca
+376|Risposte
+377|Clicca
+378|Visualizza in Fogli
+379|(oppure
+380|Collega a Fogli
+381|la prima volta).
+382|Nel foglio, clicca
+383|File
+384|, poi
+385|Scarica
+386|Scegli quel file
+387|Scegli il file
+388|oppure trascinalo qui
+389|Di' all'app dove va ogni risposta
+390|Abbiamo indovinato ogni domanda. Cambia quelle che sembrano sbagliate.
+391|Scegli la domanda con il nome del {ca}.
+392|Niente per oggi
+393|{n} persona
+394|{n} persone
+395|Aggiungi un {ca}
+396|Trova qualcuno
+397|Più recenti
+398|Più {o}
+399|Hanno speso di più
+400|Dalla A alla Z
+401|Ancora nessun telefono o email
+402|totale
+403|Aggiungi {ca}
+404|Lascia stare
+405|Torna a {C}
+406|primo {oa}
+407|I loro {o}
+408|Tutti quelli che comprano da te, in un unico posto
+409|Ancora nessun {ca}
+410|Aggiungi le persone per cui lavori, con telefono o email, così sono tutte in un unico posto.
+411|Tieni tutte le persone per cui lavori in un unico posto.
+412|{n} {p}
+413|Aggiungi {pa}
+414|Ne fa {n}
+415|{n} {s}
+416|Costa {m}
+417|Nessun prezzo
+418|Torna a {P}
+419|Quanto fai pagare
+420|Quanto ne fa
+421|{n} torta, {n} cupcake
+422|Ore che ci metti
+423|Cosa ci va dentro
+424|Ancora niente. Scegli tra i tuoi {s} qui sotto o aggiungine uno nuovo.
+425|+ Aggiungi {sa}
+426|Passaggi
+427|(uno per riga)
+428|Aggiungi {pa}
+429|Dagli un nome per salvarlo.
+430|Gli ingredienti per una infornata costano
+431|Cerca tutto nella tua app o trova posti vicino a te
+432|Cerca {o}, {c}, {p}, attività
+433|Cerca {c}, {p}, attività
+434|Cerca
+435|Vicino a te
+436|Mercati contadini
+437|Apre Google Maps
+438|Fiere dell'artigianato
+439|Negozi di {s}
+440|Posti dove vendere
+441|Creane uno, poi stampalo o salvalo in PDF
+442|Ricevuta
+443|Quale {oa}
+444|Stampa
+445|Per
+446|Data
+447|Articolo
+448|Totale
+449|Non ancora pagato
+450|Grazie per il tuo {oa}!
+451|Una nota in fondo
+452|{Oa} con {n} giorni di anticipo. Scrivi al {n}-{n}-{n}
+453|Ordina con {n} giorni di anticipo. Scrivi al {n}-{n}-{n}
+454|Nessun risultato
+455|Cambia immagine
+456|Togli immagine
+457|Le tue attività
+458|Aperta ora
+459|Aggiungi un'altra attività
+460|Le altre attività restano salvate
+461|Questa attività
+462|Nome dell'attività e paese
+463|{B} · Stati Uniti
+464|{B} · Canada
+465|{B} · Messico
+466|{B} · Regno Unito
+467|{B} · Irlanda
+468|{B} · Australia
+469|{B} · Nuova Zelanda
+470|{B} · Nessuna festa
+471|Tipo di attività e parole
+472|Aspetto
+473|Colori e carattere
+474|Cambia con l'ora del giorno
+475|Lingua
+476|
+477|Pip, il tuo aiutante
+478|Compare con consigli sulla tua attività
+479|Obiettivi
+480|In cosa vuoi aiuto
+481|Ancora niente di scelto
+482|Backup
+483|Salva un backup
+484|Non ne hai ancora salvato uno
+485|Carica un backup
+486|Recupera tutto da un file di backup
+487|Salvato oggi
+488|Salvato ieri
+489|Salvato {n} giorni fa
+490|Elimina {B}
+491|Torna alle Impostazioni
+492|Questo cancella tutto in {B}. Clicca di nuovo per eliminare
+493|Tipo di attività
+494|La tua attività
+495|Colori
+496|Che tipo di attività è?
+497|Biz Studio usa le parole giuste per la tua attività, come {P} per una pasticceria o Appuntamenti per un salone.
+498|Pasticceria in casa
+499|Pasti e catering
+500|Candele e artigianato
+501|Arte e commissioni
+502|Cucito e vestiti
+503|Unghie
+504|Capelli
+505|Ciglia e trucco
+506|Ripetizioni
+507|Lezioni di musica e danza
+508|Allenamento fitness
+509|Fotografia
+510|Cura degli animali
+511|Pulizie
+512|Giardino
+513|Feste ed eventi
+514|Che tipo di attività?
+515|Riparazione bici, toelettatura cani, banchetto di limonata...
+516|Raccontaci cosa fai e inseriremo le parole giuste.
+517|Cosa vendi o offri
+518|Cosa prenotano o ordinano le persone
+519|Le persone con cui lavori
+520|Cosa usi per lavorare
+521|Continua
+522|Come si chiama la tua attività?
+523|Questo nome compare sulle ricevute, sui menù e in cima all'app. Puoi cambiarlo dopo.
+524|Nome dell'attività
+525|Dove ti trovi?
+526|Stati Uniti
+527|Canada
+528|Messico
+529|Regno Unito
+530|Irlanda
+531|Australia
+532|Nuova Zelanda
+533|Altrove (nessuna festa)
+534|Metteremo le feste del tuo paese nel tuo calendario.
+535|Foto del profilo (facoltativa)
+536|Aggiungi un'immagine o un logo
+537|Se salti, compaiono le tue iniziali.
+538|Indietro
+539|Scrivi il nome dell'attività per continuare.
+540|Rendila tua
+541|Scegli i colori. Ognuno ha il suo carattere abbinato, e tutta l'app cambia mentre clicchi.
+542|Semplici
+543|Classico
+544|Ardesia
+545|Salvia
+546|Ciliegia
+547|Dolcetti
+548|Fragola
+549|Matcha
+550|Mirtillo
+551|Limone
+552|Caramello
+553|Gomma da masticare
+554|Natura
+555|Oceano
+556|Foresta
+557|Tramonto
+558|Deserto
+559|Cielo
+560|Decisi
+561|Galassia
+562|Tropicale
+563|Retrò
+564|Arcobaleno
+565|Personalizzato
+566|Colore principale
+567|Colore d'accento
+568|Cambia con l'ora del giorno
+569|Caldo al mattino, luminoso al pomeriggio e calmo la sera.
+570|Anteprima
+571|{o} in scadenza
+572|questa settimana
+573|Prossimo
+574|Biscotti con gocce di cioccolato
+575|Amichevole
+576|Arrotondato
+577|Giocoso
+578|Elegante
+579|Moderno
+580|Carattere
+581|In cosa vuoi aiuto?
+582|Scegline quanti vuoi. Biz Studio li mette per primi e ti dà consigli.
+583|Altro? (facoltativo)
+584|Voglio vendere al mercato contadino quest'estate
+585|Salta per ora
+586|Finisci
+587|Dimentico {o} o scadenze
+588|Non so quanto far pagare il mio lavoro
+589|Finisco i {s}
+590|Voglio far crescere la mia attività
+591|Non ho abbastanza tempo
+592|Le mie informazioni sono sparse ovunque
+593|Voglio tenere d'occhio i soldi
+594|Voglio che la mia attività sembri professionale
+595|Guarda il calendario ogni mattina. Riceverai promemoria extra prima delle scadenze dei {o}.
+596|Aggiungi quanto paghi i {s} in Prezzi e guadagni, e Biz Studio ti suggerirà prezzi giusti.
+597|Guarda la lista dei {s} qualche giorno prima dei giorni pieni, così fai la spesa in anticipo.
+598|Usa Cerca per scoprire mercati ed eventi dove vendere.
+599|La lista delle cose da fare mette prima le più urgenti, così sai sempre cosa fare dopo.
+600|Tieni tutti i tuoi {o} e {c} qui invece che in messaggi e note.
+601|Tieni i tuoi {c}, attività ed eventi qui invece che in messaggi e note.
+602|La Contabilità somma entrate e uscite, così vedi il tuo vero guadagno.
+603|Crea ricevute, menù e listini dai tuoi {p} in pochi clic.
+604|Apri calendario
+605|Apri prezzi e guadagni
+606|Apri cose da fare
+607|Apri contabilità
+608|Apri cerca
+609|Apri ricevute e menù
+610|Attenzione! {n} {o} sono in ritardo.
+611|Hai {n} {o} per oggi. Ce la fai!
+612|{n} {o} sono per domani. È ora di prepararsi!
+613|Hai {n} cose nella lista di oggi.
+614|Hai {n} cosa nella lista di oggi.
+615|{n} {o} finiti aspettano il pagamento.
+616|Aggiungi il tuo primo {oa} e ti aiuto a seguirlo.
+617|Aggiungi i tuoi {p} così calcolo quanto ti costano.
+618|Aggiungi quanto paghi i {s} e preparo la tua lista della spesa.
+619|È passato un po' dall'ultimo backup. Salvane uno nelle Impostazioni per non perdere nulla!
+620|Aggiungi un'immagine della tua attività nelle Impostazioni. Compare anche sulle ricevute!
+621|Clicca su qualcuno per vedere tutti i suoi {o}.
+622|Clicca su un giorno, poi su Aggiungi per mettere un evento o un'attività.
+623|Stampa un menù e portalo al prossimo mercato.
+624|Prova a cercare un nome, un {pa} o qualsiasi cosa.
+625|Registra quello che spendi in Uscite, così sai quanto ti è rimasto davvero.
+626|Stai andando alla grande. Continua così!
+627|Niente di urgente adesso. Ottimo lavoro!
+628|Tutto fatto! Concediti uno spuntino.
+629|Niente nella tua lista per oggi.
+630|Aggiungi un'attività qui sopra per iniziare.
+631|Aggiungi un'attività qui sopra. Quando avrai {o} in arrivo, le loro attività compariranno qui da sole.
+632|Ancora nessun post-it
+633|Note e promemoria veloci, del colore che vuoi.
+634|Il tuo calendario è libero
+635|Ancora niente nella tua lista
+636|Niente da comprare
+637|Ancora nessun prezzo calcolato
+638|Trova qualsiasi cosa
+639|Ancora niente da stampare
+640|Fatto: $1
+641|Non fatto: $1
+642|Segna come importante: $1
+643|Togli il segno: $1
+644|Elimina $1
+645|Togli $1
+646|Modifica $1
+647|Attività: $1
+648|Post-it: $1
+649|Hai comprato $1, aggiunti $2 alla Contabilità
+650|Hai comprato $1
+651|$1 ora costa $2
+652|Ultimo: $1
+653|Aggiungi $1 per $2
+654|$2 di $1 segnato come $3
+655|Fare $1 per $2
+656|$1, compra $2
+657|Ti serve $1, hai $2. Per $3
+658|$1 per $2 $3
+659|$1 alle $2
+660|$1 per $2
+661|Attenzione! $2 di $1 è in ritardo.
+662|$2 di $1 è per oggi alle $3.
+663|$2 di $1 è per oggi.
+664|Non dimenticare: $2 di $1 è per domani.
+665|Oggi: $1 alle $2. Divertiti!
+666|Oggi: $1. Divertiti!
+667|Hai segnato "$1" come importante. E altri $2.
+668|Hai segnato "$1" come importante.
+669|Stai finendo $1 e altri $2 per i tuoi prossimi $3.
+670|Stai finendo $1 per i tuoi prossimi $2.
+671|$2 di $1 è finito ma non ancora pagato.
+672|Fare $1 ti costa più di quanto fai pagare. Sistemiamolo!
+673|Potresti far pagare un po' di più per $1.
+674|$1: $2 ($3)
+675|Torna a $1
+676|Aggiunti $1 a $2 e aggiornati $3 prezzi
+677|Aggiunti $1 a $2
+678|Aggiornati $1 prezzi
+679|Aggiungi $1 a $2
+680|Trovati $1. Controlla nomi, quantità e prezzi e correggi quello che sembra sbagliato. Togli la spunta a quello che non vuoi.
+681|$1 con il carattere $2
+682|Pasticceria in casa: $1
+683|Pulizie: $1
+684|Salta $1
+685|Hai comprato $1
+686|Ancora niente. Aggiungi cose come $1.
+`;
+
+// Indonesian
+var LANG_ID = `
+0|Min
+1|Sen
+2|Sel
+3|Rab
+4|Kam
+5|Jum
+6|Sab
+7|Hariku
+8|Dipilih untukmu
+9|Kalender
+10|Daftar tugas
+11|Harga dan untung
+12|Pembukuan
+13|Kerja
+14|Catatan tempel
+15|Usaha
+16|{S} dan belanja
+17|Berkembang
+18|Cari
+19|Struk dan menu
+20|Pengaturan
+21|Uang
+22|Menu
+23|Menu
+24|Selamat pagi
+25|Selamat siang
+26|Selamat malam
+27|Selamat pagi!
+28|{o} jatuh tempo hari ini
+29|{oa} jatuh tempo hari ini
+30|tugas hari ini
+31|tugas hari ini
+32|diterima bulan ini
+33|barang untuk dibeli
+34|barang untuk dibeli
+35|{n} {oa} terlambat. Ketuk untuk melihat.
+36|{n} {o} terlambat. Ketuk untuk melihat.
+37|Yang dikerjakan hari ini
+38|Lihat semua
+39|Minggu ini
+40|acara hari ini
+41|acara hari ini
+42|Tidak ada apa-apa hari ini. {n} akan datang.
+43|Fokusmu
+44|Tutup
+45|Tunjukkan
+46|Tips berikutnya
+47|Tips dari Pip
+48|Pip
+49|Hari ini
+50|Besok
+51|Kemarin
+52|Terlambat
+53|Tanpa tanggal
+54|Kapan-kapan
+55|Terlambat, seharusnya {d}
+56|{Oa} jatuh tempo {d}
+57|{Oa} jatuh tempo {d} pukul {t}
+58|Terlambat {n} hari
+59|Terlambat {n} hari
+60|Jatuh tempo hari ini
+61|Jatuh tempo besok
+62|Jatuh tempo besok pukul {t}
+63|Jatuh tempo hari ini pukul {t}
+64|{n} hari lagi
+65|{n} hari lagi pukul {t}
+66|Jatuh tempo {d}
+67|Jatuh tempo {d} pukul {t}
+68|Seharusnya {d}
+69|Seharusnya {d} pukul {t}
+70|{d} pukul {t}
+71|Tandai penting
+72|Hapus tanda
+73|Hapus
+74|Selesai
+75|Belum selesai
+76|Tambah tugas
+77|Tugas baru
+78|Apa yang perlu kamu kerjakan?
+79|Beli tepung lagi
+80|Penting
+81|Tandai supaya tetap di atas
+82|Tambah tugas
+83|Tulis apa yang perlu kamu kerjakan.
+84|Hapus yang selesai ({n})
+85|{n} hal dikerjakan hari ini
+86|{n} hal dikerjakan hari ini
+87|{n} tugas dihapus
+88|{n} tugas dihapus
+89|Belum ada apa-apa di sini.
+90|Urungkan
+91|Tidak ada tugas
+92|Tidak ada yang dikerjakan hari ini
+93|Semua selesai!
+94|Catatan baru
+95|Tulis di sini...
+96|Catatan tempel
+97|Keluarkan ke layar
+98|Warna dan hapus
+99|Lihat di kalender
+100|Kuning
+101|Persik
+102|Merah muda
+103|Lavender
+104|Biru
+105|Mint
+106|Jeruk nipis
+107|Pasir
+108|Pilih warna apa saja
+109|Warna
+110|Di kalender: {d}
+111|Hapus catatan
+112|Tambahkan ke kalender
+113|Buka di Catatan tempel
+114|Pindahkan ke hari lain
+115|Hari apa?
+116|Keluarkan dari kalender
+117|Simpan
+118|Ditambahkan ke kalender pada {d}
+119|Dikeluarkan dari kalender
+120|Catatan dihapus
+121|Pilih satu hari.
+122|{n} catatan. Arahkan mouse ke catatan untuk mengeluarkannya ke layar.
+123|{n} catatan. Arahkan mouse ke catatan untuk mengeluarkannya ke layar.
+124|Catatan dan pengingat cepat, warna apa saja
+125|Belum ada catatan. Klik + untuk menambah.
+126|Browser kamu memblokir jendela catatan. Izinkan pop-up untuk situs ini lalu coba lagi.
+127|Tampilan kalender
+128|Hari
+129|Minggu
+130|Bulan
+131|Tahun
+132|Bulan lalu
+133|Bulan depan
+134|Hari sebelumnya
+135|Hari berikutnya
+136|Minggu lalu
+137|Minggu depan
+138|Tahun lalu
+139|Tahun depan
+140|Tambah
+141|Lihat hari ini
+142|Tambah ke hari ini
+143|Tambah ke {d}
+144|Lihat bulan ini
+145|{n} rencana minggu ini
+146|{n} rencana minggu ini
+147|Belum ada rencana minggu ini
+148|{n} rencana
+149|{n} rencana
+150|Belum ada rencana
+151|Titik menandai hari yang ada rencana. Hari libur berwarna kuning.
+152|Belum ada yang jatuh tempo di {d}
+153|Belum ada rencana di {d}
+154|Tidak ada rencana. Hari bebas!
+155|{n} {o} jatuh tempo di {d}
+156|{n} {oa} jatuh tempo di {d}
+157|{n} acara di {d}
+158|{n} acara di {d}
+159|Acara
+160|Tugas
+161|Ubah acara
+162|Acara baru
+163|Ada acara apa?
+164|Jam berapa?
+165|(boleh dilewati)
+166|Jam berapa? (boleh dilewati)
+167|Di mana?
+168|Taman Jalan Utama
+169|Hapus acara ini
+170|Tambah acara
+171|Acara dihapus
+172|Tulis ada acara apa.
+173|Seharian
+174|Kapan saja
+175|Pasar tani
+176|Apa yang ditambah
+177|Waktu
+178|Tempat
+179|Judul
+180|(opsional)
+181|Dicentang
+182|Tahun Baru
+183|Hari Martin Luther King Jr.
+184|Hari Valentine
+185|Hari Presiden
+186|Hari Santo Patrick
+187|Paskah
+188|Minggu Paskah
+189|Senin Paskah
+190|Jumat Agung
+191|Kamis Putih
+192|Hari Ibu
+193|Memorial Day
+194|Hari Ayah
+195|Juneteenth
+196|Hari Kemerdekaan
+197|Hari Buruh
+198|Hari Masyarakat Adat
+199|Halloween
+200|Hari Veteran
+201|Thanksgiving
+202|Black Friday
+203|Sabtu Usaha Kecil
+204|Malam Natal
+205|Natal
+206|Natal
+207|Malam Tahun Baru
+208|Boxing Day
+209|Hari Keluarga
+210|Victoria Day
+211|Hari Kanada
+212|Libur Sipil
+213|Hari Buruh
+214|Hari Kebenaran dan Rekonsiliasi
+215|Hari Peringatan
+216|Hari Tiga Raja
+217|Hari Konstitusi
+218|Hari Lahir Benito Juárez
+219|Hari Anak
+220|Cinco de Mayo
+221|Hari Orang Mati
+222|Hari Revolusi
+223|Hari Perawan Guadalupe
+224|Hari Australia
+225|Hari Anzac
+226|Hari Ulang Tahun Raja
+227|Hari Waitangi
+228|Sehari setelah Tahun Baru
+229|Malam Api Unggun
+230|Minggu Peringatan
+231|Hari Santo Stefanus
+232|Libur awal Mei
+233|Libur musim semi
+234|Libur musim panas
+235|Libur Santa Brigid
+236|Libur Mei
+237|Libur Juni
+238|Libur Agustus
+239|Libur Oktober
+240|{o} yang sudah dibayar dihitung sebagai uang masuk pada tanggal jatuh temponya
+241|Uang masuk dan keluar, per bulan
+242|Uang masuk
+243|Uang keluar
+244|Sisa untukmu
+245|Menunggu pembayaran
+246|{n} bulan terakhir
+247|Masuk: {m}
+248|Keluar: {m}
+249|Bulan ini
+250|Belum ada apa-apa bulan ini.
+251|Apa yang kamu beli atau bayar
+252|Kotak kue, sewa stan
+253|Berapa
+254|Hari apa
+255|Hapus ini
+256|Tambahkan
+257|Tulis berapa jumlahnya.
+258|Untuk apa
+259|Bazar kue, tip
+260|Tip
+261|Belum ada uang yang dicatat
+262|{n} barang untuk dibeli
+263|{n} barang untuk dibeli
+264|Tambah dari gambar
+265|Tambah {sa}
+266|Daftar belanja
+267|Untuk {o} kamu {n} minggu ke depan, sekitar {m}
+268|Untuk {o} kamu {n} minggu ke depan
+269|Kebutuhan untuk {o} kamu muncul di sini sendiri
+270|Yang perlu kamu beli
+271|Tambah barang untuk dibeli
+272|Yang kamu punya
+273|Kurangi
+274|Tambah
+275|Kamu sudah punya yang dibutuhkan
+276|Tidak ada yang perlu dibeli sekarang.
+277|Belum ada harga
+278|Kamu mengukurnya dalam
+279|Saat kamu membeli
+280|Kamu dapat
+281|Berapa yang kamu dapat
+282|unit
+283|seharga
+284|Berapa yang kamu punya sekarang
+285|Tambah {sa}
+286|Tulis namanya.
+287|cangkir
+288|buah
+289|batang
+290|lusin
+291|Nama
+292|Jumlah
+293|Satuan
+294|Harga
+295|Ubah {sa}
+296|Tepung
+297|Gula
+298|Ambil tangkapan layar struk, pesanan online, atau daftar kebutuhanmu. Aplikasi akan membacanya dan mengisi nama, jumlah, dan harga untukmu.
+299|Ambil tangkapan layar struk, pesanan online, atau daftar kebutuhanmu. Aplikasi akan membacanya dan mengisi nama, jumlah, dan harga untukmu.
+300|Tempel tangkapan layar di sini
+301|Tekan
+302|, letakkan gambar, atau klik untuk memilih
+303|Tips:
+304|untuk tangkapan layar
+305|Atau ketik atau tempel daftarnya sebagai teks
+306|Baca daftar ini
+307|Membaca gambarmu...
+308|Ini bisa makan beberapa detik. Pertama kali, pembacanya juga dimuat dari internet.
+309|Tambah baris
+310|Coba gambar lain
+311|Tambah ke {S}
+312|Centang setidaknya satu barang.
+313|Akan memperbarui harga
+314|Gambarmu
+315|Gambar tidak bisa dibaca. Membaca gambar pertama kali butuh internet. Kamu bisa ketik atau tempel daftarnya di bawah.
+316|Tidak ada barang berharga di gambar itu. Coba tangkapan layar yang lebih jelas, atau perbaiki teks di bawah lalu klik Baca daftar ini.
+317|Berapa biaya sebenarnya tiap {pa}, dan berapa harga jualnya
+318|Gaji untukmu
+319|per jam
+320|Untung tambahan
+321|Waktumu
+322|Biaya sebenarnya
+323|Harga jualmu
+324|Saran
+325|Jual {m} saja
+326|Belum ada harga
+327|Belum diatur
+328|Kamu untung {m}, sedikit di bawah target
+329|Kamu untung {m} tiap kali
+330|Kamu rugi {m} tiap kali
+331|Pakai harga saran
+332|Biaya sebenarnya adalah {s} ditambah waktumu. Harga saran menambahkan untung yang kamu pilih, dibulatkan ke dolar berikutnya.
+333|Tambahkan {p} dulu
+334|Setelah kamu menambahkan isinya, halaman ini menghitung biaya dan harga yang pas.
+335|Ke {P}
+336|{n} terbuka, {n} selesai
+337|Dari Google Formulir
+338|Tambah {oa}
+339|+ Tambah {oa}
+340|Terbuka
+341|Semua
+342|Baru
+343|Sedang dikerjakan
+344|Sudah dibayar
+345|Ubah
+346|Status
+347|Hapus {o} yang selesai ({n})
+348|Kembali ke Hariku
+349|Ubah {oa}
+350|Nama {ca}
+351|Telepon atau email (opsional)
+352|{n}-{n}-{n} atau email
+353|Yang mereka mau
+354|Tanggal jatuh tempo
+355|Waktu (opsional)
+356|Tanpa waktu
+357|Detail tambahan
+358|Rasa kue
+359|Mau tanya hal lain di setiap {oa}?
+360|Tulisan di kue
+361|Alergi
+362|Ambil sendiri atau diantar
+363|Lainnya
+364|Catatan (opsional)
+365|Hal lain yang perlu diingat
+366|Simpan perubahan
+367|Batal
+368|Hapus {oa} ini
+369|Kembali ke {O}
+370|Tambah {oa}
+371|{n} {o} dihapus
+372|Ambil {o} dari Google Formulir
+373|Setiap orang yang mengisi formulirmu muncul di sini sebagai {oa} baru. Kamu bisa mengulanginya kapan saja. Yang sudah diambil tidak akan ditambahkan dua kali.
+374|Unduh jawabanmu
+375|Buka Google Formulir dan klik
+376|Jawaban
+377|Klik
+378|Lihat di Spreadsheet
+379|(atau
+380|Tautkan ke Spreadsheet
+381|pertama kali).
+382|Di spreadsheet, klik
+383|File
+384|, lalu
+385|Unduh
+386|Pilih file itu
+387|Pilih file kamu
+388|atau seret ke sini
+389|Beri tahu aplikasi ke mana tiap jawaban
+390|Kami sudah menebak tiap pertanyaan. Ubah yang tampak salah.
+391|Pilih pertanyaan yang berisi nama {ca}.
+392|Tidak ada yang jatuh tempo hari ini
+393|{n} orang
+394|{n} orang
+395|Tambah {ca}
+396|Cari orang
+397|Terbaru
+398|{O} terbanyak
+399|Belanja terbanyak
+400|A sampai Z
+401|Belum ada telepon atau email
+402|total
+403|Tambah {ca}
+404|Tidak jadi
+405|Kembali ke {C}
+406|{oa} pertama
+407|{O} mereka
+408|Semua yang membeli darimu, di satu tempat
+409|Belum ada {c}
+410|Tambahkan orang yang kamu layani, dengan telepon atau email, supaya semuanya di satu tempat.
+411|Simpan semua orang yang kamu layani di satu tempat.
+412|{n} {p}
+413|Tambah {pa}
+414|Jadi {n}
+415|{n} {s}
+416|Biaya {m}
+417|Tanpa harga
+418|Kembali ke {P}
+419|Harga jualmu
+420|Jadi berapa
+421|{n} kue, {n} cupcake
+422|Berapa jam yang dibutuhkan
+423|Isinya apa saja
+424|Belum ada yang ditambahkan. Pilih dari {s} di bawah, atau tambah yang baru.
+425|+ Tambah {sa}
+426|Langkah
+427|(satu per baris)
+428|Tambah {pa}
+429|Beri nama untuk menyimpannya.
+430|Bahan untuk satu adonan seharga
+431|Cari semua di aplikasimu, atau temukan tempat di dekatmu
+432|Cari {o}, {c}, {p}, tugas
+433|Cari {c}, {p}, tugas
+434|Cari
+435|Di dekatmu
+436|Pasar tani
+437|Membuka Google Maps
+438|Pameran kerajinan
+439|Toko {s}
+440|Tempat untuk berjualan
+441|Buat satu, lalu cetak atau simpan sebagai PDF
+442|Struk
+443|{Oa} yang mana
+444|Cetak
+445|Untuk
+446|Tanggal
+447|Barang
+448|Total
+449|Belum dibayar
+450|Terima kasih atas {oa} kamu!
+451|Catatan di bawah
+452|{Oa} {n} hari sebelumnya. SMS ke {n}-{n}-{n}
+453|Pesan {n} hari sebelumnya. SMS ke {n}-{n}-{n}
+454|Tidak ada hasil
+455|Ganti gambar
+456|Hapus gambar
+457|Usahamu
+458|Sedang dibuka
+459|Tambah usaha lain
+460|Usahamu yang lain tetap tersimpan
+461|Usaha ini
+462|Nama usaha dan negara
+463|{B} · Amerika Serikat
+464|{B} · Kanada
+465|{B} · Meksiko
+466|{B} · Inggris
+467|{B} · Irlandia
+468|{B} · Australia
+469|{B} · Selandia Baru
+470|{B} · Tanpa hari libur
+471|Jenis usaha dan kata-kata
+472|Tampilan
+473|Warna dan huruf
+474|Berubah sesuai waktu
+475|Bahasa
+476|
+477|Pip, pembantumu
+478|Muncul dengan tips tentang usahamu
+479|Tujuan
+480|Kamu mau dibantu apa
+481|Belum ada yang dipilih
+482|Cadangan
+483|Simpan cadangan
+484|Kamu belum pernah menyimpan
+485|Muat cadangan
+486|Kembalikan semua dari file cadangan
+487|Disimpan hari ini
+488|Disimpan kemarin
+489|Disimpan {n} hari lalu
+490|Hapus {B}
+491|Kembali ke Pengaturan
+492|Ini menghapus semua di {B}. Klik sekali lagi untuk menghapus
+493|Jenis usaha
+494|Usahamu
+495|Warna
+496|Usaha apa ini?
+497|Biz Studio memakai kata yang pas untuk usahamu, seperti {P} untuk toko kue atau Janji temu untuk salon.
+498|Kue rumahan
+499|Makanan dan katering
+500|Lilin dan kerajinan
+501|Seni dan pesanan karya
+502|Menjahit dan pakaian
+503|Kuku
+504|Rambut
+505|Bulu mata dan rias
+506|Les privat
+507|Les musik dan tari
+508|Pelatih kebugaran
+509|Fotografi
+510|Perawatan hewan
+511|Bersih-bersih
+512|Halaman dan taman
+513|Pesta dan acara
+514|Usaha apa?
+515|Bengkel sepeda, salon anjing, kios limun...
+516|Ceritakan apa yang kamu kerjakan, kami isi kata yang cocok.
+517|Yang kamu jual atau tawarkan
+518|Yang dipesan orang
+519|Orang yang bekerja denganmu
+520|Yang kamu pakai untuk bekerja
+521|Lanjut
+522|Apa nama usahamu?
+523|Nama ini muncul di struk, menu, dan bagian atas aplikasimu. Bisa diganti nanti.
+524|Nama usaha
+525|Kamu di mana?
+526|Amerika Serikat
+527|Kanada
+528|Meksiko
+529|Inggris
+530|Irlandia
+531|Australia
+532|Selandia Baru
+533|Tempat lain (tanpa hari libur)
+534|Kami akan memasukkan hari libur negaramu ke kalender.
+535|Foto profil (opsional)
+536|Tambah gambar atau logo
+537|Kalau dilewati, inisialmu yang muncul.
+538|Kembali
+539|Tulis nama usaha untuk lanjut.
+540|Jadikan milikmu
+541|Pilih warnamu. Tiap warna punya huruf yang cocok, dan seluruh aplikasi berubah saat kamu klik.
+542|Sederhana
+543|Klasik
+544|Batu tulis
+545|Sage
+546|Ceri
+547|Manisan
+548|Stroberi
+549|Matcha
+550|Bluberi
+551|Lemon
+552|Karamel
+553|Permen karet
+554|Alam
+555|Samudra
+556|Hutan
+557|Matahari terbenam
+558|Gurun
+559|Langit
+560|Mencolok
+561|Galaksi
+562|Tropis
+563|Retro
+564|Pelangi
+565|Kustom
+566|Warna utama
+567|Warna aksen
+568|Berubah sesuai waktu
+569|Hangat di pagi hari, cerah di siang hari, dan tenang di malam hari.
+570|Pratinjau
+571|{o} jatuh tempo
+572|minggu ini
+573|Berikutnya
+574|Kue kering cokelat chip
+575|Ramah
+576|Bulat
+577|Ceria
+578|Elegan
+579|Modern
+580|Huruf
+581|Kamu mau dibantu apa?
+582|Pilih sebanyak yang kamu mau. Biz Studio menaruhnya paling depan dan memberi tips.
+583|Ada lagi? (opsional)
+584|Aku mau berjualan di pasar tani musim panas ini
+585|Lewati dulu
+586|Selesaikan
+587|Aku lupa {o} atau tanggal jatuh tempo
+588|Aku tidak tahu cara menentukan harga
+589|{S} aku sering habis
+590|Aku mau usahaku berkembang
+591|Waktuku tidak cukup
+592|Infoku tersebar di mana-mana
+593|Aku mau mencatat uangku
+594|Aku mau usahaku terlihat profesional
+595|Cek kalendermu tiap pagi. Kamu akan dapat pengingat tambahan sebelum {o} jatuh tempo.
+596|Tambahkan harga {s} di Harga dan untung, dan Biz Studio akan menyarankan harga yang pas.
+597|Lihat daftar {s} beberapa hari sebelum hari sibuk supaya bisa belanja lebih dulu.
+598|Pakai Cari untuk menemukan pasar dan acara tempat kamu bisa berjualan.
+599|Daftar tugasmu menaruh yang paling mendesak di depan, jadi kamu selalu tahu langkah berikutnya.
+600|Simpan semua {o} dan {c} di sini, bukan di pesan dan catatan.
+601|Simpan {c}, tugas, dan acaramu di sini, bukan di pesan dan catatan.
+602|Pembukuan menjumlahkan uang masuk dan keluar, jadi kamu bisa lihat untung sebenarnya.
+603|Buat struk, menu, dan daftar harga dari {p} dalam beberapa klik.
+604|Buka kalender
+605|Buka harga dan untung
+606|Buka daftar tugas
+607|Buka pembukuan
+608|Buka cari
+609|Buka struk dan menu
+610|Perhatian! {n} {o} terlambat.
+611|Kamu punya {n} {o} untuk hari ini. Kamu pasti bisa!
+612|{n} {o} jatuh tempo besok. Saatnya bersiap!
+613|Ada {n} hal di daftarmu hari ini.
+614|Ada {n} hal di daftarmu hari ini.
+615|{n} {o} yang selesai menunggu pembayaran.
+616|Tambahkan {oa} pertamamu dan aku bantu memantaunya.
+617|Tambahkan {p} supaya aku bisa hitung biayanya.
+618|Tambahkan harga {s} kamu, dan aku buatkan daftar belanja.
+619|Sudah lama sejak cadangan terakhirmu. Simpan satu di Pengaturan supaya tidak ada yang hilang!
+620|Tambahkan gambar usahamu di Pengaturan. Gambarnya juga muncul di struk!
+621|Klik seseorang untuk melihat semua {o} mereka.
+622|Klik satu hari, lalu Tambah untuk memasukkan acara atau tugas.
+623|Cetak menu dan bawa ke pasar berikutnya.
+624|Coba cari nama, {pa}, atau apa saja.
+625|Catat pengeluaranmu di Uang keluar, supaya tahu berapa yang benar-benar tersisa.
+626|Kamu hebat. Terus begitu!
+627|Tidak ada yang mendesak sekarang. Kerja bagus!
+628|Semua beres! Waktunya ngemil.
+629|Tidak ada di daftarmu hari ini.
+630|Tambah tugas di atas untuk mulai.
+631|Tambah tugas di atas. Saat ada {o} mendekat, tugasnya akan muncul di sini sendiri.
+632|Belum ada catatan tempel
+633|Catatan dan pengingat cepat, warna apa saja.
+634|Kalendermu kosong
+635|Daftarmu masih kosong
+636|Tidak ada yang perlu dibeli
+637|Belum ada harga yang dihitung
+638|Cari apa saja
+639|Belum ada yang bisa dicetak
+640|Selesai: $1
+641|Belum selesai: $1
+642|Tandai penting: $1
+643|Hapus tanda: $1
+644|Hapus $1
+645|Keluarkan $1
+646|Ubah $1
+647|Tugas: $1
+648|Catatan tempel: $1
+649|Membeli $1, $2 ditambahkan ke Pembukuan
+650|Membeli $1
+651|$1 sekarang $2
+652|Terakhir: $1
+653|Tambah $1 untuk $2
+654|$2 milik $1 ditandai $3
+655|Buat $1 untuk $2
+656|$1, beli $2
+657|Butuh $1, punya $2. Untuk $3
+658|$1 untuk $2 $3
+659|$1 pukul $2
+660|$1 untuk $2
+661|Perhatian! $2 milik $1 terlambat.
+662|$2 milik $1 jatuh tempo hari ini pukul $3.
+663|$2 milik $1 jatuh tempo hari ini.
+664|Jangan lupa: $2 milik $1 jatuh tempo besok.
+665|Hari ini: $1 pukul $2. Selamat bersenang-senang!
+666|Hari ini: $1. Selamat bersenang-senang!
+667|Kamu menandai "$1" penting. Dan $2 lagi.
+668|Kamu menandai "$1" penting.
+669|$1 dan $2 barang lain hampir habis untuk $3 berikutnya.
+670|$1 hampir habis untuk $2 berikutnya.
+671|$2 milik $1 sudah selesai tapi belum dibayar.
+672|Membuat $1 lebih mahal dari harga jualmu. Ayo perbaiki!
+673|Kamu bisa menjual $1 sedikit lebih mahal.
+674|$1: $2 ($3)
+675|Kembali ke $1
+676|$1 ditambahkan ke $2 dan $3 harga diperbarui
+677|$1 ditambahkan ke $2
+678|$1 harga diperbarui
+679|Tambah $1 ke $2
+680|Ditemukan $1. Periksa nama, jumlah, dan harga, lalu perbaiki yang salah. Hapus centang yang tidak kamu mau.
+681|$1 dengan huruf $2
+682|Kue rumahan: $1
+683|Bersih-bersih: $1
+684|Lewati $1
+685|Membeli $1
+686|Belum ada. Tambahkan hal seperti $1.
+`;
+
+// Ukrainian
+var LANG_UK = `
+0|Нд
+1|Пн
+2|Вт
+3|Ср
+4|Чт
+5|Пт
+6|Сб
+7|Мій день
+8|Обрано для тебе
+9|Календар
+10|Список справ
+11|Ціни й прибуток
+12|Облік грошей
+13|Робота
+14|Нотатки-стікери
+15|Бізнес
+16|{S} і покупки
+17|Розвиток
+18|Пошук
+19|Чеки й меню
+20|Налаштування
+21|Гроші
+22|Меню
+23|Меню
+24|Доброго ранку
+25|Добрий день
+26|Добрий вечір
+27|Доброго ранку!
+28|{o} на сьогодні
+29|{oa} на сьогодні
+30|справ на сьогодні
+31|справа на сьогодні
+32|отримано цього місяця
+33|треба купити
+34|треба купити
+35|{oa}: {n} запізнюється. Натисни, щоб переглянути.
+36|{o}: {n} запізнюються. Натисни, щоб переглянути.
+37|Справи на сьогодні
+38|Усі
+39|Цього тижня
+40|подій сьогодні
+41|подія сьогодні
+42|На сьогодні нічого. Попереду: {n}.
+43|Твої цілі
+44|Закрити
+45|Покажи
+46|Наступна порада
+47|Поради від Pip
+48|Pip
+49|Сьогодні
+50|Завтра
+51|Учора
+52|Запізнення
+53|Без дати
+54|Колись
+55|Запізнення, було на {d}
+56|{Oa} до {d}
+57|{Oa} до {d} о {t}
+58|Запізнення {n} дн.
+59|Запізнення {n} дн.
+60|До сьогодні
+61|До завтра
+62|До завтра о {t}
+63|До сьогодні о {t}
+64|Через {n} дн.
+65|Через {n} дн. о {t}
+66|До {d}
+67|До {d} о {t}
+68|Було до {d}
+69|Було до {d} о {t}
+70|{d} о {t}
+71|Позначити як важливе
+72|Зняти позначку
+73|Видалити
+74|Готово
+75|Не готово
+76|Додати справу
+77|Нова справа
+78|Що потрібно зробити?
+79|Купити ще борошна
+80|Важливе
+81|Познач, щоб воно було вгорі
+82|Додати справу
+83|Напиши, що потрібно зробити.
+84|Прибрати виконані ({n})
+85|Справ на сьогодні: {n}
+86|Справ на сьогодні: {n}
+87|Видалено справ: {n}
+88|Видалено справ: {n}
+89|Тут поки нічого немає.
+90|Скасувати
+91|Немає справ
+92|Сьогодні нічого робити
+93|Усе готово!
+94|Новий стікер
+95|Пиши тут...
+96|Стікер
+97|Винести на екран
+98|Колір і видалення
+99|Переглянути в календарі
+100|Жовтий
+101|Персиковий
+102|Рожевий
+103|Лавандовий
+104|Блакитний
+105|М'ятний
+106|Лаймовий
+107|Пісочний
+108|Вибрати будь-який колір
+109|Колір
+110|У календарі: {d}
+111|Видалити стікер
+112|Додати в календар
+113|Відкрити в Стікерах
+114|Перенести на інший день
+115|Який день?
+116|Прибрати з календаря
+117|Зберегти
+118|Додано в календар на {d}
+119|Прибрано з календаря
+120|Стікер видалено
+121|Вибери день.
+122|Стікерів: {n}. Наведи на стікер, щоб винести його на екран.
+123|Стікерів: {n}. Наведи на стікер, щоб винести його на екран.
+124|Швидкі нотатки й нагадування будь-якого кольору
+125|Стікерів поки немає. Натисни +, щоб додати.
+126|Браузер заблокував вікно стікера. Дозволь спливні вікна для цього сайту й спробуй ще раз.
+127|Вигляд календаря
+128|День
+129|Тиждень
+130|Місяць
+131|Рік
+132|Минулий місяць
+133|Наступний місяць
+134|Попередній день
+135|Наступний день
+136|Минулий тиждень
+137|Наступний тиждень
+138|Минулий рік
+139|Наступний рік
+140|Додати
+141|Відкрити цей день
+142|Додати в цей день
+143|Додати на {d}
+144|Відкрити цей місяць
+145|Заплановано на тиждень: {n}
+146|Заплановано на тиждень: {n}
+147|Цього тижня поки нічого не заплановано
+148|Заплановано: {n}
+149|Заплановано: {n}
+150|Поки нічого не заплановано
+151|Крапки — дні з планами. Свята виділено жовтим.
+152|На {d} поки нічого
+153|На {d} поки нічого не заплановано
+154|Нічого не заплановано. Вільний день!
+155|{o} у {d}: {n}
+156|{oa} у {d}: {n}
+157|Подій у {d}: {n}
+158|Подій у {d}: {n}
+159|Подія
+160|Справа
+161|Змінити подію
+162|Нова подія
+163|Що буде?
+164|О котрій?
+165|(можна пропустити)
+166|О котрій? (можна пропустити)
+167|Де?
+168|Парк на головній вулиці
+169|Видалити цю подію
+170|Додати подію
+171|Подію видалено
+172|Напиши, що буде.
+173|Увесь день
+174|Будь-коли
+175|Фермерський ринок
+176|Що додати
+177|Час
+178|Де
+179|Назва
+180|(необов'язково)
+181|Позначено
+182|Новий рік
+183|День Мартіна Лютера Кінга
+184|День святого Валентина
+185|День президентів
+186|День святого Патрика
+187|Великдень
+188|Великодня неділя
+189|Великодній понеділок
+190|Страсна п'ятниця
+191|Великий четвер
+192|День матері
+193|День пам'яті
+194|День батька
+195|Джунтінс
+196|День незалежності
+197|День праці
+198|День корінних народів
+199|Гелловін
+200|День ветеранів
+201|День подяки
+202|Чорна п'ятниця
+203|Субота малого бізнесу
+204|Святвечір
+205|Різдво
+206|Різдво
+207|Переддень Нового року
+208|День подарунків
+209|День родини
+210|День Вікторії
+211|День Канади
+212|Громадянське свято
+213|День праці
+214|День правди й примирення
+215|День пам'яті
+216|День трьох королів
+217|День Конституції
+218|День народження Беніто Хуареса
+219|День дітей
+220|Сінко де Майо
+221|День мертвих
+222|День революції
+223|День Діви Марії Гваделупської
+224|День Австралії
+225|День АНЗАК
+226|День народження короля
+227|День Вайтангі
+228|День після Нового року
+229|Ніч вогнищ
+230|Поминальна неділя
+231|День святого Стефана
+232|Вихідний на початку травня
+233|Весняний вихідний
+234|Літній вихідний
+235|Вихідний святої Бригіди
+236|Травневий вихідний
+237|Червневий вихідний
+238|Серпневий вихідний
+239|Жовтневий вихідний
+240|Оплачені {o} рахуються як дохід у день терміну
+241|Доходи й витрати по місяцях
+242|Доходи
+243|Витрати
+244|Залишилося в тебе
+245|Очікує оплати
+246|Останні {n} міс.
+247|Дохід: {m}
+248|Витрата: {m}
+249|Цей місяць
+250|Цього місяця поки нічого.
+251|Що ти купив або оплатив
+252|Коробки для торта, оренда місця
+253|Скільки
+254|Який день
+255|Видалити це
+256|Додати
+257|Напиши суму.
+258|На що
+259|Ярмарок випічки, чайові
+260|Чайові
+261|Грошей поки не записано
+262|Треба купити: {n}
+263|Треба купити: {n}
+264|Додати з картинки
+265|Додати: {sa}
+266|Список покупок
+267|Для твоїх {o} на найближчі {n} тиж., приблизно {m}
+268|Для твоїх {o} на найближчі {n} тиж.
+269|Усе потрібне для {o} з'явиться тут саме
+270|Що треба купити
+271|Додай, що купити
+272|Що в тебе є
+273|Менше
+274|Більше
+275|У тебе є все потрібне
+276|Зараз нічого не треба купувати.
+277|Ціни поки немає
+278|Ти вимірюєш це в
+279|Коли купуєш
+280|Ти отримуєш
+281|Скільки отримуєш
+282|од.
+283|за
+284|Скільки в тебе зараз
+285|Додати: {sa}
+286|Напиши назву.
+287|чашки
+288|шт.
+289|палички
+290|дюжина
+291|Назва
+292|Кількість
+293|Одиниця
+294|Ціна
+295|Змінити: {sa}
+296|Борошно
+297|Цукор
+298|Зроби скриншот чека, онлайн-замовлення чи списку потрібного. Застосунок прочитає його й заповнить назви, кількість і ціни за тебе.
+299|Зроби скриншот чека, онлайн-замовлення чи списку потрібного. Застосунок прочитає його й заповнить назви, кількість і ціни за тебе.
+300|Встав скриншот сюди
+301|Натисни
+302|, перетягни картинку або натисни, щоб вибрати
+303|Порада:
+304|робить скриншот
+305|Або напиши чи встав список текстом
+306|Прочитати цей список
+307|Читаю картинку...
+308|Це займе кілька секунд. Першого разу програма читання ще завантажиться з інтернету.
+309|Додати рядок
+310|Спробувати іншу картинку
+311|Додати в {S}
+312|Познач хоча б одну позицію.
+313|Оновить ціну
+314|Твоя картинка
+315|Не вдалося прочитати картинку. Для першого читання потрібен інтернет. Можна надрукувати або вставити список нижче.
+316|На картинці не знайшлося позицій із цінами. Спробуй чіткіший скриншот або виправ текст нижче й натисни «Прочитати цей список».
+317|Скільки насправді коштує кожен {pa} і скільки за нього брати
+318|Плати собі
+319|за годину
+320|Прибуток зверху
+321|Твій час
+322|Справжня вартість
+323|Твоя ціна
+324|Радимо
+325|Краще бери {m}
+326|Ціну ще не задано
+327|Не задано
+328|Ти заробляєш {m}, трохи менше за ціль
+329|Ти заробляєш {m} щоразу
+330|Ти втрачаєш {m} щоразу
+331|Взяти рекомендовану ціну
+332|Справжня вартість — це {s} плюс твій час. Рекомендована ціна додає вибраний прибуток і округлює вгору до цілого долара.
+333|Спершу додай {p}
+334|Коли додаси, що входить у кожен, ця сторінка порахує вартість і чесну ціну.
+335|Перейти до {P}
+336|Відкрито: {n}, готово: {n}
+337|З Google Форми
+338|Додати: {oa}
+339|+ Додати: {oa}
+340|Відкриті
+341|Усі
+342|Новий
+343|У роботі
+344|Оплачено
+345|Змінити
+346|Статус
+347|Прибрати готові {o} ({n})
+348|Назад у Мій день
+349|Змінити: {oa}
+350|Ім'я ({ca})
+351|Телефон або пошта (необов'язково)
+352|{n}-{n}-{n} або пошта
+353|Що хочуть
+354|Термін
+355|Час (необов'язково)
+356|Без часу
+357|Дод. деталі
+358|Смак торта
+359|Хочеш питати щось іще в кожному замовленні ({oa})?
+360|Напис на торті
+361|Алергії
+362|Самовивіз чи доставка
+363|Інше
+364|Нотатки (необов'язково)
+365|Що ще запам'ятати
+366|Зберегти
+367|Скасувати
+368|Видалити: {oa}
+369|Назад до {O}
+370|Додати: {oa}
+371|Видалено ({o}): {n}
+372|Завантажити {o} з Google Форми
+373|Кожен, хто заповнив форму, з'явиться тут як новий {oa}. Можна повторити будь-коли. Уже завантажені не додадуться двічі.
+374|Завантаж відповіді
+375|Відкрий Google Форму й натисни
+376|Відповіді
+377|Натисни
+378|Відкрити в Таблицях
+379|(або
+380|Пов'язати з Таблицями
+381|першого разу).
+382|У таблиці натисни
+383|Файл
+384|, потім
+385|Завантажити
+386|Вибери цей файл
+387|Вибери файл
+388|або перетягни сюди
+389|Підкажи застосунку, куди йде кожна відповідь
+390|Ми вгадали кожне питання. Виправ, якщо щось не так.
+391|Вибери питання з іменем ({ca}).
+392|На сьогодні нічого
+393|{n} ос.
+394|{n} ос.
+395|Додати: {ca}
+396|Знайти людину
+397|Спершу нові
+398|Найбільше {o}
+399|Найбільше витратили
+400|Від А до Я
+401|Поки немає телефону чи пошти
+402|усього
+403|Додати: {ca}
+404|Не треба
+405|Назад до {C}
+406|перший {oa}
+407|Їхні {o}
+408|Усі, хто в тебе купує, в одному місці
+409|Поки немає: {c}
+410|Додай людей, на яких працюєш, з телефоном чи поштою, щоб усі були в одному місці.
+411|Тримай усіх, на кого працюєш, в одному місці.
+412|{p}: {n}
+413|Додати: {pa}
+414|Вихід: {n}
+415|{s}: {n}
+416|Коштує {m}
+417|Без ціни
+418|Назад до {P}
+419|Твоя ціна
+420|Скільки виходить
+421|{n} торт, {n} капкейків
+422|Скільки годин займає
+423|Що входить
+424|Поки нічого не додано. Вибери з {s} нижче або додай нове.
+425|+ Додати: {sa}
+426|Кроки
+427|(по одному в рядку)
+428|Додати: {pa}
+429|Дай назву, щоб зберегти.
+430|Інгредієнти на одну партію коштують
+431|Шукай усе в застосунку або знаходь місця поруч
+432|Шукати {o}, {c}, {p}, справи
+433|Шукати {c}, {p}, справи
+434|Шукати
+435|Поруч із тобою
+436|Фермерські ринки
+437|Відкриває Google Карти
+438|Ярмарки ремесел
+439|Магазини: {s}
+440|Де продавати
+441|Створи, а потім надрукуй або збережи в PDF
+442|Чек
+443|Який {oa}
+444|Друк
+445|Для
+446|Дата
+447|Позиція
+448|Разом
+449|Ще не оплачено
+450|Дякуємо за замовлення ({oa})!
+451|Нотатка внизу
+452|{Oa} за {n} дн. Пиши на {n}-{n}-{n}
+453|Замовляй за {n} дн. Пиши на {n}-{n}-{n}
+454|Нічого не знайдено
+455|Змінити картинку
+456|Прибрати картинку
+457|Твої бізнеси
+458|Відкритий зараз
+459|Додати ще бізнес
+460|Інші бізнеси залишаться збереженими
+461|Цей бізнес
+462|Назва бізнесу й країна
+463|{B} · США
+464|{B} · Канада
+465|{B} · Мексика
+466|{B} · Велика Британія
+467|{B} · Ірландія
+468|{B} · Австралія
+469|{B} · Нова Зеландія
+470|{B} · Без свят
+471|Тип бізнесу й слова
+472|Вигляд
+473|Кольори й шрифт
+474|Змінюється протягом дня
+475|Мова
+476|
+477|Pip, твій помічник
+478|З'являється з порадами про твій бізнес
+479|Цілі
+480|З чим тобі допомогти
+481|Поки нічого не вибрано
+482|Резервна копія
+483|Зберегти копію
+484|Ти ще не зберігав копію
+485|Завантажити копію
+486|Повернути все з файлу копії
+487|Збережено сьогодні
+488|Збережено вчора
+489|Збережено {n} дн. тому
+490|Видалити {B}
+491|Назад до Налаштувань
+492|Це видалить усе в {B}. Натисни ще раз, щоб видалити
+493|Тип бізнесу
+494|Твій бізнес
+495|Кольори
+496|Який у тебе бізнес?
+497|Biz Studio використовує правильні слова, наприклад {P} для пекарні чи Записи для салону.
+498|Домашня випічка
+499|Їжа й кейтеринг
+500|Свічки й рукоділля
+501|Мистецтво й замовлення
+502|Шиття й одяг
+503|Нігті
+504|Волосся
+505|Вії й макіяж
+506|Репетиторство
+507|Уроки музики й танців
+508|Фітнес-тренування
+509|Фотографія
+510|Догляд за тваринами
+511|Прибирання
+512|Подвір'я й сад
+513|Свята й події
+514|Який бізнес?
+515|Ремонт велосипедів, грумінг собак, лимонадний кіоск...
+516|Розкажи, чим займаєшся, і ми підберемо слова.
+517|Що ти продаєш або пропонуєш
+518|Що люди бронюють або замовляють
+519|Люди, з якими ти працюєш
+520|Чим ти користуєшся в роботі
+521|Далі
+522|Як називається твій бізнес?
+523|Ця назва буде на чеках, у меню й угорі застосунку. Її можна змінити пізніше.
+524|Назва бізнесу
+525|Де ти знаходишся?
+526|США
+527|Канада
+528|Мексика
+529|Велика Британія
+530|Ірландія
+531|Австралія
+532|Нова Зеландія
+533|Інше місце (без свят)
+534|Ми додамо свята твоєї країни в календар.
+535|Фото профілю (необов'язково)
+536|Додати картинку чи логотип
+537|Якщо пропустити, будуть твої ініціали.
+538|Назад
+539|Напиши назву бізнесу, щоб продовжити.
+540|Зроби по-своєму
+541|Вибери кольори. Кожен має свій шрифт, і весь застосунок змінюється, коли натискаєш.
+542|Прості
+543|Класика
+544|Сланець
+545|Шавлія
+546|Вишня
+547|Солодощі
+548|Полуниця
+549|Матча
+550|Чорниця
+551|Лимон
+552|Карамель
+553|Жуйка
+554|Природа
+555|Океан
+556|Ліс
+557|Захід сонця
+558|Пустеля
+559|Небо
+560|Яскраві
+561|Галактика
+562|Тропіки
+563|Ретро
+564|Веселка
+565|Свої
+566|Основний колір
+567|Акцентний колір
+568|Змінювати протягом дня
+569|Теплі вранці, яскраві вдень і спокійні ввечері.
+570|Попередній перегляд
+571|{o} до терміну
+572|цього тижня
+573|Далі
+574|Печиво з шоколадною крихтою
+575|Дружній
+576|Округлий
+577|Грайливий
+578|Елегантний
+579|Сучасний
+580|Шрифт
+581|З чим тобі допомогти?
+582|Вибирай скільки хочеш. Biz Studio поставить це першим і дасть поради.
+583|Щось іще? (необов'язково)
+584|Хочу продавати на фермерському ринку цього літа
+585|Поки пропустити
+586|Завершити
+587|Я забуваю {o} або терміни
+588|Не знаю, скільки брати за роботу
+589|У мене закінчуються {s}
+590|Хочу розвивати бізнес
+591|Мені бракує часу
+592|Моя інформація розкидана всюди
+593|Хочу стежити за грошима
+594|Хочу, щоб мій бізнес виглядав професійно
+595|Перевіряй календар щоранку. Перед терміном {o} будуть додаткові нагадування.
+596|Додай, скільки платиш за {s}, у «Ціни й прибуток», і Biz Studio запропонує чесні ціни.
+597|Дивись список ({s}) за кілька днів до завантажених днів, щоб купити заздалегідь.
+598|Використовуй Пошук, щоб знайти ринки й події, де можна продавати.
+599|Список справ ставить найтерміновіше першим, тож ти завжди знаєш, що далі.
+600|Тримай усі {o} і {c} тут, а не в повідомленнях і нотатках.
+601|Тримай {c}, справи й події тут, а не в повідомленнях і нотатках.
+602|Облік грошей складає доходи й витрати, щоб ти бачив справжній прибуток.
+603|Роби чеки, меню й прайс-листи зі своїх {p} у кілька кліків.
+604|Відкрити календар
+605|Відкрити ціни й прибуток
+606|Відкрити список справ
+607|Відкрити облік грошей
+608|Відкрити пошук
+609|Відкрити чеки й меню
+610|Увага! Запізнюються: {n} ({o}).
+611|Сьогодні в тебе {n} ({o}). Ти впораєшся!
+612|Завтра термін: {n} ({o}). Час готуватися!
+613|Сьогодні у твоєму списку справ: {n}.
+614|Сьогодні у твоєму списку справ: {n}.
+615|Готові, але не оплачені: {n} ({o}).
+616|Додай перший {oa}, і я допоможу за ним стежити.
+617|Додай {p}, щоб я порахував, скільки вони тобі коштують.
+618|Додай, скільки платиш за {s}, і я складу список покупок.
+619|Давно не було резервної копії. Збережи її в Налаштуваннях, щоб нічого не втратити!
+620|Додай картинку для бізнесу в Налаштуваннях. Вона буде й на чеках!
+621|Натисни на людину, щоб побачити всі її {o}.
+622|Натисни на день, а потім «Додати», щоб поставити подію чи справу.
+623|Надрукуй меню й візьми його на наступний ринок.
+624|Спробуй знайти ім'я, {pa} або що завгодно.
+625|Записуй витрати у «Витрати», щоб знати, скільки в тебе насправді залишилося.
+626|У тебе чудово виходить. Так тримати!
+627|Зараз нічого термінового. Гарна робота!
+628|Усе зроблено! Можна й перекусити.
+629|На сьогодні в списку нічого немає.
+630|Додай справу вище, щоб почати.
+631|Додай справу вище. Коли з'являться найближчі {o}, справи для них з'являться тут самі.
+632|Стікерів поки немає
+633|Швидкі нотатки й нагадування будь-якого кольору.
+634|Календар порожній
+635|Список поки порожній
+636|Нічого купувати
+637|Ціни ще не пораховано
+638|Знайди що завгодно
+639|Поки нічого друкувати
+640|Готово: $1
+641|Не готово: $1
+642|Позначити як важливе: $1
+643|Зняти позначку: $1
+644|Видалити: $1
+645|Прибрати: $1
+646|Змінити: $1
+647|Справа: $1
+648|Стікер: $1
+649|Куплено: $1, $2 додано в Облік грошей
+650|Куплено: $1
+651|$1 тепер коштує $2
+652|Останній: $1
+653|Додати $1 для $2
+654|$2 ($1) позначено: $3
+655|Зробити $1 для $2
+656|$1, купити $2
+657|Потрібно $1, є $2. Для $3
+658|$1 за $2 $3
+659|$1 о $2
+660|$1 для $2
+661|Увага! $2 ($1) запізнюється.
+662|$2 ($1) — сьогодні о $3.
+663|$2 ($1) — сьогодні.
+664|Не забудь: $2 ($1) — завтра.
+665|Сьогодні: $1 о $2. Гарно провести час!
+666|Сьогодні: $1. Гарно провести час!
+667|Ти позначив «$1» як важливе. І ще $2.
+668|Ти позначив «$1» як важливе.
+669|Закінчується $1 і ще $2 для найближчих $3.
+670|Закінчується $1 для найближчих $2.
+671|$2 ($1) готовий, але ще не оплачений.
+672|$1 обходиться дорожче, ніж ти береш. Давай виправимо!
+673|За $1 можна брати трохи більше.
+674|$1: $2 ($3)
+675|Назад до $1
+676|Додано в $2: $1, оновлено цін: $3
+677|Додано в $2: $1
+678|Оновлено цін: $1
+679|Додати $1 у $2
+680|Знайдено: $1. Перевір назви, кількість і ціни й виправ помилки. Зніми позначку з непотрібного.
+681|$1, шрифт $2
+682|Домашня випічка: $1
+683|Прибирання: $1
+684|Пропустити: $1
+685|Куплено: $1
+686|Поки нічого. Додай, наприклад, $1.
+`;
+
+// Hindi
+var LANG_HI = `
+0|रवि
+1|सोम
+2|मंगल
+3|बुध
+4|गुरु
+5|शुक्र
+6|शनि
+7|मेरा दिन
+8|आपके लिए चुना गया
+9|कैलेंडर
+10|करने के काम
+11|दाम और मुनाफ़ा
+12|हिसाब-किताब
+13|काम
+14|स्टिकी नोट
+15|बिज़नेस
+16|{S} और ख़रीदारी
+17|आगे बढ़ें
+18|खोजें
+19|रसीदें और मेन्यू
+20|सेटिंग्स
+21|पैसे
+22|मेन्यू
+23|मेन्यू
+24|सुप्रभात
+25|नमस्ते
+26|शुभ संध्या
+27|सुप्रभात!
+28|आज के {o}
+29|आज का {oa}
+30|आज के काम
+31|आज का काम
+32|इस महीने मिले पैसे
+33|ख़रीदने की चीज़ें
+34|ख़रीदने की चीज़
+35|{n} {oa} देर से है। देखने के लिए टैप करें।
+36|{n} {o} देर से हैं। देखने के लिए टैप करें।
+37|आज करना है
+38|सब देखें
+39|इस हफ़्ते
+40|आज के इवेंट
+41|आज का इवेंट
+42|आज कुछ नहीं। आगे {n} हैं।
+43|आपका फ़ोकस
+44|बंद करें
+45|दिखाओ
+46|अगला सुझाव
+47|Pip के सुझाव
+48|Pip
+49|आज
+50|कल
+51|बीता कल
+52|देर से
+53|कोई तारीख़ नहीं
+54|कभी भी
+55|देर से, तारीख़ थी {d}
+56|{Oa} की तारीख़ {d}
+57|{Oa} की तारीख़ {d}, {t}
+58|{n} दिन देर
+59|{n} दिन देर
+60|आज तक
+61|कल तक
+62|कल {t} तक
+63|आज {t} तक
+64|{n} दिन में
+65|{n} दिन में, {t}
+66|{d} तक
+67|{d}, {t} तक
+68|तारीख़ थी {d}
+69|तारीख़ थी {d}, {t}
+70|{d}, {t}
+71|ज़रूरी मार्क करें
+72|मार्क हटाएँ
+73|हटाएँ
+74|हो गया
+75|नहीं हुआ
+76|काम जोड़ें
+77|नया काम
+78|आपको क्या करना है?
+79|और आटा ख़रीदें
+80|ज़रूरी
+81|मार्क करें ताकि यह सबसे ऊपर रहे
+82|काम जोड़ें
+83|लिखें कि आपको क्या करना है।
+84|पूरे हुए हटाएँ ({n})
+85|आज {n} काम करने हैं
+86|आज {n} काम करना है
+87|{n} काम हटाए गए
+88|{n} काम हटाया गया
+89|अभी यहाँ कुछ नहीं है।
+90|वापस लें
+91|कोई काम नहीं
+92|आज करने को कुछ नहीं
+93|सब हो गया!
+94|नया नोट
+95|यहाँ लिखें...
+96|स्टिकी नोट
+97|स्क्रीन पर निकालें
+98|रंग और हटाएँ
+99|कैलेंडर में देखें
+100|पीला
+101|आड़ू
+102|गुलाबी
+103|लैवेंडर
+104|नीला
+105|पुदीना
+106|हरा नींबू
+107|रेतीला
+108|कोई भी रंग चुनें
+109|रंग
+110|कैलेंडर में: {d}
+111|नोट हटाएँ
+112|कैलेंडर में जोड़ें
+113|स्टिकी नोट में खोलें
+114|किसी और दिन पर ले जाएँ
+115|कौन सा दिन?
+116|कैलेंडर से हटाएँ
+117|सेव करें
+118|{d} को कैलेंडर में जोड़ा गया
+119|कैलेंडर से हटाया गया
+120|नोट हटाया गया
+121|एक दिन चुनें।
+122|{n} नोट। नोट पर माउस ले जाकर उसे स्क्रीन पर निकालें।
+123|{n} नोट। नोट पर माउस ले जाकर उसे स्क्रीन पर निकालें।
+124|जल्दी के नोट और याद-दिलाने, किसी भी रंग में
+125|अभी कोई नोट नहीं। जोड़ने के लिए + दबाएँ।
+126|आपके ब्राउज़र ने नोट की विंडो रोक दी। इस साइट के लिए पॉप-अप की अनुमति दें और फिर कोशिश करें।
+127|कैलेंडर व्यू
+128|दिन
+129|हफ़्ता
+130|महीना
+131|साल
+132|पिछला महीना
+133|अगला महीना
+134|पिछला दिन
+135|अगला दिन
+136|पिछला हफ़्ता
+137|अगला हफ़्ता
+138|पिछला साल
+139|अगला साल
+140|जोड़ें
+141|यह दिन देखें
+142|इस दिन में जोड़ें
+143|{d} में जोड़ें
+144|यह महीना देखें
+145|इस हफ़्ते {n} काम तय हैं
+146|इस हफ़्ते {n} काम तय है
+147|इस हफ़्ते अभी कुछ तय नहीं
+148|{n} काम तय हैं
+149|{n} काम तय है
+150|अभी कुछ तय नहीं
+151|बिंदु वाले दिनों में कुछ तय है। छुट्टियाँ पीले रंग में हैं।
+152|{d} में अभी कुछ नहीं
+153|{d} में अभी कुछ तय नहीं
+154|कुछ तय नहीं। आज़ाद दिन!
+155|{d} में {n} {o}
+156|{d} में {n} {oa}
+157|{d} में {n} इवेंट
+158|{d} में {n} इवेंट
+159|इवेंट
+160|काम
+161|इवेंट बदलें
+162|नया इवेंट
+163|क्या होने वाला है?
+164|कितने बजे?
+165|(छोड़ सकते हैं)
+166|कितने बजे? (छोड़ सकते हैं)
+167|कहाँ?
+168|मेन स्ट्रीट पार्क
+169|यह इवेंट हटाएँ
+170|इवेंट जोड़ें
+171|इवेंट हटाया गया
+172|लिखें कि क्या होने वाला है।
+173|पूरा दिन
+174|कभी भी
+175|किसान बाज़ार
+176|क्या जोड़ना है
+177|समय
+178|कहाँ
+179|शीर्षक
+180|(वैकल्पिक)
+181|पूरा किया
+182|नया साल
+183|मार्टिन लूथर किंग जूनियर दिवस
+184|वैलेंटाइन डे
+185|प्रेसिडेंट्स डे
+186|सेंट पैट्रिक डे
+187|ईस्टर
+188|ईस्टर संडे
+189|ईस्टर मंडे
+190|गुड फ्राइडे
+191|होली थर्सडे
+192|मदर्स डे
+193|मेमोरियल डे
+194|फ़ादर्स डे
+195|जूनटीन्थ
+196|स्वतंत्रता दिवस
+197|श्रम दिवस
+198|मूल निवासी दिवस
+199|हैलोवीन
+200|वेटरन्स डे
+201|थैंक्सगिविंग
+202|ब्लैक फ्राइडे
+203|स्मॉल बिज़नेस सैटरडे
+204|क्रिसमस की पूर्व संध्या
+205|क्रिसमस
+206|क्रिसमस
+207|नए साल की पूर्व संध्या
+208|बॉक्सिंग डे
+209|फ़ैमिली डे
+210|विक्टोरिया डे
+211|कनाडा डे
+212|सिविक हॉलिडे
+213|श्रम दिवस
+214|सत्य और मेल-मिलाप दिवस
+215|स्मरण दिवस
+216|तीन राजाओं का दिन
+217|संविधान दिवस
+218|बेनितो हुआरेज़ जयंती
+219|बाल दिवस
+220|सिंको दे मायो
+221|मृतकों का दिन
+222|क्रांति दिवस
+223|ग्वाडालूपे की कुँवारी मरियम का दिन
+224|ऑस्ट्रेलिया डे
+225|एंज़ैक डे
+226|राजा का जन्मदिन
+227|वाइतांगी डे
+228|नए साल के बाद का दिन
+229|बॉनफ़ायर नाइट
+230|रिमेंबरेंस संडे
+231|सेंट स्टीफ़न डे
+232|मई की शुरुआत की छुट्टी
+233|वसंत की छुट्टी
+234|गर्मी की छुट्टी
+235|सेंट ब्रिजिड डे की छुट्टी
+236|मई की छुट्टी
+237|जून की छुट्टी
+238|अगस्त की छुट्टी
+239|अक्तूबर की छुट्टी
+240|भुगतान हुए {o} अपनी तारीख़ पर आमदनी में गिने जाते हैं
+241|हर महीने आने वाले और जाने वाले पैसे
+242|आए पैसे
+243|गए पैसे
+244|आपके पास बचे
+245|भुगतान बाक़ी
+246|पिछले {n} महीने
+247|आए: {m}
+248|गए: {m}
+249|यह महीना
+250|इस महीने अभी कुछ नहीं।
+251|आपने क्या ख़रीदा या चुकाया
+252|केक के डिब्बे, स्टॉल का किराया
+253|कितना
+254|कौन सा दिन
+255|इसे हटाएँ
+256|जोड़ें
+257|लिखें कि कितना था।
+258|किसलिए था
+259|बेक सेल, टिप
+260|टिप
+261|अभी कोई पैसा दर्ज नहीं
+262|{n} चीज़ें ख़रीदनी हैं
+263|{n} चीज़ ख़रीदनी है
+264|फ़ोटो से जोड़ें
+265|{sa} जोड़ें
+266|ख़रीदारी की सूची
+267|अगले {n} हफ़्तों के {o} के लिए, लगभग {m}
+268|अगले {n} हफ़्तों के {o} के लिए
+269|{o} के लिए ज़रूरी चीज़ें यहाँ अपने-आप दिखेंगी
+270|जो चीज़ें ख़रीदनी हैं
+271|ख़रीदने की चीज़ जोड़ें
+272|आपके पास क्या है
+273|कम
+274|ज़्यादा
+275|आपके पास सब कुछ है
+276|अभी कुछ ख़रीदना नहीं है।
+277|अभी कोई दाम नहीं
+278|आप इसे इसमें नापते हैं
+279|जब आप ख़रीदते हैं
+280|आपको मिलता है
+281|आपको कितना मिलता है
+282|यूनिट
+283|के लिए
+284|अभी आपके पास कितना है
+285|{sa} जोड़ें
+286|इसका नाम लिखें।
+287|कप
+288|पीस
+289|स्टिक
+290|दर्जन
+291|नाम
+292|मात्रा
+293|यूनिट
+294|दाम
+295|{sa} बदलें
+296|आटा
+297|चीनी
+298|रसीद, ऑनलाइन ऑर्डर या ज़रूरी चीज़ों की सूची का स्क्रीनशॉट लें। ऐप उसे पढ़कर नाम, मात्रा और दाम भर देगा।
+299|रसीद, ऑनलाइन ऑर्डर या ज़रूरी चीज़ों की सूची का स्क्रीनशॉट लें। ऐप उसे पढ़कर नाम, मात्रा और दाम भर देगा।
+300|स्क्रीनशॉट यहाँ पेस्ट करें
+301|दबाएँ
+302|, तस्वीर छोड़ें, या चुनने के लिए क्लिक करें
+303|सुझाव:
+304|से स्क्रीनशॉट लेते हैं
+305|या सूची को टेक्स्ट के रूप में लिखें या पेस्ट करें
+306|यह सूची पढ़ें
+307|आपकी तस्वीर पढ़ी जा रही है...
+308|इसमें कुछ सेकंड लग सकते हैं। पहली बार, रीडर इंटरनेट से भी लोड होता है।
+309|लाइन जोड़ें
+310|कोई और तस्वीर आज़माएँ
+311|{S} में जोड़ें
+312|कम से कम एक चीज़ पर टिक करें।
+313|दाम अपडेट करेगा
+314|आपकी तस्वीर
+315|तस्वीर नहीं पढ़ी जा सकी। पहली बार तस्वीर पढ़ने के लिए इंटरनेट चाहिए। आप नीचे सूची लिख या पेस्ट कर सकते हैं।
+316|उस तस्वीर में दाम वाली कोई चीज़ नहीं मिली। ज़्यादा साफ़ स्क्रीनशॉट आज़माएँ, या नीचे का टेक्स्ट ठीक करके "यह सूची पढ़ें" दबाएँ।
+317|हर {pa} पर असल में कितना ख़र्च होता है, और कितना लेना चाहिए
+318|ख़ुद को दें
+319|प्रति घंटा
+320|ऊपर से मुनाफ़ा
+321|आपका समय
+322|असली लागत
+323|आप लेते हैं
+324|सुझाया गया
+325|इसके बजाय {m} लें
+326|अभी कोई दाम तय नहीं
+327|तय नहीं
+328|आप {m} कमाते हैं, लक्ष्य से थोड़ा कम
+329|आप हर बार {m} कमाते हैं
+330|आपको हर बार {m} का नुकसान होता है
+331|सुझाया गया दाम लें
+332|असली लागत है आपके {s} और आपका समय। सुझाया गया दाम आपका चुना मुनाफ़ा जोड़कर अगले डॉलर तक बढ़ा देता है।
+333|पहले अपने {p} जोड़ें
+334|जब आप हर एक में लगने वाली चीज़ें जोड़ देंगे, यह पेज लागत और सही दाम निकाल देगा।
+335|{P} पर जाएँ
+336|{n} खुले, {n} पूरे
+337|Google Form से
+338|{oa} जोड़ें
+339|+ {oa} जोड़ें
+340|खुले
+341|सभी
+342|नया
+343|चल रहा है
+344|भुगतान हो गया
+345|बदलें
+346|स्थिति
+347|पूरे हुए {o} हटाएँ ({n})
+348|मेरा दिन पर वापस जाएँ
+349|{oa} बदलें
+350|{ca} का नाम
+351|फ़ोन या ईमेल (वैकल्पिक)
+352|{n}-{n}-{n} या ईमेल
+353|उन्हें क्या चाहिए
+354|तारीख़
+355|समय (वैकल्पिक)
+356|कोई समय नहीं
+357|और जानकारी
+358|केक का फ़्लेवर
+359|हर {oa} पर कुछ और पूछना है?
+360|केक पर संदेश
+361|एलर्जी
+362|पिकअप या डिलीवरी
+363|कुछ और
+364|नोट्स (वैकल्पिक)
+365|और कुछ याद रखना है
+366|बदलाव सेव करें
+367|रद्द करें
+368|यह {oa} हटाएँ
+369|{O} पर वापस जाएँ
+370|{oa} जोड़ें
+371|{n} {o} हटाए गए
+372|अपने Google Form से {o} लाएँ
+373|जिसने भी आपका फ़ॉर्म भरा है, वह यहाँ नए {oa} के रूप में दिखेगा। आप यह कभी भी दोबारा कर सकते हैं। पहले लाए गए दो बार नहीं जुड़ेंगे।
+374|अपने जवाब डाउनलोड करें
+375|अपना Google Form खोलें और क्लिक करें
+376|जवाब
+377|क्लिक करें
+378|Sheets में देखें
+379|(या
+380|Sheets से जोड़ें
+381|पहली बार)।
+382|शीट में, क्लिक करें
+383|फ़ाइल
+384|, फिर
+385|डाउनलोड
+386|वह फ़ाइल चुनें
+387|अपनी फ़ाइल चुनें
+388|या यहाँ खींचकर लाएँ
+389|ऐप को बताएँ कि हर जवाब कहाँ जाएगा
+390|हमने हर सवाल का अंदाज़ा लगाया है। जो ग़लत लगे उसे बदलें।
+391|वह सवाल चुनें जिसमें {ca} का नाम है।
+392|आज के लिए कुछ नहीं
+393|{n} व्यक्ति
+394|{n} लोग
+395|{ca} जोड़ें
+396|किसी को ढूँढें
+397|सबसे नए
+398|सबसे ज़्यादा {o}
+399|सबसे ज़्यादा ख़र्च किया
+400|A से Z
+401|अभी कोई फ़ोन या ईमेल नहीं
+402|कुल
+403|{ca} जोड़ें
+404|रहने दें
+405|{C} पर वापस जाएँ
+406|पहला {oa}
+407|उनके {o}
+408|आपसे ख़रीदने वाले सभी लोग, एक जगह
+409|अभी कोई {c} नहीं
+410|जिन लोगों के लिए आप काम करते हैं उन्हें फ़ोन या ईमेल के साथ जोड़ें, ताकि सब एक जगह रहें।
+411|जिनके लिए आप काम करते हैं, उन सबको एक जगह रखें।
+412|{n} {p}
+413|{pa} जोड़ें
+414|{n} बनते हैं
+415|{n} {s}
+416|लागत {m}
+417|कोई दाम नहीं
+418|{P} पर वापस जाएँ
+419|आप कितना लेते हैं
+420|कितना बनता है
+421|{n} केक, {n} कपकेक
+422|कितने घंटे लगते हैं
+423|इसमें क्या लगता है
+424|अभी कुछ नहीं जोड़ा। नीचे अपने {s} में से चुनें, या नया जोड़ें।
+425|+ {sa} जोड़ें
+426|स्टेप
+427|(हर लाइन में एक)
+428|{pa} जोड़ें
+429|सेव करने के लिए नाम दें।
+430|एक बैच की सामग्री की लागत
+431|अपने ऐप में सब कुछ खोजें, या पास की जगहें ढूँढें
+432|{o}, {c}, {p}, काम खोजें
+433|{c}, {p}, काम खोजें
+434|खोजें
+435|आपके पास
+436|किसान बाज़ार
+437|Google Maps खोलता है
+438|हस्तशिल्प मेले
+439|{s} की दुकानें
+440|बेचने की जगहें
+441|एक बनाएँ, फिर प्रिंट करें या PDF के रूप में सेव करें
+442|रसीद
+443|कौन सा {oa}
+444|प्रिंट करें
+445|किसके लिए
+446|तारीख़
+447|चीज़
+448|कुल
+449|अभी भुगतान नहीं हुआ
+450|आपके {oa} के लिए धन्यवाद!
+451|नीचे एक नोट
+452|{n} दिन पहले {oa} करें। मैसेज करें {n}-{n}-{n}
+453|{n} दिन पहले ऑर्डर करें। मैसेज करें {n}-{n}-{n}
+454|कोई नतीजा नहीं
+455|तस्वीर बदलें
+456|तस्वीर हटाएँ
+457|आपके बिज़नेस
+458|अभी खुला है
+459|एक और बिज़नेस जोड़ें
+460|आपके दूसरे बिज़नेस सेव रहेंगे
+461|यह बिज़नेस
+462|बिज़नेस का नाम और देश
+463|{B} · अमेरिका
+464|{B} · कनाडा
+465|{B} · मेक्सिको
+466|{B} · ब्रिटेन
+467|{B} · आयरलैंड
+468|{B} · ऑस्ट्रेलिया
+469|{B} · न्यूज़ीलैंड
+470|{B} · कोई छुट्टी नहीं
+471|बिज़नेस का प्रकार और शब्द
+472|रूप
+473|रंग और फ़ॉन्ट
+474|दिन के समय के साथ बदलता है
+475|भाषा
+476|
+477|Pip, आपका सहायक
+478|आपके बिज़नेस के बारे में सुझाव देता है
+479|लक्ष्य
+480|आपको किसमें मदद चाहिए
+481|अभी कुछ नहीं चुना
+482|बैकअप
+483|बैकअप सेव करें
+484|आपने अभी तक कोई सेव नहीं किया
+485|बैकअप लोड करें
+486|बैकअप फ़ाइल से सब कुछ वापस लाएँ
+487|आज सेव किया
+488|कल सेव किया
+489|{n} दिन पहले सेव किया
+490|{B} हटाएँ
+491|सेटिंग्स पर वापस जाएँ
+492|इससे {B} में सब कुछ मिट जाएगा। हटाने के लिए फिर से क्लिक करें
+493|बिज़नेस का प्रकार
+494|आपका बिज़नेस
+495|रंग
+496|यह किस तरह का बिज़नेस है?
+497|Biz Studio आपके बिज़नेस के लिए सही शब्द इस्तेमाल करता है, जैसे बेकरी के लिए {P} या सैलून के लिए अपॉइंटमेंट।
+498|घर की बेकरी
+499|खाना और कैटरिंग
+500|मोमबत्तियाँ और हस्तशिल्प
+501|कला और कमीशन
+502|सिलाई और कपड़े
+503|नेल्स
+504|बाल
+505|पलकें और मेकअप
+506|ट्यूशन
+507|संगीत और डांस क्लास
+508|फ़िटनेस कोचिंग
+509|फ़ोटोग्राफ़ी
+510|पालतू जानवरों की देखभाल
+511|सफ़ाई
+512|आँगन और बगीचा
+513|पार्टी और इवेंट
+514|किस तरह का बिज़नेस?
+515|साइकिल रिपेयर, कुत्तों की ग्रूमिंग, नींबू पानी का ठेला...
+516|हमें बताएँ कि आप क्या करते हैं, हम सही शब्द भर देंगे।
+517|आप क्या बेचते या देते हैं
+518|लोग क्या बुक या ऑर्डर करते हैं
+519|जिन लोगों के साथ आप काम करते हैं
+520|काम के लिए आप क्या इस्तेमाल करते हैं
+521|आगे बढ़ें
+522|आपके बिज़नेस का नाम क्या है?
+523|यह नाम आपकी रसीदों, मेन्यू और ऐप के ऊपर दिखेगा। आप इसे बाद में बदल सकते हैं।
+524|बिज़नेस का नाम
+525|आप कहाँ रहते हैं?
+526|अमेरिका
+527|कनाडा
+528|मेक्सिको
+529|ब्रिटेन
+530|आयरलैंड
+531|ऑस्ट्रेलिया
+532|न्यूज़ीलैंड
+533|कहीं और (कोई छुट्टी नहीं)
+534|हम आपके देश की छुट्टियाँ आपके कैलेंडर में डाल देंगे।
+535|प्रोफ़ाइल फ़ोटो (वैकल्पिक)
+536|तस्वीर या लोगो जोड़ें
+537|अगर आप इसे छोड़ते हैं, तो आपके नाम के पहले अक्षर दिखेंगे।
+538|वापस
+539|आगे बढ़ने के लिए बिज़नेस का नाम लिखें।
+540|इसे अपना बनाएँ
+541|अपने रंग चुनें। हर एक के साथ मिलता-जुलता फ़ॉन्ट आता है, और क्लिक करते ही पूरा ऐप बदल जाता है।
+542|सादा
+543|क्लासिक
+544|स्लेट
+545|सेज
+546|चेरी
+547|मिठाइयाँ
+548|स्ट्रॉबेरी
+549|माचा
+550|ब्लूबेरी
+551|नींबू
+552|कैरेमल
+553|बबलगम
+554|प्रकृति
+555|समुद्र
+556|जंगल
+557|सूर्यास्त
+558|रेगिस्तान
+559|आसमान
+560|चटकीले
+561|आकाशगंगा
+562|ट्रॉपिकल
+563|रेट्रो
+564|इंद्रधनुष
+565|अपना
+566|मुख्य रंग
+567|ख़ास रंग
+568|दिन के समय के साथ बदलें
+569|सुबह गर्माहट, दोपहर में चमक और रात में सुकून।
+570|झलक
+571|बाक़ी {o}
+572|इस हफ़्ते
+573|आगे
+574|चॉकलेट चिप कुकीज़
+575|दोस्ताना
+576|गोल
+577|मज़ेदार
+578|सुंदर
+579|आधुनिक
+580|फ़ॉन्ट
+581|आपको किसमें मदद चाहिए?
+582|जितने चाहें उतने चुनें। Biz Studio इन्हें सबसे पहले रखेगा और सुझाव देगा।
+583|कुछ और? (वैकल्पिक)
+584|मैं इस गर्मी किसान बाज़ार में बेचना चाहता/चाहती हूँ
+585|अभी छोड़ें
+586|सेटअप पूरा करें
+587|मैं {o} या तारीख़ें भूल जाता/जाती हूँ
+588|मुझे नहीं पता कि दाम कैसे तय करूँ
+589|मेरे {s} ख़त्म हो जाते हैं
+590|मैं अपना बिज़नेस बढ़ाना चाहता/चाहती हूँ
+591|मेरे पास समय कम है
+592|मेरी जानकारी इधर-उधर बिखरी है
+593|मैं अपने पैसों का हिसाब रखना चाहता/चाहती हूँ
+594|मैं चाहता/चाहती हूँ कि मेरा बिज़नेस प्रोफ़ेशनल दिखे
+595|हर सुबह अपना कैलेंडर देखें। {o} की तारीख़ से पहले आपको और याद दिलाया जाएगा।
+596|"दाम और मुनाफ़ा" में {s} के दाम डालें, और Biz Studio सही दाम सुझाएगा।
+597|व्यस्त दिनों से कुछ दिन पहले {s} की सूची देखें ताकि पहले से ख़रीद सकें।
+598|"खोजें" से वे बाज़ार और इवेंट ढूँढें जहाँ आप बेच सकते हैं।
+599|आपकी काम की सूची सबसे ज़रूरी काम पहले दिखाती है, ताकि आपको हमेशा पता रहे कि आगे क्या करना है।
+600|अपने सभी {o} और {c} मैसेज और नोट्स के बजाय यहाँ रखें।
+601|अपने {c}, काम और इवेंट मैसेज और नोट्स के बजाय यहाँ रखें।
+602|हिसाब-किताब आने और जाने वाले पैसे जोड़ता है, ताकि आप असली मुनाफ़ा देख सकें।
+603|अपने {p} से कुछ ही क्लिक में रसीदें, मेन्यू और दाम-सूची बनाएँ।
+604|कैलेंडर खोलें
+605|दाम और मुनाफ़ा खोलें
+606|काम की सूची खोलें
+607|हिसाब-किताब खोलें
+608|खोजें खोलें
+609|रसीदें और मेन्यू खोलें
+610|ध्यान दें! {n} {o} देर से हैं।
+611|आज आपके {n} {o} हैं। आप कर सकते हैं!
+612|कल {n} {o} की तारीख़ है। तैयारी का समय!
+613|आज आपकी सूची में {n} काम हैं।
+614|आज आपकी सूची में {n} काम है।
+615|{n} पूरे हुए {o} भुगतान का इंतज़ार कर रहे हैं।
+616|अपना पहला {oa} जोड़ें और मैं उसे संभालने में मदद करूँगा।
+617|अपने {p} जोड़ें ताकि मैं उनकी लागत निकाल सकूँ।
+618|अपने {s} के दाम डालें, और मैं आपकी ख़रीदारी की सूची बनाऊँगा।
+619|आपका पिछला बैकअप काफ़ी पुराना है। सेटिंग्स में एक सेव करें ताकि कुछ खोए नहीं!
+620|सेटिंग्स में अपने बिज़नेस की तस्वीर जोड़ें। यह आपकी रसीदों पर भी आती है!
+621|किसी पर क्लिक करके उनके सभी {o} एक जगह देखें।
+622|किसी दिन पर क्लिक करें, फिर "जोड़ें" दबाकर इवेंट या काम डालें।
+623|एक मेन्यू प्रिंट करें और अगले बाज़ार में ले जाएँ।
+624|कोई नाम, {pa}, या कुछ भी खोजकर देखें।
+625|ख़र्च "गए पैसे" में डालें, ताकि पता रहे कि असल में कितना बचा।
+626|आप बहुत अच्छा कर रहे हैं। ऐसे ही चलते रहें!
+627|अभी कुछ ज़रूरी नहीं। बढ़िया काम!
+628|सब हो गया! थोड़ा नाश्ता कर लीजिए।
+629|आज आपकी सूची में कुछ नहीं।
+630|शुरू करने के लिए ऊपर एक काम जोड़ें।
+631|ऊपर एक काम जोड़ें। जब {o} आने वाले होंगे, उनके काम यहाँ अपने-आप दिखेंगे।
+632|अभी कोई स्टिकी नोट नहीं
+633|जल्दी के नोट और याद-दिलाने, किसी भी रंग में।
+634|आपका कैलेंडर ख़ाली है
+635|आपकी सूची अभी ख़ाली है
+636|ख़रीदने को कुछ नहीं
+637|अभी कोई दाम नहीं निकाला गया
+638|कुछ भी ढूँढें
+639|अभी प्रिंट करने को कुछ नहीं
+640|हो गया: $1
+641|नहीं हुआ: $1
+642|ज़रूरी मार्क करें: $1
+643|मार्क हटाएँ: $1
+644|$1 हटाएँ
+645|$1 हटाएँ
+646|$1 बदलें
+647|काम: $1
+648|स्टिकी नोट: $1
+649|$1 ख़रीदा, $2 हिसाब-किताब में जोड़ा गया
+650|$1 ख़रीदा
+651|$1 अब $2 है
+652|पिछला: $1
+653|$2 के लिए $1 जोड़ें
+654|$1 का $2 "$3" मार्क किया गया
+655|$2 के लिए $1 बनाएँ
+656|$1, $2 ख़रीदें
+657|$1 चाहिए, $2 है। $3 के लिए
+658|$2 $3 के लिए $1
+659|$1, $2
+660|$2 के लिए $1
+661|ध्यान दें! $1 का $2 देर से है।
+662|$1 का $2 आज $3 तक है।
+663|$1 का $2 आज तक है।
+664|भूलिए मत: $1 का $2 कल तक है।
+665|आज: $1, $2। मज़े करें!
+666|आज: $1। मज़े करें!
+667|आपने "$1" को ज़रूरी मार्क किया। और $2 और।
+668|आपने "$1" को ज़रूरी मार्क किया।
+669|आने वाले $3 के लिए $1 और $2 और चीज़ें कम हैं।
+670|आने वाले $2 के लिए $1 कम है।
+671|$1 का $2 पूरा हो गया पर अभी भुगतान नहीं हुआ।
+672|आपके $1 को बनाने में आपके दाम से ज़्यादा लगता है। इसे ठीक करते हैं!
+673|आप अपने $1 के लिए थोड़ा ज़्यादा ले सकते हैं।
+674|$1: $2 ($3)
+675|$1 पर वापस जाएँ
+676|$2 में $1 जोड़े गए और $3 दाम अपडेट हुए
+677|$2 में $1 जोड़े गए
+678|$1 दाम अपडेट हुए
+679|$2 में $1 जोड़ें
+680|$1 चीज़ें मिलीं। नाम, मात्रा और दाम देखें, जो ग़लत लगे उसे ठीक करें। जो नहीं चाहिए उसका टिक हटाएँ।
+681|$1, $2 फ़ॉन्ट के साथ
+682|घर की बेकरी: $1
+683|सफ़ाई: $1
+684|$1 छोड़ें
+685|$1 ख़रीदा
+686|अभी कुछ नहीं। $1 जैसी चीज़ें जोड़ें।
 `;
