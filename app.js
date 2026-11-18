@@ -788,6 +788,84 @@ function fillKey(template, values) {
 
 // A few newer labels, in every language (same order as OWN_WORD_LANGS)
 const EXTRA_TEXT = {
+  // What each kind of business buys
+  "bottles": ["botellas", "flacons", "瓶", "chai", "병", "bote", "бутылки", "本", "frascos", "Flaschen", "flaconi", "botol", "пляшки", "बोतलें"],
+  "gal": ["galones", "gallons", "加仑", "gallon", "갤런", "galon", "галлоны", "ガロン", "galões", "Gallonen", "galloni", "galon", "галони", "गैलन"],
+  "rolls": ["rollos", "rouleaux", "卷", "cuộn", "롤", "rolyo", "рулоны", "ロール", "rolos", "Rollen", "rotoli", "gulung", "рулони", "रोल"],
+  "pack": ["paquete", "paquet", "包", "gói", "팩", "pakete", "упаковка", "パック", "pacote", "Packung", "confezione", "pak", "упаковка", "पैक"],
+  "packs": ["paquetes", "paquets", "包", "gói", "팩", "pakete", "упаковки", "パック", "pacotes", "Packungen", "confezioni", "pak", "упаковки", "पैक"],
+  "bags": ["bolsas", "sacs", "袋", "túi", "봉지", "supot", "пакеты", "袋", "sacos", "Beutel", "sacchetti", "kantong", "пакети", "थैलियाँ"],
+  "boxes": ["cajas", "boîtes", "盒", "hộp", "상자", "kahon", "коробки", "箱", "caixas", "Schachteln", "scatole", "kotak", "коробки", "डिब्बे"],
+  "trays": ["bandejas", "plateaux", "盘", "khay", "트레이", "tray", "лотки", "トレー", "bandejas", "Trays", "vassoi", "baki", "лотки", "ट्रे"],
+  "yards": ["yardas", "yards", "码", "thước Anh", "야드", "yarda", "ярды", "ヤード", "jardas", "Yards", "iarde", "yard", "ярди", "गज़"],
+  "spools": ["carretes", "bobines", "轴", "cuộn chỉ", "실패", "rolyo ng sinulid", "катушки", "巻き", "carretéis", "Spulen", "rocchetti", "gulungan", "котушки", "रील"],
+  "sheets": ["hojas", "feuilles", "张", "tờ", "장", "pirasong papel", "листы", "枚", "folhas", "Blätter", "fogli", "lembar", "аркуші", "शीट"],
+  "tubes": ["tubos", "tubes", "管", "tuýp", "튜브", "tubo", "тюбики", "本", "tubos", "Tuben", "tubetti", "tube", "тюбики", "ट्यूब"],
+  "jars": ["frascos", "pots", "罐", "hũ", "병", "garapon", "банки", "瓶", "potes", "Gläser", "barattoli", "toples", "банки", "जार"],
+  "books": ["libros", "livres", "本", "cuốn", "권", "libro", "книги", "冊", "livros", "Bücher", "libri", "buku", "книги", "किताबें"],
+  "Cake boxes": ["Cajas para pastel", "Boîtes à gâteau", "蛋糕盒", "Hộp bánh", "케이크 상자", "Kahon ng cake", "Коробки для торта", "ケーキ箱", "Caixas de bolo", "Tortenschachteln", "Scatole per torte", "Kotak kue", "Коробки для торта", "केक बॉक्स"],
+  "Rice": ["Arroz", "Riz", "米", "Gạo", "쌀", "Bigas", "Рис", "米", "Arroz", "Reis", "Riso", "Beras", "Рис", "चावल"],
+  "Chicken": ["Pollo", "Poulet", "鸡肉", "Thịt gà", "닭고기", "Manok", "Курица", "鶏肉", "Frango", "Hähnchen", "Pollo", "Ayam", "Курка", "चिकन"],
+  "Foil trays": ["Charolas de aluminio", "Barquettes alu", "锡纸盘", "Khay giấy bạc", "포일 용기", "Foil tray", "Фольгированные лотки", "アルミトレー", "Bandejas de alumínio", "Alu-Schalen", "Vaschette in alluminio", "Wadah aluminium", "Фольговані лотки", "फ़ॉइल ट्रे"],
+  "Soy wax": ["Cera de soya", "Cire de soja", "大豆蜡", "Sáp đậu nành", "소이 왁스", "Soy wax", "Соевый воск", "ソイワックス", "Cera de soja", "Sojawachs", "Cera di soia", "Lilin kedelai", "Соєвий віск", "सोया वैक्स"],
+  "Fragrance oil": ["Aceite aromático", "Huile parfumée", "香精油", "Tinh dầu thơm", "향료 오일", "Fragrance oil", "Аромамасло", "フレグランスオイル", "Óleo de fragrância", "Duftöl", "Olio profumato", "Minyak wangi", "Аромаолія", "ख़ुशबू वाला तेल"],
+  "Wicks": ["Pabilos", "Mèches", "烛芯", "Bấc nến", "심지", "Mitsa", "Фитили", "芯", "Pavios", "Dochte", "Stoppini", "Sumbu", "Ґноти", "बत्तियाँ"],
+  "Canvas": ["Lienzo", "Toile", "画布", "Toan vẽ", "캔버스", "Canvas", "Холст", "キャンバス", "Tela", "Leinwand", "Tela", "Kanvas", "Полотно", "कैनवास"],
+  "Acrylic paint": ["Pintura acrílica", "Peinture acrylique", "丙烯颜料", "Màu acrylic", "아크릴 물감", "Acrylic paint", "Акриловая краска", "アクリル絵の具", "Tinta acrílica", "Acrylfarbe", "Colori acrilici", "Cat akrilik", "Акрилова фарба", "एक्रिलिक पेंट"],
+  "Sticker paper": ["Papel para stickers", "Papier autocollant", "贴纸纸", "Giấy dán", "스티커 용지", "Sticker paper", "Бумага для наклеек", "ステッカー用紙", "Papel adesivo", "Stickerpapier", "Carta adesiva", "Kertas stiker", "Папір для наліпок", "स्टिकर पेपर"],
+  "Fabric": ["Tela", "Tissu", "布料", "Vải", "원단", "Tela", "Ткань", "布", "Tecido", "Stoff", "Tessuto", "Kain", "Тканина", "कपड़ा"],
+  "Thread": ["Hilo", "Fil", "线", "Chỉ", "실", "Sinulid", "Нитки", "糸", "Linha", "Garn", "Filo", "Benang", "Нитки", "धागा"],
+  "Zippers": ["Cierres", "Fermetures éclair", "拉链", "Khóa kéo", "지퍼", "Zipper", "Молнии", "ファスナー", "Zíperes", "Reißverschlüsse", "Cerniere", "Ritsleting", "Блискавки", "ज़िप"],
+  "Gel polish": ["Esmalte en gel", "Vernis gel", "甲油胶", "Sơn gel", "젤 폴리시", "Gel polish", "Гель-лак", "ジェルポリッシュ", "Esmalte em gel", "Gel-Lack", "Smalto gel", "Kutek gel", "Гель-лак", "जेल पॉलिश"],
+  "Acrylic powder": ["Polvo acrílico", "Poudre acrylique", "水晶粉", "Bột acrylic", "아크릴 파우더", "Acrylic powder", "Акриловая пудра", "アクリルパウダー", "Pó acrílico", "Acrylpulver", "Polvere acrilica", "Bubuk akrilik", "Акрилова пудра", "एक्रिलिक पाउडर"],
+  "Nail tips": ["Tips para uñas", "Capsules", "甲片", "Móng giả", "네일 팁", "Nail tips", "Типсы", "ネイルチップ", "Tips de unha", "Nageltips", "Tip per unghie", "Kuku palsu", "Типси", "नेल टिप्स"],
+  "Braiding hair": ["Cabello para trenzas", "Mèches à tresser", "编发用发", "Tóc tết", "브레이딩 헤어", "Braiding hair", "Канекалон", "ブレイド用の毛", "Cabelo para tranças", "Flechthaar", "Capelli per trecce", "Rambut kepang", "Волосся для кіс", "चोटी वाले बाल"],
+  "Edge control": ["Gel para bordes", "Gel pour contours", "发际线定型膏", "Gel vuốt tóc mai", "엣지 컨트롤", "Edge control", "Гель для краёв", "エッジコントロール", "Gel de baby hair", "Edge Control", "Gel per i bordi", "Gel rambut tepi", "Гель для країв", "एज कंट्रोल"],
+  "Shampoo": ["Champú", "Shampooing", "洗发水", "Dầu gội", "샴푸", "Shampoo", "Шампунь", "シャンプー", "Xampu", "Shampoo", "Shampoo", "Sampo", "Шампунь", "शैम्पू"],
+  "Lash trays": ["Bandejas de pestañas", "Plateaux de cils", "睫毛盘", "Khay mi", "속눈썹 트레이", "Lash tray", "Ленты ресниц", "まつげトレー", "Bandejas de cílios", "Wimpern-Trays", "Vassoi di ciglia", "Baki bulu mata", "Стрічки вій", "लैश ट्रे"],
+  "Lash glue": ["Pegamento de pestañas", "Colle à cils", "睫毛胶", "Keo nối mi", "속눈썹 글루", "Lash glue", "Клей для ресниц", "まつげ用グルー", "Cola de cílios", "Wimpernkleber", "Colla per ciglia", "Lem bulu mata", "Клей для вій", "लैश ग्लू"],
+  "Makeup wipes": ["Toallitas desmaquillantes", "Lingettes démaquillantes", "卸妆湿巾", "Khăn tẩy trang", "메이크업 클렌징 티슈", "Makeup wipes", "Салфетки для снятия макияжа", "メイク落としシート", "Lenços demaquilantes", "Abschminktücher", "Salviette struccanti", "Tisu pembersih", "Серветки для зняття макіяжу", "मेकअप वाइप्स"],
+  "Workbooks": ["Cuadernos de ejercicios", "Cahiers d'exercices", "练习册", "Sách bài tập", "문제집", "Workbook", "Рабочие тетради", "問題集", "Apostilas", "Arbeitshefte", "Eserciziari", "Buku latihan", "Робочі зошити", "वर्कबुक"],
+  "Printer paper": ["Papel para impresora", "Papier d'imprimante", "打印纸", "Giấy in", "프린터 용지", "Printer paper", "Бумага для принтера", "コピー用紙", "Papel de impressora", "Druckerpapier", "Carta per stampante", "Kertas printer", "Папір для принтера", "प्रिंटर पेपर"],
+  "Pencils": ["Lápices", "Crayons", "铅笔", "Bút chì", "연필", "Lapis", "Карандаши", "鉛筆", "Lápis", "Bleistifte", "Matite", "Pensil", "Олівці", "पेंसिलें"],
+  "Sheet music": ["Partituras", "Partitions", "乐谱", "Bản nhạc", "악보", "Sheet music", "Ноты", "楽譜", "Partituras", "Noten", "Spartiti", "Partitur", "Ноти", "सरगम की किताब"],
+  "Guitar strings": ["Cuerdas de guitarra", "Cordes de guitare", "吉他弦", "Dây đàn guitar", "기타 줄", "Kuwerdas ng gitara", "Гитарные струны", "ギターの弦", "Cordas de violão", "Gitarrensaiten", "Corde per chitarra", "Senar gitar", "Гітарні струни", "गिटार के तार"],
+  "Stickers": ["Stickers", "Autocollants", "贴纸", "Nhãn dán", "스티커", "Sticker", "Наклейки", "シール", "Adesivos", "Sticker", "Adesivi", "Stiker", "Наліпки", "स्टिकर"],
+  "Resistance bands": ["Bandas elásticas", "Bandes élastiques", "弹力带", "Dây kháng lực", "저항 밴드", "Resistance band", "Резинки для фитнеса", "トレーニングチューブ", "Faixas elásticas", "Widerstandsbänder", "Bande elastiche", "Karet resistensi", "Фітнес-резинки", "रेज़िस्टेंस बैंड"],
+  "Water bottles": ["Botellas de agua", "Bouteilles d'eau", "水瓶", "Chai nước", "물병", "Bote ng tubig", "Бутылки воды", "水のボトル", "Garrafas de água", "Wasserflaschen", "Bottiglie d'acqua", "Botol air", "Пляшки води", "पानी की बोतलें"],
+  "Yoga mats": ["Tapetes de yoga", "Tapis de yoga", "瑜伽垫", "Thảm yoga", "요가 매트", "Yoga mat", "Коврики для йоги", "ヨガマット", "Tapetes de ioga", "Yogamatten", "Tappetini yoga", "Matras yoga", "Килимки для йоги", "योगा मैट"],
+  "Memory card": ["Tarjeta de memoria", "Carte mémoire", "存储卡", "Thẻ nhớ", "메모리 카드", "Memory card", "Карта памяти", "メモリーカード", "Cartão de memória", "Speicherkarte", "Scheda di memoria", "Kartu memori", "Карта пам'яті", "मेमोरी कार्ड"],
+  "Prints": ["Impresiones", "Tirages", "照片冲印", "Ảnh in", "인화", "Prints", "Отпечатки", "プリント", "Impressões", "Abzüge", "Stampe", "Cetakan foto", "Відбитки", "प्रिंट"],
+  "Props": ["Accesorios", "Accessoires", "道具", "Đạo cụ", "소품", "Props", "Реквизит", "小道具", "Adereços", "Requisiten", "Oggetti di scena", "Properti", "Реквізит", "प्रॉप्स"],
+  "Dog shampoo": ["Champú para perro", "Shampooing pour chien", "狗狗沐浴露", "Sữa tắm cho chó", "강아지 샴푸", "Dog shampoo", "Шампунь для собак", "犬用シャンプー", "Xampu para cachorro", "Hundeshampoo", "Shampoo per cani", "Sampo anjing", "Шампунь для собак", "कुत्ते का शैम्पू"],
+  "Treats": ["Premios", "Friandises", "零食", "Bánh thưởng", "간식", "Treats", "Лакомства", "おやつ", "Petiscos", "Leckerlis", "Snack", "Camilan", "Ласощі", "ट्रीट्स"],
+  "Poop bags": ["Bolsas para popó", "Sacs à crottes", "拾便袋", "Túi nhặt phân", "배변 봉투", "Poop bag", "Пакеты для уборки", "うんち袋", "Saquinhos de cocô", "Kotbeutel", "Sacchetti igienici", "Kantong kotoran", "Пакети для прибирання", "पूप बैग"],
+  "All-purpose cleaner": ["Limpiador multiusos", "Nettoyant multi-usage", "多用途清洁剂", "Nước tẩy rửa đa năng", "다용도 세정제", "All-purpose cleaner", "Универсальное средство", "万能クリーナー", "Limpador multiuso", "Allzweckreiniger", "Detergente multiuso", "Pembersih serbaguna", "Універсальний засіб", "ऑल-पर्पज़ क्लीनर"],
+  "Paper towels": ["Toallas de papel", "Essuie-tout", "厨房纸巾", "Khăn giấy", "키친타월", "Paper towel", "Бумажные полотенца", "ペーパータオル", "Papel-toalha", "Küchenrolle", "Carta assorbente", "Tisu dapur", "Паперові рушники", "पेपर टॉवल"],
+  "Trash bags": ["Bolsas de basura", "Sacs poubelle", "垃圾袋", "Túi rác", "쓰레기봉투", "Trash bag", "Мусорные пакеты", "ゴミ袋", "Sacos de lixo", "Müllbeutel", "Sacchi della spazzatura", "Kantong sampah", "Сміттєві пакети", "कूड़े के बैग"],
+  "Gas for mower": ["Gasolina para podadora", "Essence pour tondeuse", "割草机汽油", "Xăng máy cắt cỏ", "잔디깎이 기름", "Gas ng mower", "Бензин для газонокосилки", "芝刈り機のガソリン", "Gasolina do cortador", "Benzin für den Mäher", "Benzina per tosaerba", "Bensin mesin rumput", "Бензин для косарки", "घास काटने की मशीन का पेट्रोल"],
+  "Mulch": ["Mantillo", "Paillis", "覆盖物", "Lớp phủ đất", "멀칭재", "Mulch", "Мульча", "マルチ材", "Cobertura morta", "Mulch", "Pacciame", "Mulsa", "Мульча", "मल्च"],
+  "Balloons": ["Globos", "Ballons", "气球", "Bóng bay", "풍선", "Lobo", "Воздушные шары", "風船", "Balões", "Luftballons", "Palloncini", "Balon", "Повітряні кульки", "गुब्बारे"],
+  "Streamers": ["Serpentinas", "Serpentins", "彩带", "Dây trang trí", "리본 장식", "Streamer", "Серпантин", "紙テープ", "Serpentinas", "Luftschlangen", "Stelle filanti", "Pita hias", "Серпантин", "स्ट्रीमर"],
+  "Tablecloths": ["Manteles", "Nappes", "桌布", "Khăn trải bàn", "식탁보", "Mantel", "Скатерти", "テーブルクロス", "Toalhas de mesa", "Tischdecken", "Tovaglie", "Taplak meja", "Скатертини", "मेज़पोश"],
+  "Boxes": ["Cajas", "Boîtes", "盒子", "Hộp", "상자", "Kahon", "Коробки", "箱", "Caixas", "Kartons", "Scatole", "Kotak", "Коробки", "डिब्बे"],
+  "Tape": ["Cinta", "Ruban adhésif", "胶带", "Băng keo", "테이프", "Tape", "Скотч", "テープ", "Fita", "Klebeband", "Nastro adesivo", "Selotip", "Скотч", "टेप"],
+  "Catering job, tips": ["Evento de comida, propinas", "Prestation traiteur, pourboires", "餐饮订单、小费", "Tiệc đặt, tiền boa", "케이터링, 팁", "Catering, tip", "Заказ кейтеринга, чаевые", "ケータリング、チップ", "Buffet, gorjetas", "Catering-Auftrag, Trinkgeld", "Catering, mance", "Pesanan katering, tip", "Замовлення кейтерингу, чайові", "केटरिंग का काम, टिप"],
+  "Groceries, foil trays": ["Despensa, charolas de aluminio", "Courses, barquettes alu", "食材、锡纸盘", "Đi chợ, khay giấy bạc", "식재료, 포일 용기", "Grocery, foil tray", "Продукты, лотки", "食材、アルミトレー", "Mercado, bandejas", "Lebensmittel, Alu-Schalen", "Spesa, vaschette", "Belanja bahan, wadah aluminium", "Продукти, лотки", "किराना, फ़ॉइल ट्रे"],
+  "Custom order, market sales": ["Pedido especial, ventas en el mercado", "Commande perso, ventes au marché", "定制订单、市集销售", "Đơn đặt riêng, bán ở chợ", "맞춤 주문, 마켓 판매", "Custom order, benta sa market", "Заказ, продажи на ярмарке", "特注、マーケットの売上", "Encomenda, vendas na feira", "Auftrag, Marktverkauf", "Ordine su misura, vendite al mercato", "Pesanan khusus, jualan di pasar", "Замовлення, продажі на ярмарку", "कस्टम ऑर्डर, बाज़ार की बिक्री"],
+  "Materials, booth fee": ["Materiales, renta del puesto", "Matériel, frais de stand", "材料、摊位费", "Vật liệu, phí gian hàng", "재료, 부스비", "Materyales, bayad sa booth", "Материалы, аренда места", "材料、出店料", "Materiais, taxa do estande", "Material, Standgebühr", "Materiali, quota stand", "Bahan, sewa lapak", "Матеріали, оренда місця", "सामान, स्टॉल की फ़ीस"],
+  "Tips, deposit": ["Propinas, anticipo", "Pourboires, acompte", "小费、定金", "Tiền boa, tiền cọc", "팁, 예약금", "Tip, deposit", "Чаевые, предоплата", "チップ、予約金", "Gorjetas, sinal", "Trinkgeld, Anzahlung", "Mance, acconto", "Tip, DP", "Чайові, передоплата", "टिप, एडवांस"],
+  "Supplies, booth rent": ["Insumos, renta de la silla", "Fournitures, location de poste", "用品、工位租金", "Đồ dùng, tiền thuê chỗ", "재료, 자리 임대료", "Supplies, upa sa booth", "Расходники, аренда места", "材料、席の家賃", "Materiais, aluguel da cadeira", "Material, Platzmiete", "Materiali, affitto postazione", "Perlengkapan, sewa tempat", "Витратні матеріали, оренда місця", "सामान, जगह का किराया"],
+  "Lesson payment, extra session": ["Pago de clase, sesión extra", "Paiement de cours, séance en plus", "课费、加课", "Học phí, buổi học thêm", "수업료, 추가 수업", "Bayad sa lesson, dagdag na session", "Оплата занятия, доп. занятие", "レッスン代、追加レッスン", "Pagamento da aula, aula extra", "Stundengeld, Extrastunde", "Pagamento lezione, lezione extra", "Bayaran les, sesi tambahan", "Оплата заняття, додаткове заняття", "क्लास की फ़ीस, अतिरिक्त सेशन"],
+  "Books and materials, room rent": ["Libros y materiales, renta del salón", "Livres et matériel, location de salle", "书本和材料、场地租金", "Sách và tài liệu, tiền thuê phòng", "책과 교재, 공간 대여료", "Libro at materyales, upa sa kuwarto", "Книги и материалы, аренда зала", "本や教材、部屋代", "Livros e materiais, aluguel da sala", "Bücher und Material, Raummiete", "Libri e materiali, affitto della sala", "Buku dan bahan, sewa ruangan", "Книги й матеріали, оренда залу", "किताबें और सामान, कमरे का किराया"],
+  "Job payment, tips": ["Pago del trabajo, propinas", "Paiement, pourboires", "工钱、小费", "Tiền công, tiền boa", "작업 대금, 팁", "Bayad sa trabaho, tip", "Оплата работы, чаевые", "作業代、チップ", "Pagamento do serviço, gorjetas", "Bezahlung, Trinkgeld", "Pagamento lavoro, mance", "Bayaran kerja, tip", "Оплата роботи, чайові", "काम का भुगतान, टिप"],
+  "Supplies, gas": ["Insumos, gasolina", "Fournitures, essence", "用品、油费", "Đồ dùng, tiền xăng", "용품, 기름값", "Supplies, gas", "Расходники, бензин", "用品、ガソリン代", "Materiais, gasolina", "Material, Benzin", "Materiali, benzina", "Perlengkapan, bensin", "Витратні матеріали, бензин", "सामान, पेट्रोल"],
+  "Profit": ["Ganancia", "Bénéfice", "利润", "Lợi nhuận", "이익", "Kita", "Прибыль", "利益", "Lucro", "Gewinn", "Profitto", "Untung", "Прибуток", "मुनाफ़ा"],
+  "Looks good": ["Va bien", "C'est bien", "不错", "Ổn rồi", "좋아요", "Ayos", "Всё хорошо", "いい感じ", "Está bom", "Passt", "Va bene", "Sudah pas", "Усе добре", "ठीक है"],
+  "A little low": ["Un poco bajo", "Un peu bas", "有点低", "Hơi thấp", "조금 낮아요", "Medyo mababa", "Немного низко", "少し安い", "Um pouco baixo", "Etwas niedrig", "Un po' basso", "Agak rendah", "Трохи низько", "थोड़ा कम"],
+  "Losing money": ["Pierdes dinero", "Vous perdez de l'argent", "在亏钱", "Đang lỗ", "손해예요", "Nalulugi", "В убыток", "赤字です", "Perdendo dinheiro", "Verlust", "In perdita", "Rugi", "Збиток", "नुकसान हो रहा है"],
+  "What your time is worth": ["Lo que vale tu tiempo", "Ce que vaut votre temps", "你的时间值多少钱", "Thời gian của bạn đáng giá bao nhiêu", "내 시간의 가치", "Halaga ng oras mo", "Сколько стоит ваше время", "あなたの時間の価値", "Quanto vale seu tempo", "Was deine Zeit wert ist", "Quanto vale il tuo tempo", "Nilai waktumu", "Скільки коштує ваш час", "आपके समय की कीमत"],
+  "Extra on top of your costs": ["Extra sobre tus costos", "En plus de vos coûts", "在成本之上多赚的", "Phần cộng thêm trên chi phí", "비용 위에 더하는 몫", "Dagdag sa ibabaw ng gastos", "Сверху к вашим затратам", "コストに上乗せする分", "Extra além dos custos", "Aufschlag auf deine Kosten", "Extra oltre ai costi", "Tambahan di atas biaya", "Зверху до ваших витрат", "लागत के ऊपर अतिरिक्त"],
   "Add the hours it takes, so your pay is part of the price.": ["Agrega las horas que te toma, para que tu pago cuente en el precio.", "Ajoutez le temps passé pour que votre salaire compte dans le prix.", "填上要花几小时，你的工钱才会算进价格。", "Thêm số giờ làm để tiền công của bạn được tính vào giá.", "걸리는 시간을 넣으면 내 인건비가 가격에 들어가요.", "Ilagay kung ilang oras ito, para kasama ang bayad mo sa presyo.", "Укажите, сколько часов это занимает, чтобы ваша оплата вошла в цену.", "かかる時間を入れると、あなたの時給が価格に入ります。", "Adicione as horas que leva, para seu pagamento entrar no preço.", "Trag die Stunden ein, damit dein Lohn im Preis steckt.", "Aggiungi le ore che servono, così la tua paga entra nel prezzo.", "Isi berapa jam waktunya, supaya upahmu masuk ke harga.", "Вкажіть, скільки годин це займає, щоб ваша оплата увійшла в ціну.", "इसमें लगने वाले घंटे डालें, ताकि आपकी मेहनत की कीमत जुड़ जाए।"],
   "{n} tray, serves {n}": ["{n} charola, para {n}", "{n} plateau, pour {n}", "{n}盘，够{n}人吃", "{n} khay, cho {n} người", "{n}판, {n}인분", "{n} tray, para sa {n}", "{n} поднос, на {n} человек", "{n}トレー、{n}人分", "{n} bandeja, serve {n}", "{n} Platte, für {n}", "{n} vassoio, per {n}", "{n} nampan, untuk {n} orang", "{n} піднос, на {n} людей", "{n} ट्रे, {n} लोगों के लिए"],
   "{n} candles, {n} bracelets": ["{n} velas, {n} pulseras", "{n} bougies, {n} bracelets", "{n}支蜡烛，{n}条手链", "{n} cây nến, {n} vòng tay", "양초 {n}개, 팔찌 {n}개", "{n} kandila, {n} bracelet", "{n} свечей, {n} браслета", "キャンドル{n}個、ブレスレット{n}本", "{n} velas, {n} pulseiras", "{n} Kerzen, {n} Armbänder", "{n} candele, {n} braccialetti", "{n} lilin, {n} gelang", "{n} свічок, {n} браслети", "{n} मोमबत्तियाँ, {n} ब्रेसलेट"],
@@ -2103,6 +2181,34 @@ const KITS = {
   events:   { booked: true, about: ['Event date', 'Venue', 'Theme or colors'] },
   other:    { about: ['Birthday'] },
 };
+
+// What each kind of business buys, for examples and quick picks:
+//   units: the buttons under "You measure it in"
+//   stuff: three examples, as [name, how many you get, unit, price]
+//   money: examples for Bookkeeping, as [money in, money out]
+const COOKING_UNITS = ['cups', 'tbsp', 'tsp', 'oz', 'lb', 'g', 'kg', 'ml', 'each', 'sticks', 'dozen'];
+const SUPPLY_KITS = {
+  bakery:   { units: COOKING_UNITS, stuff: [['Flour', 5, 'lb', 4.5], ['Sugar', 4, 'lb', 3.29], ['Cake boxes', 10, 'each', 8.99]], money: ['Bake sale, tips', 'Cake boxes, booth fee'] },
+  catering: { units: COOKING_UNITS, stuff: [['Rice', 10, 'lb', 12], ['Chicken', 5, 'lb', 18], ['Foil trays', 10, 'each', 9]], money: ['Catering job, tips', 'Groceries, foil trays'] },
+  craft:    { units: ['oz', 'lb', 'g', 'ml', 'each', 'pack', 'bottles'], stuff: [['Soy wax', 10, 'lb', 25], ['Fragrance oil', 4, 'oz', 12], ['Wicks', 100, 'each', 8]], money: ['Custom order, market sales', 'Materials, booth fee'] },
+  art:      { units: ['each', 'sheets', 'tubes', 'pack', 'bottles'], stuff: [['Canvas', 5, 'each', 20], ['Acrylic paint', 12, 'tubes', 15], ['Sticker paper', 25, 'sheets', 14]], money: ['Custom order, market sales', 'Materials, booth fee'] },
+  clothing: { units: ['yards', 'spools', 'each', 'pack'], stuff: [['Fabric', 3, 'yards', 24], ['Thread', 6, 'spools', 10], ['Zippers', 10, 'each', 7]], money: ['Custom order, market sales', 'Materials, booth fee'] },
+  nails:    { units: ['bottles', 'oz', 'ml', 'each', 'pack', 'boxes'], stuff: [['Gel polish', 1, 'bottles', 9], ['Acrylic powder', 2, 'oz', 15], ['Nail tips', 500, 'each', 12]], money: ['Tips, deposit', 'Supplies, booth rent'] },
+  hair:     { units: ['packs', 'bottles', 'jars', 'oz', 'ml', 'each'], stuff: [['Braiding hair', 6, 'packs', 30], ['Edge control', 1, 'jars', 8], ['Shampoo', 1, 'bottles', 12]], money: ['Tips, deposit', 'Supplies, booth rent'] },
+  beauty:   { units: ['trays', 'bottles', 'each', 'boxes', 'pack', 'ml'], stuff: [['Lash trays', 10, 'trays', 45], ['Lash glue', 1, 'bottles', 18], ['Makeup wipes', 100, 'each', 10]], money: ['Tips, deposit', 'Supplies, booth rent'] },
+  tutoring: { units: ['each', 'sheets', 'pack', 'boxes'], stuff: [['Workbooks', 3, 'each', 30], ['Printer paper', 500, 'sheets', 8], ['Pencils', 24, 'each', 6]], money: ['Lesson payment, extra session', 'Books and materials, room rent'] },
+  music:    { units: ['each', 'pack', 'books', 'sheets'], stuff: [['Sheet music', 1, 'books', 12], ['Guitar strings', 3, 'pack', 15], ['Stickers', 100, 'each', 5]], money: ['Lesson payment, extra session', 'Books and materials, room rent'] },
+  fitness:  { units: ['each', 'pack'], stuff: [['Resistance bands', 5, 'each', 20], ['Water bottles', 24, 'each', 6], ['Yoga mats', 2, 'each', 40]], money: ['Lesson payment, extra session', 'Books and materials, room rent'] },
+  photo:    { units: ['each', 'pack'], stuff: [['Memory card', 1, 'each', 25], ['Prints', 20, 'each', 15], ['Props', 5, 'each', 20]], money: ['Job payment, tips', 'Supplies, gas'] },
+  pets:     { units: ['bottles', 'bags', 'each', 'pack', 'oz'], stuff: [['Dog shampoo', 1, 'bottles', 12], ['Treats', 2, 'bags', 10], ['Poop bags', 120, 'each', 9]], money: ['Job payment, tips', 'Supplies, gas'] },
+  cleaning: { units: ['bottles', 'gal', 'oz', 'rolls', 'pack', 'each', 'boxes'], stuff: [['All-purpose cleaner', 4, 'bottles', 14], ['Paper towels', 12, 'rolls', 18], ['Trash bags', 50, 'each', 12]], money: ['Job payment, tips', 'Supplies, gas'] },
+  yard:     { units: ['bags', 'gal', 'each', 'lb'], stuff: [['Trash bags', 30, 'each', 15], ['Gas for mower', 2, 'gal', 8], ['Mulch', 3, 'bags', 12]], money: ['Job payment, tips', 'Supplies, gas'] },
+  events:   { units: ['each', 'pack', 'rolls', 'bags', 'boxes'], stuff: [['Balloons', 100, 'each', 18], ['Streamers', 6, 'rolls', 10], ['Tablecloths', 10, 'each', 15]], money: ['Job payment, tips', 'Supplies, gas'] },
+  other:    { units: ['each', 'pack', 'boxes', 'bags', 'rolls', 'bottles', 'oz', 'lb'], stuff: [['Paper towels', 6, 'rolls', 9], ['Boxes', 10, 'each', 12], ['Tape', 3, 'rolls', 6]], money: ['Job payment, tips', 'Supplies, gas'] },
+};
+function supplyKit() {
+  return SUPPLY_KITS[realType()] || SUPPLY_KITS.other;
+}
 
 // The kind of business, with "Something else" matched to the closest kind when we can tell
 function realType() {
@@ -6745,22 +6851,23 @@ function showProductForm(page, p) {
 function editSupply(s, done) {
   const w = words();
   const isNew = !s;
+  const example = supplyKit().stuff[0]; // like Flour for a bakery, or All-purpose cleaner for cleaning
   openWindow({
     title: isNew ? 'New ' + oneSupply() : 'Edit ' + s.name,
     saveLabel: isNew ? 'Add ' + oneSupply() : 'Save changes',
     html: `
       <label class="label" for="sw-name">Name</label>
-      <input class="input" id="sw-name" autocomplete="off" placeholder="Flour">
+      <input class="input" id="sw-name" autocomplete="off" placeholder="${example[0]}">
       <label class="label" for="sw-unit">You measure it in</label>
-      <input class="input" id="sw-unit" autocomplete="off" placeholder="cups">
-      <div class="unit-chips">${UNIT_IDEAS.map(function (u) { return '<button type="button" class="idea-btn" data-unit="' + u + '">' + u + '</button>'; }).join('')}</div>
+      <input class="input" id="sw-unit" autocomplete="off" placeholder="${example[2]}">
+      <div class="unit-chips">${supplyKit().units.map(function (u) { return '<button type="button" class="idea-btn" data-unit="' + u + '">' + u + '</button>'; }).join('')}</div>
       <p class="label">When you buy it</p>
       <div class="buy-line">
         <span>You get</span>
-        <input class="input" id="sw-size" type="number" min="0" step="0.01" placeholder="20" aria-label="How much you get">
-        <span class="sw-unit-word">cups</span>
+        <input class="input" id="sw-size" type="number" min="0" step="0.01" placeholder="${example[1]}" aria-label="How much you get">
+        <span class="sw-unit-word">${example[2]}</span>
         <span>for</span>
-        <div class="money-box"><span>$</span><input class="input" id="sw-price" type="number" min="0" step="0.01" placeholder="4.50" aria-label="Price"></div>
+        <div class="money-box"><span>$</span><input class="input" id="sw-price" type="number" min="0" step="0.01" placeholder="${example[3].toFixed(2)}" aria-label="Price"></div>
       </div>
       <label class="label" for="sw-have">How much you have now</label>
       <input class="input" id="sw-have" type="number" min="0" step="0.01" placeholder="0">
@@ -7125,7 +7232,7 @@ function openPictureImport() {
         </label>
         <button type="button" class="link-btn import-type" id="import-type">Or type or paste the list as words</button>
         <div class="import-text" hidden>
-          <textarea class="input" id="import-words" rows="6" placeholder="Flour 5 lb $4.50&#10;Sugar 4 lb $3.29&#10;Cake boxes 10 ct $8.99"></textarea>
+          <textarea class="input" id="import-words" rows="6"></textarea>
           <button type="button" class="btn secondary small" id="import-read-words">Read this list</button>
         </div>
       </div>
@@ -7187,6 +7294,10 @@ function openPictureImport() {
   });
 
   const start = box.querySelector('.import-start');
+  // An example list that fits the business, like "All-purpose cleaner 4 bottles $14.00"
+  box.querySelector('#import-words').placeholder = supplyKit().stuff.map(function (t) {
+    return (translateText(t[0]) || t[0]) + ' ' + t[1] + ' ' + t[2] + ' $' + t[3].toFixed(2);
+  }).join('\n');
   const reading = box.querySelector('.import-reading');
   const review = box.querySelector('.import-review');
   const save = box.querySelector('#window-save');
@@ -7319,7 +7430,9 @@ function openPictureImport() {
     if (!units) {
       units = document.createElement('datalist');
       units.id = 'import-units';
-      UNIT_IDEAS.concat(['pack', 'bags', 'boxes', 'rolls', 'gal']).forEach(function (u) {
+      // The business's own units first, then the rest (no repeats)
+      supplyKit().units.concat(UNIT_IDEAS, ['pack', 'bags', 'boxes', 'rolls', 'gal', 'bottles'])
+        .filter(function (u, i, all) { return all.indexOf(u) === i; }).forEach(function (u) {
         const o = document.createElement('option');
         o.value = u;
         units.appendChild(o);
@@ -7354,11 +7467,24 @@ function showPricing(page) {
       <button class="btn with-icon" id="from-picture">${icon('camera')}<span>Add from a picture</span></button>
     </header>
     <div class="pricing-settings">
-      <label><span>Pay yourself</span>
-        <div class="money-box"><span>$</span><input class="input" id="pay-rate" type="number" min="0" step="0.5"></div>
-        <span>an hour</span></label>
-      <label><span>Profit on top</span>
-        <input class="input" id="profit-rate" type="number" min="0" step="5"><span>%</span></label>
+      <div class="rate-tile sky">
+        <label for="pay-rate">Pay yourself</label>
+        <div class="rate-row">
+          <input type="range" id="pay-slide" min="0" max="100" step="1" aria-label="Pay yourself">
+          <div class="money-box"><span>$</span><input class="input" id="pay-rate" type="number" min="0" step="0.5"></div>
+          <span class="rate-unit">an hour</span>
+        </div>
+        <small>What your time is worth</small>
+      </div>
+      <div class="rate-tile mint">
+        <label for="profit-rate">Profit on top</label>
+        <div class="rate-row">
+          <input type="range" id="profit-slide" min="0" max="100" step="5" aria-label="Profit on top">
+          <input class="input" id="profit-rate" type="number" min="0" step="5">
+          <span class="rate-unit">%</span>
+        </div>
+        <small>Extra on top of your costs</small>
+      </div>
     </div>
     <div id="price-list"></div>
   `;
@@ -7366,9 +7492,23 @@ function showPricing(page) {
   page.querySelector('#from-picture').addEventListener('click', openPictureImport);
   const pay = page.querySelector('#pay-rate');
   const extra = page.querySelector('#profit-rate');
+  const paySlide = page.querySelector('#pay-slide');
+  const extraSlide = page.querySelector('#profit-slide');
   pay.value = set.hourly;
   extra.value = set.extra;
-  // The numbers below update as you type, with a little flash so you can see what changed
+  // The slider's filled part shows how far along it is
+  function fillSlide(slide) {
+    slide.style.setProperty('--fill', (Math.min(Number(slide.value), Number(slide.max)) / Number(slide.max) * 100) + '%');
+  }
+  function syncSlides() {
+    paySlide.value = Math.min(100, Number(pay.value) || 0);
+    extraSlide.value = Math.min(100, Number(extra.value) || 0);
+    fillSlide(paySlide);
+    fillSlide(extraSlide);
+  }
+  syncSlides();
+
+  // The numbers below update as you type or slide, with a little flash so you can see what changed
   let rateTimer = null;
   function saveRates() {
     profile.hourlyPay = Number(pay.value) || 0;
@@ -7377,8 +7517,10 @@ function showPricing(page) {
     rateTimer = setTimeout(saveProfile, 300);
     drawList(true);
   }
-  pay.addEventListener('input', saveRates);
-  extra.addEventListener('input', saveRates);
+  pay.addEventListener('input', function () { syncSlides(); saveRates(); });
+  extra.addEventListener('input', function () { syncSlides(); saveRates(); });
+  paySlide.addEventListener('input', function () { pay.value = paySlide.value; fillSlide(paySlide); saveRates(); });
+  extraSlide.addEventListener('input', function () { extra.value = extraSlide.value; fillSlide(extraSlide); saveRates(); });
 
   const box = page.querySelector('#price-list');
   function drawList(flash) {
@@ -7399,32 +7541,58 @@ function showPricing(page) {
       const suggested = Math.ceil(trueCost * (1 + s.extra / 100));
       const price = Number(p.price || 0);
       const left = price - trueCost;
+      // good: at or above the suggested price, thin: some profit but under it, bad: losing money
       let mood = 'none';
-      let note = 'No price set yet';
+      let badge = 'No price set yet';
+      let badgeIcon = 'tag';
       if (price) {
-        if (left < 0) { mood = 'bad'; note = 'You lose ' + money(-left) + ' each time'; }
-        else if (price < suggested) { mood = 'thin'; note = 'You make ' + money(left) + ', a little under your goal'; }
-        else { mood = 'good'; note = 'You make ' + money(left) + ' each time'; }
+        if (left < 0) { mood = 'bad'; badge = 'Losing money'; badgeIcon = 'flag'; }
+        else if (price < suggested) { mood = 'thin'; badge = 'A little low'; badgeIcon = 'clock'; }
+        else { mood = 'good'; badge = 'Looks good'; badgeIcon = 'tick'; }
       }
 
       const card = document.createElement('div');
       card.className = 'price-card ' + mood;
+      card.dataset.id = p.id;
       card.innerHTML = `
-        <div class="pc-head"><b></b><span class="pc-note"></span></div>
+        <div class="pc-head"><b class="pc-name"></b><span class="pc-badge">${icon(badgeIcon)}<span></span></span></div>
+        <div class="pc-big">
+          <div><small>You charge</small><b class="n-price"></b></div>
+          <div class="pc-keep"><small>Profit</small><b class="n-keep"></b></div>
+        </div>
         <div class="pc-bar" aria-hidden="true"><span class="pc-supplies"></span><span class="pc-time"></span><span class="pc-profit"></span></div>
-        <div class="pc-numbers">
-          <span><small></small><b class="n-supplies"></b></span>
-          <span><small>Your time</small><b class="n-time"></b></span>
-          <span><small>True cost</small><b class="n-cost"></b></span>
-          <span><small>You charge</small><b class="n-price"></b></span>
-          <span class="pc-suggest"><small>Suggested</small><b class="n-suggest"></b></span>
+        <div class="pc-sum">
+          <span class="pc-part supplies"><i></i><small></small><b class="n-supplies"></b></span>
+          <span class="pc-op">+</span>
+          <span class="pc-part time"><i></i><small>Your time</small><b class="n-time"></b></span>
+          <span class="pc-op">=</span>
+          <span class="pc-part total"><small>True cost</small><b class="n-cost"></b></span>
         </div>
-        <div class="pc-hours">
-          <label><span>Hours it takes you</span><input class="input" type="number" min="0" step="0.25" placeholder="0"></label>
-          <span class="pc-hint" hidden>Add the hours it takes, so your pay is part of the price.</span>
+        <div class="pc-bottom">
+          <label class="pc-hours"><span>Hours it takes you</span><input class="input" type="number" min="0" step="0.25" placeholder="0"></label>
+          <div class="pc-suggest" hidden>
+            <span><small>Suggested</small><b class="n-suggest"></b></span>
+            <button class="btn small"></button>
+          </div>
         </div>
-        <button class="btn small" hidden>Use the suggested price</button>
+        <p class="pc-hint" hidden>Add the hours it takes, so your pay is part of the price.</p>
       `;
+      card.querySelector('.pc-name').textContent = p.name;
+      card.querySelector('.pc-badge > span').textContent = badge;
+      card.querySelector('.n-price').textContent = price ? money(price) : 'Not set';
+      card.querySelector('.n-keep').textContent = price ? (left < 0 ? '-' + money(-left) : money(left)) : '-';
+      card.querySelector('.pc-part.supplies small').textContent = w.supplies;
+      card.querySelector('.n-supplies').textContent = money(supplyCost);
+      card.querySelector('.n-time').textContent = money(timeCost);
+      card.querySelector('.n-cost').textContent = money(trueCost);
+      card.querySelector('.n-suggest').textContent = money(suggested);
+
+      // The bar: supplies, time, and what's left over, out of the price
+      const whole = Math.max(price, trueCost) || 1;
+      card.querySelector('.pc-supplies').style.width = (supplyCost / whole * 100) + '%';
+      card.querySelector('.pc-time').style.width = (timeCost / whole * 100) + '%';
+      card.querySelector('.pc-profit').style.width = (Math.max(0, left) / whole * 100) + '%';
+
       // How long it takes, right here, so "Pay yourself" counts
       const hours = card.querySelector('.pc-hours input');
       hours.value = p.hours || '';
@@ -7436,26 +7604,13 @@ function showPricing(page) {
         const again = box.querySelector('.price-card[data-id="' + p.id + '"]');
         if (again) again.classList.add('flash');
       });
-      card.dataset.id = p.id;
-      if (flash) card.classList.add('flash');
-      card.querySelector('.pc-head b').textContent = p.name;
-      card.querySelector('.pc-note').textContent = note;
-      card.querySelector('.pc-numbers small').textContent = w.supplies;
-      card.querySelector('.n-supplies').textContent = money(supplyCost);
-      card.querySelector('.n-time').textContent = p.hours ? money(timeCost) : 'Not set';
-      card.querySelector('.n-cost').textContent = money(trueCost);
-      card.querySelector('.n-price').textContent = price ? money(price) : 'Not set';
-      card.querySelector('.n-suggest').textContent = trueCost ? money(suggested) : '-';
 
-      // The bar: ingredients, time, and what's left over, out of the price
-      const whole = Math.max(price, trueCost) || 1;
-      card.querySelector('.pc-supplies').style.width = (supplyCost / whole * 100) + '%';
-      card.querySelector('.pc-time').style.width = (timeCost / whole * 100) + '%';
-      card.querySelector('.pc-profit').style.width = (Math.max(0, left) / whole * 100) + '%';
-
-      const use = card.querySelector('.btn');
-      if (trueCost && price !== suggested) {
-        use.hidden = false;
+      // A better price, with a button to use it
+      // (only when they charge too little, or haven't set a price yet)
+      if (trueCost && (!price || price < suggested)) {
+        const suggest = card.querySelector('.pc-suggest');
+        suggest.hidden = false;
+        const use = suggest.querySelector('.btn');
         use.textContent = 'Charge ' + money(suggested) + ' instead';
         use.addEventListener('click', function () {
           const was = p.price;
@@ -7465,6 +7620,7 @@ function showPricing(page) {
           showUndo(p.name + ' is now ' + money(suggested), function () { p.price = was; saveProducts(); drawList(); });
         });
       }
+      if (flash) card.classList.add('flash');
       box.appendChild(card);
     });
     const how = document.createElement('p');
@@ -7629,7 +7785,7 @@ function editMoney(kind, entry) {
     `,
     fill: function (box) {
       box.querySelector('label[for="mw-what"]').textContent = kind === 'in' ? 'What it was for' : 'What you bought or paid';
-      box.querySelector('#mw-what').placeholder = kind === 'in' ? 'Bake sale, tips' : 'Cake boxes, booth fee';
+      box.querySelector('#mw-what').placeholder = supplyKit().money[kind === 'in' ? 0 : 1];
       const date = box.querySelector('#mw-date');
       date.value = entry ? entry.date : todayText();
       fancyDate(date);
