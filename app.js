@@ -820,6 +820,82 @@ const EXTRA_TEXT = {
   "The quick buttons for how you measure {s}.": ["Los botones rápidos para cómo mides tus {s}.", "Les boutons rapides pour mesurer vos {s}.", "衡量{s}用的快捷按钮。", "Nút nhanh cho cách bạn đo {s}.", "{s}을 재는 빠른 버튼이에요.", "Mga mabilis na button kung paano mo sinusukat ang {s}.", "Быстрые кнопки для того, как вы измеряете: {s}.", "{s}の量り方のボタンです。", "Os botões rápidos de como você mede {s}.", "Die Schnellknöpfe, wie du {s} misst.", "I pulsanti rapidi per come misuri {s}.", "Tombol cepat untuk cara kamu mengukur {s}.", "Швидкі кнопки для того, як ви вимірюєте: {s}.", "आप {s} कैसे नापते हैं, उसके लिए जल्दी वाले बटन।"],
   "Make pages of your own, like a list of vendors, a packing checklist or a page of ideas. They show up in your menu.": ["Haz tus propias páginas, como una lista de proveedores, una lista para empacar o una página de ideas. Aparecen en tu menú.", "Créez vos propres pages, comme une liste de fournisseurs, une liste à cocher ou une page d'idées. Elles apparaissent dans votre menu.", "制作你自己的页面，比如供应商名单、打包清单或灵感页面。它们会出现在菜单里。", "Tạo trang riêng, như danh sách nhà cung cấp, danh sách đồ cần mang hoặc trang ý tưởng. Chúng sẽ hiện trong menu.", "거래처 목록, 짐 체크리스트, 아이디어 페이지처럼 나만의 페이지를 만들어요. 메뉴에 나타나요.", "Gumawa ng sariling page, gaya ng listahan ng supplier, packing checklist o page ng ideya. Lalabas ito sa menu mo.", "Создавайте свои страницы: список поставщиков, чек-лист сборов или страницу идей. Они появятся в меню.", "仕入れ先のリスト、持ち物チェックリスト、アイデアのページなど、自分のページを作れます。メニューに表示されます。", "Crie suas páginas, como uma lista de fornecedores, um checklist de malas ou uma página de ideias. Elas aparecem no seu menu.", "Erstelle eigene Seiten, z. B. eine Lieferantenliste, eine Packliste oder eine Ideenseite. Sie erscheinen in deinem Menü.", "Crea pagine tue, come un elenco di fornitori, una lista da spuntare o una pagina di idee. Compaiono nel menu.", "Buat halaman sendiri, seperti daftar pemasok, daftar barang bawaan, atau halaman ide. Akan muncul di menu.", "Створюйте власні сторінки: список постачальників, чекліст речей чи сторінку ідей. Вони з'являться в меню.", "अपने पेज बनाएँ, जैसे सप्लायरों की सूची, पैकिंग चेकलिस्ट या आइडिया का पेज। ये आपके मेन्यू में दिखेंगे।"],
   "No pages yet.": ["Todavía no hay páginas.", "Pas encore de pages.", "还没有页面。", "Chưa có trang nào.", "아직 페이지가 없어요.", "Wala pang page.", "Страниц пока нет.", "まだページがありません。", "Nenhuma página ainda.", "Noch keine Seiten.", "Ancora nessuna pagina.", "Belum ada halaman.", "Сторінок поки немає.", "अभी कोई पेज नहीं।"],
+  "Ready-made": ["Listas para usar", "Prêtes à l'emploi", "现成的", "Có sẵn", "바로 쓰기", "Handa na", "Готовые", "すぐ使える", "Prontas", "Fertige Seiten", "Già pronte", "Siap pakai", "Готові", "तैयार पेज"],
+  "Tap one and it's ready to use. You can change anything later.": ["Toca una y estará lista. Puedes cambiar todo después.", "Touchez-en une et elle est prête. Vous pourrez tout changer plus tard.", "点一下就能用，之后可以随时修改。", "Chạm vào là dùng được ngay. Bạn có thể sửa sau.", "누르면 바로 쓸 수 있어요. 나중에 언제든 바꿀 수 있어요.", "I-tap at handa na itong gamitin. Puwede mong baguhin mamaya.", "Нажмите — и всё готово. Изменить можно потом.", "タップするとすぐ使えます。あとで何でも変えられます。", "Toque em uma e ela fica pronta. Você pode mudar tudo depois.", "Tippe eine an und sie ist fertig. Du kannst später alles ändern.", "Toccane una ed è pronta. Puoi cambiare tutto dopo.", "Ketuk satu dan langsung siap. Kamu bisa mengubahnya nanti.", "Натисніть — і все готово. Змінити можна пізніше.", "एक पर टैप करें और यह तैयार है। बाद में कुछ भी बदल सकते हैं।"],
+  "Goal tracker": ["Seguimiento de meta", "Suivi d'objectif", "目标追踪", "Theo dõi mục tiêu", "목표 기록", "Tracker ng layunin", "Трекер цели", "目標トラッカー", "Acompanhar meta", "Ziel-Tracker", "Traguardo", "Pelacak target", "Трекер мети", "लक्ष्य ट्रैकर"],
+  "Count up toward a goal, like money saved or cakes sold": ["Cuenta hacia una meta, como dinero ahorrado o pasteles vendidos", "Comptez vers un objectif, comme l'argent économisé ou les gâteaux vendus", "朝着目标累计，比如存了多少钱或卖了多少蛋糕", "Đếm dần tới mục tiêu, như tiền tiết kiệm hay số bánh đã bán", "모은 돈이나 판 케이크처럼 목표까지 세어 봐요", "Bilangin papunta sa layunin, gaya ng naipong pera o nabentang cake", "Считайте путь к цели: накопленные деньги или проданные торты", "貯めたお金や売れたケーキなど、目標まで数えます", "Conte até uma meta, como dinheiro guardado ou bolos vendidos", "Zähle auf ein Ziel hin, z. B. Erspartes oder verkaufte Kuchen", "Conta verso un obiettivo, come soldi risparmiati o torte vendute", "Hitung menuju target, seperti uang tabungan atau kue terjual", "Рахуйте шлях до мети: зібрані гроші чи продані торти", "लक्ष्य की ओर गिनें, जैसे बचाए पैसे या बिके केक"],
+  "Links": ["Enlaces", "Liens", "链接", "Liên kết", "링크", "Mga link", "Ссылки", "リンク", "Links", "Links", "Link", "Tautan", "Посилання", "लिंक"],
+  "Buttons for your websites, social media and forms": ["Botones para tus sitios web, redes sociales y formularios", "Des boutons pour vos sites, réseaux sociaux et formulaires", "网站、社交媒体和表单的快捷按钮", "Nút bấm tới trang web, mạng xã hội và biểu mẫu", "웹사이트, SNS, 신청서로 가는 버튼", "Mga button para sa website, social media at form mo", "Кнопки для ваших сайтов, соцсетей и форм", "サイト、SNS、フォームへのボタン", "Botões para seus sites, redes sociais e formulários", "Buttons für deine Websites, Social Media und Formulare", "Pulsanti per i tuoi siti, social e moduli", "Tombol untuk situs web, media sosial, dan formulirmu", "Кнопки для ваших сайтів, соцмереж і форм", "आपकी वेबसाइट, सोशल मीडिया और फ़ॉर्म के बटन"],
+  "What are you counting?": ["¿Qué vas a contar?", "Que comptez-vous ?", "你要数什么？", "Bạn đang đếm gì?", "무엇을 세나요?", "Ano ang binibilang mo?", "Что вы считаете?", "何を数えますか？", "O que você vai contar?", "Was zählst du?", "Cosa stai contando?", "Apa yang kamu hitung?", "Що ви рахуєте?", "आप क्या गिन रहे हैं?"],
+  "Things, like cakes sold": ["Cosas, como pasteles vendidos", "Des choses, comme les gâteaux vendus", "数量，比如卖出的蛋糕", "Số lượng, như bánh đã bán", "개수, 예: 판 케이크", "Mga bagay, gaya ng nabentang cake", "Штуки, например проданные торты", "数、たとえば売れたケーキ", "Coisas, como bolos vendidos", "Dinge, z. B. verkaufte Kuchen", "Cose, come torte vendute", "Barang, seperti kue terjual", "Штуки, наприклад продані торти", "चीज़ें, जैसे बिके केक"],
+  "Goal reached!": ["¡Meta alcanzada!", "Objectif atteint !", "目标达成！", "Đã đạt mục tiêu!", "목표 달성!", "Naabot ang layunin!", "Цель достигнута!", "目標達成！", "Meta alcançada!", "Ziel erreicht!", "Obiettivo raggiunto!", "Target tercapai!", "Мету досягнуто!", "लक्ष्य पूरा!"],
+  "Note (optional)": ["Nota (opcional)", "Note (facultatif)", "备注（可选）", "Ghi chú (tùy chọn)", "메모 (선택)", "Tala (opsyonal)", "Заметка (необязательно)", "メモ（任意）", "Nota (opcional)", "Notiz (optional)", "Nota (facoltativa)", "Catatan (opsional)", "Нотатка (необов'язково)", "नोट (वैकल्पिक)"],
+  "How much to add": ["Cuánto agregar", "Combien ajouter", "要加多少", "Thêm bao nhiêu", "추가할 양", "Gaano karami ang idadagdag", "Сколько добавить", "追加する量", "Quanto adicionar", "Wie viel hinzufügen", "Quanto aggiungere", "Berapa yang ditambah", "Скільки додати", "कितना जोड़ें"],
+  "Nothing added yet.": ["Aún no has agregado nada.", "Rien d'ajouté pour l'instant.", "还没有添加任何内容。", "Chưa thêm gì.", "아직 추가한 게 없어요.", "Wala pang naidagdag.", "Пока ничего не добавлено.", "まだ何も追加していません。", "Nada adicionado ainda.", "Noch nichts hinzugefügt.", "Ancora niente aggiunto.", "Belum ada yang ditambahkan.", "Поки нічого не додано.", "अभी कुछ नहीं जोड़ा गया।"],
+  "Name, like Instagram": ["Nombre, como Instagram", "Nom, comme Instagram", "名称，比如 Instagram", "Tên, như Instagram", "이름 (예: 인스타그램)", "Pangalan, gaya ng Instagram", "Название, например Instagram", "名前（例: Instagram）", "Nome, como Instagram", "Name, z. B. Instagram", "Nome, come Instagram", "Nama, seperti Instagram", "Назва, наприклад Instagram", "नाम, जैसे Instagram"],
+  "Link, like instagram.com/yourname": ["Enlace, como instagram.com/tunombre", "Lien, comme instagram.com/votrenom", "链接，比如 instagram.com/yourname", "Liên kết, như instagram.com/tencuaban", "링크 (예: instagram.com/내이름)", "Link, gaya ng instagram.com/pangalanmo", "Ссылка, например instagram.com/вашеимя", "リンク（例: instagram.com/yourname）", "Link, como instagram.com/seunome", "Link, z. B. instagram.com/deinname", "Link, come instagram.com/tuonome", "Tautan, seperti instagram.com/namamu", "Посилання, наприклад instagram.com/вашеімʼя", "लिंक, जैसे instagram.com/yourname"],
+  "No links yet.": ["Aún no hay enlaces.", "Pas encore de liens.", "还没有链接。", "Chưa có liên kết.", "아직 링크가 없어요.", "Wala pang link.", "Ссылок пока нет.", "まだリンクがありません。", "Nenhum link ainda.", "Noch keine Links.", "Ancora nessun link.", "Belum ada tautan.", "Посилань поки немає.", "अभी कोई लिंक नहीं।"],
+  "Put in a real link, like instagram.com/yourname": ["Escribe un enlace real, como instagram.com/tunombre", "Entrez un vrai lien, comme instagram.com/votrenom", "请输入有效链接，比如 instagram.com/yourname", "Hãy nhập liên kết thật, như instagram.com/tencuaban", "올바른 링크를 넣어 주세요 (예: instagram.com/내이름)", "Maglagay ng totoong link, gaya ng instagram.com/pangalanmo", "Введите настоящую ссылку, например instagram.com/вашеимя", "正しいリンクを入れてください（例: instagram.com/yourname）", "Coloque um link de verdade, como instagram.com/seunome", "Gib einen echten Link ein, z. B. instagram.com/deinname", "Inserisci un link vero, come instagram.com/tuonome", "Masukkan tautan yang benar, seperti instagram.com/namamu", "Введіть справжнє посилання, наприклад instagram.com/вашеімʼя", "सही लिंक डालें, जैसे instagram.com/yourname"],
+  "Enter a goal bigger than 0.": ["Escribe una meta mayor que 0.", "Entrez un objectif supérieur à 0.", "请输入大于 0 的目标。", "Nhập mục tiêu lớn hơn 0.", "0보다 큰 목표를 입력하세요.", "Maglagay ng layuning mas malaki sa 0.", "Введите цель больше 0.", "0より大きい目標を入れてください。", "Digite uma meta maior que 0.", "Gib ein Ziel größer als 0 ein.", "Inserisci un obiettivo maggiore di 0.", "Masukkan target lebih dari 0.", "Введіть мету більшу за 0.", "0 से बड़ा लक्ष्य डालें।"],
+  "{n} link": ["{n} enlace", "{n} lien", "{n} 个链接", "{n} liên kết", "링크 {n}개", "{n} link", "Ссылок: {n}", "リンク{n}件", "{n} link", "{n} Link", "{n} link", "{n} tautan", "Посилань: {n}", "{n} लिंक"],
+  "{n} links": ["{n} enlaces", "{n} liens", "{n} 个链接", "{n} liên kết", "링크 {n}개", "{n} link", "Ссылок: {n}", "リンク{n}件", "{n} links", "{n} Links", "{n} link", "{n} tautan", "Посилань: {n}", "{n} लिंक"],
+  "{m} of {m}": ["{m} de {m}", "{m} sur {m}", "{m} / {m}", "{m} / {m}", "{m} / {m}", "{m} sa {m}", "{m} из {m}", "{m} / {m}", "{m} de {m}", "{m} von {m}", "{m} su {m}", "{m} dari {m}", "{m} з {m}", "{m} में से {m}"],
+  "{n} of {n}": ["{n} de {n}", "{n} sur {n}", "{n} / {n}", "{n} / {n}", "{n} / {n}", "{n} sa {n}", "{n} из {n}", "{n} / {n}", "{n} de {n}", "{n} von {n}", "{n} su {n}", "{n} dari {n}", "{n} з {n}", "{n} में से {n}"],
+  "of {m} · {n}": ["de {m} · {n}", "sur {m} · {n}", "/ {m} · {n}", "/ {m} · {n}", "/ {m} · {n}", "sa {m} · {n}", "из {m} · {n}", "/ {m} · {n}", "de {m} · {n}", "von {m} · {n}", "su {m} · {n}", "dari {m} · {n}", "з {m} · {n}", "{m} में से · {n}"],
+  "of {n} · {n}": ["de {n} · {n}", "sur {n} · {n}", "/ {n} · {n}", "/ {n} · {n}", "/ {n} · {n}", "sa {n} · {n}", "из {n} · {n}", "/ {n} · {n}", "de {n} · {n}", "von {n} · {n}", "su {n} · {n}", "dari {n} · {n}", "з {n} · {n}", "{n} में से · {n}"],
+  "Who you buy from": ["A quién le compras", "Chez qui vous achetez", "你从谁那里进货", "Bạn mua hàng từ ai", "물건을 사는 곳", "Kung kanino ka bumibili", "У кого вы покупаете", "仕入れ先", "De quem você compra", "Bei wem du einkaufst", "Da chi compri", "Tempat kamu belanja", "У кого ви купуєте", "आप किससे खरीदते हैं"],
+  "Market packing list": ["Lista para el mercado", "Liste pour le marché", "市集打包清单", "Danh sách mang đi chợ phiên", "마켓 준비물", "Listahan ng dadalhin sa market", "Список для ярмарки", "マーケットの持ち物", "Lista para a feira", "Packliste für den Markt", "Lista per il mercatino", "Daftar bawaan ke pasar", "Список для ярмарку", "मार्केट की पैकिंग लिस्ट"],
+  "Things to bring to a market or pop-up": ["Lo que llevar a un mercado o evento", "Ce qu'il faut apporter au marché ou à un pop-up", "去市集或快闪摊要带的东西", "Đồ cần mang tới chợ phiên hay gian hàng", "마켓이나 팝업에 챙겨 갈 것", "Mga dadalhin sa market o pop-up", "Что взять на ярмарку или поп-ап", "マーケットやポップアップに持っていく物", "O que levar para uma feira ou evento", "Was du zum Markt oder Pop-up mitnimmst", "Cosa portare al mercatino o a un pop-up", "Barang yang dibawa ke pasar atau bazar", "Що взяти на ярмарок чи поп-ап", "मार्केट या पॉप-अप में ले जाने की चीज़ें"],
+  "Savings goal": ["Meta de ahorro", "Objectif d'épargne", "存钱目标", "Mục tiêu tiết kiệm", "저축 목표", "Layunin sa ipon", "Цель накоплений", "貯金の目標", "Meta de economia", "Sparziel", "Obiettivo di risparmio", "Target tabungan", "Мета заощаджень", "बचत लक्ष्य"],
+  "Save up for something big": ["Ahorra para algo grande", "Économisez pour quelque chose de grand", "为大目标存钱", "Tiết kiệm cho việc lớn", "큰 목표를 위해 모아요", "Mag-ipon para sa malaking bagay", "Копите на что-то большое", "大きな目標のために貯める", "Economize para algo grande", "Spar auf etwas Großes", "Risparmia per qualcosa di grande", "Menabung untuk sesuatu yang besar", "Збирайте на щось велике", "किसी बड़ी चीज़ के लिए बचत करें"],
+  "My links": ["Mis enlaces", "Mes liens", "我的链接", "Liên kết của tôi", "내 링크", "Mga link ko", "Мои ссылки", "マイリンク", "Meus links", "Meine Links", "I miei link", "Tautanku", "Мої посилання", "मेरे लिंक"],
+  "Your social media, order form and shop": ["Tus redes, formulario de pedidos y tienda", "Vos réseaux, formulaire de commande et boutique", "你的社交媒体、订单表单和店铺", "Mạng xã hội, mẫu đặt hàng và cửa hàng của bạn", "SNS, 주문서, 가게 링크", "Ang social media, order form at shop mo", "Ваши соцсети, форма заказа и магазин", "SNS、注文フォーム、ショップ", "Suas redes, formulário de pedidos e loja", "Deine Social Media, Bestellformular und Shop", "I tuoi social, modulo d'ordine e negozio", "Media sosial, formulir pesanan, dan tokomu", "Ваші соцмережі, форма замовлення і магазин", "आपका सोशल मीडिया, ऑर्डर फ़ॉर्म और शॉप"],
+  "Ideas": ["Ideas", "Idées", "点子", "Ý tưởng", "아이디어", "Mga ideya", "Идеи", "アイデア", "Ideias", "Ideen", "Idee", "Ide", "Ідеї", "आइडिया"],
+  "New products, deals and plans": ["Nuevos productos, ofertas y planes", "Nouveaux produits, offres et projets", "新产品、优惠和计划", "Sản phẩm mới, khuyến mãi và kế hoạch", "새 상품, 할인, 계획", "Bagong produkto, deal at plano", "Новые товары, акции и планы", "新商品、セール、計画", "Novos produtos, promoções e planos", "Neue Produkte, Angebote und Pläne", "Nuovi prodotti, offerte e piani", "Produk baru, promo, dan rencana", "Нові товари, акції та плани", "नए प्रोडक्ट, ऑफ़र और योजनाएँ"],
+  "Recipes to try": ["Recetas por probar", "Recettes à essayer", "想试的食谱", "Công thức muốn thử", "해 볼 레시피", "Mga recipe na susubukan", "Рецепты на пробу", "試したいレシピ", "Receitas para testar", "Rezepte zum Ausprobieren", "Ricette da provare", "Resep yang ingin dicoba", "Рецепти на спробу", "आज़माने वाली रेसिपी"],
+  "Save recipes you want to test": ["Guarda recetas que quieres probar", "Gardez les recettes à tester", "保存想试做的食谱", "Lưu công thức bạn muốn thử", "시험해 볼 레시피 저장", "I-save ang mga recipe na gusto mong subukan", "Сохраняйте рецепты, которые хотите попробовать", "試したいレシピを保存", "Guarde receitas que quer testar", "Speichere Rezepte, die du testen willst", "Salva le ricette che vuoi provare", "Simpan resep yang ingin kamu coba", "Зберігайте рецепти, які хочете спробувати", "जो रेसिपी आज़मानी हैं उन्हें सेव करें"],
+  "Looks to try": ["Estilos por probar", "Looks à essayer", "想尝试的造型", "Kiểu muốn thử", "해 볼 스타일", "Mga look na susubukan", "Образы на пробу", "試したいデザイン", "Visuais para testar", "Looks zum Ausprobieren", "Look da provare", "Gaya yang ingin dicoba", "Образи на спробу", "आज़माने वाले लुक"],
+  "Designs and styles you want to try": ["Diseños y estilos que quieres probar", "Les designs et styles à essayer", "想尝试的设计和风格", "Mẫu và phong cách bạn muốn thử", "해 보고 싶은 디자인과 스타일", "Mga disenyo at istilong gusto mong subukan", "Дизайны и стили, которые хотите попробовать", "試したいデザインやスタイル", "Designs e estilos que você quer testar", "Designs und Stile, die du ausprobieren willst", "Design e stili che vuoi provare", "Desain dan gaya yang ingin kamu coba", "Дизайни й стилі, які хочете спробувати", "जो डिज़ाइन और स्टाइल आज़माने हैं"],
+  "Lesson plans": ["Planes de clase", "Plans de cours", "课程计划", "Giáo án", "수업 계획", "Mga lesson plan", "Планы занятий", "レッスンプラン", "Planos de aula", "Stundenpläne", "Piani delle lezioni", "Rencana pelajaran", "Плани занять", "पाठ योजनाएँ"],
+  "Plan what to cover in each lesson": ["Planea qué ver en cada clase", "Prévoyez le contenu de chaque cours", "计划每节课要讲什么", "Lên kế hoạch cho từng buổi học", "수업마다 다룰 내용 계획", "Planuhin ang tatalakayin sa bawat lesson", "Планируйте, что пройти на каждом занятии", "各レッスンでやることを計画", "Planeje o que ver em cada aula", "Plane, was in jeder Stunde drankommt", "Pianifica cosa fare in ogni lezione", "Rencanakan isi tiap pelajaran", "Плануйте, що пройти на кожному занятті", "हर पाठ में क्या पढ़ाना है, योजना बनाएँ"],
+  "Job kit checklist": ["Lista de material para el trabajo", "Liste du matériel", "工作装备清单", "Danh sách đồ nghề", "작업 준비물", "Checklist ng gamit sa trabaho", "Список снаряжения", "仕事の持ち物リスト", "Lista de material do trabalho", "Ausrüstungs-Checkliste", "Lista del kit di lavoro", "Daftar perlengkapan kerja", "Список спорядження", "काम के सामान की चेकलिस्ट"],
+  "What to pack before each job": ["Qué llevar antes de cada trabajo", "Quoi emporter avant chaque travail", "每次出工前要带的东西", "Cần mang gì trước mỗi việc", "작업 전마다 챙길 것", "Ano ang dadalhin bago ang bawat trabaho", "Что взять перед каждым заказом", "毎回の仕事の前に用意する物", "O que levar antes de cada trabalho", "Was du vor jedem Auftrag einpackst", "Cosa preparare prima di ogni lavoro", "Yang dibawa sebelum tiap pekerjaan", "Що взяти перед кожним замовленням", "हर काम से पहले क्या पैक करें"],
+  "Equipment checklist": ["Lista de equipo", "Liste de l'équipement", "设备清单", "Danh sách thiết bị", "장비 체크리스트", "Checklist ng kagamitan", "Список инвентаря", "道具チェックリスト", "Lista de equipamentos", "Geräte-Checkliste", "Lista attrezzatura", "Daftar peralatan", "Список інвентарю", "उपकरण चेकलिस्ट"],
+  "What to load before each job": ["Qué cargar antes de cada trabajo", "Quoi charger avant chaque travail", "每次出工前要装的东西", "Cần chất gì lên xe trước mỗi việc", "작업 전마다 실을 것", "Ano ang ikakarga bago ang bawat trabaho", "Что загрузить перед каждым заказом", "毎回の仕事の前に積む物", "O que carregar antes de cada trabalho", "Was du vor jedem Auftrag einlädst", "Cosa caricare prima di ogni lavoro", "Yang dimuat sebelum tiap pekerjaan", "Що завантажити перед кожним замовленням", "हर काम से पहले क्या लादें"],
+  "Event day checklist": ["Lista para el día del evento", "Liste du jour J", "活动当天清单", "Danh sách ngày sự kiện", "행사 당일 체크리스트", "Checklist sa araw ng event", "Список на день мероприятия", "イベント当日のリスト", "Lista do dia do evento", "Checkliste für den Eventtag", "Lista per il giorno dell'evento", "Daftar hari acara", "Список на день події", "इवेंट के दिन की चेकलिस्ट"],
+  "What to bring on the day": ["Qué llevar ese día", "Quoi apporter le jour même", "当天要带的东西", "Cần mang gì trong ngày", "당일 챙길 것", "Ano ang dadalhin sa araw na iyon", "Что взять в этот день", "当日持っていく物", "O que levar no dia", "Was du am Tag mitbringst", "Cosa portare quel giorno", "Yang dibawa di hari itu", "Що взяти в цей день", "उस दिन क्या ले जाना है"],
+  "Shot list": ["Lista de fotos", "Liste de plans", "拍摄清单", "Danh sách cảnh chụp", "촬영 목록", "Listahan ng kuha", "Список кадров", "撮影リスト", "Lista de fotos", "Shot-Liste", "Lista degli scatti", "Daftar foto", "Список кадрів", "शॉट लिस्ट"],
+  "Photos you need to get": ["Fotos que necesitas tomar", "Les photos à prendre", "需要拍的照片", "Những ảnh cần chụp", "꼭 찍어야 할 사진", "Mga litratong kailangan mong makuha", "Кадры, которые нужно снять", "撮る必要がある写真", "Fotos que você precisa tirar", "Fotos, die du brauchst", "Le foto che devi fare", "Foto yang harus diambil", "Кадри, які треба зняти", "जो फ़ोटो लेनी हैं"],
+  "Pet visit checklist": ["Lista para visitas de mascotas", "Liste pour les visites", "宠物上门清单", "Danh sách khi chăm thú cưng", "반려동물 방문 체크리스트", "Checklist sa pagbisita sa alaga", "Список для визита к питомцу", "ペット訪問のリスト", "Lista para visitas de pets", "Checkliste für Tierbesuche", "Lista per le visite agli animali", "Daftar kunjungan hewan", "Список для візиту до тварини", "पालतू विज़िट चेकलिस्ट"],
+  "What to bring to each visit": ["Qué llevar a cada visita", "Quoi apporter à chaque visite", "每次上门要带的东西", "Cần mang gì mỗi lần đến", "방문할 때마다 챙길 것", "Ano ang dadalhin sa bawat pagbisita", "Что взять на каждый визит", "毎回の訪問で持っていく物", "O que levar a cada visita", "Was du zu jedem Besuch mitbringst", "Cosa portare a ogni visita", "Yang dibawa tiap kunjungan", "Що взяти на кожен візит", "हर विज़िट पर क्या ले जाना है"],
+  "Phone": ["Teléfono", "Téléphone", "电话", "Điện thoại", "전화번호", "Telepono", "Телефон", "電話", "Telefone", "Telefon", "Telefono", "Telepon", "Телефон", "फ़ोन"],
+  "Notes": ["Notas", "Notes", "备注", "Ghi chú", "메모", "Mga tala", "Заметки", "メモ", "Notas", "Notizen", "Note", "Catatan", "Нотатки", "नोट्स"],
+  "What they sell": ["Qué venden", "Ce qu'ils vendent", "卖什么", "Họ bán gì", "파는 물건", "Ano ang binebenta nila", "Что продают", "販売している物", "O que vendem", "Was sie verkaufen", "Cosa vendono", "Yang mereka jual", "Що продають", "वे क्या बेचते हैं"],
+  "Where I found it": ["Dónde la encontré", "Où je l'ai trouvée", "在哪里找到的", "Tìm thấy ở đâu", "찾은 곳", "Saan ko nakita", "Где нашла", "見つけた場所", "Onde encontrei", "Wo ich es gefunden habe", "Dove l'ho trovata", "Tempat aku menemukannya", "Де знайшла", "कहाँ मिली"],
+  "Where I saw it": ["Dónde lo vi", "Où je l'ai vu", "在哪里看到的", "Thấy ở đâu", "본 곳", "Saan ko nakita", "Где увидела", "見た場所", "Onde vi", "Wo ich es gesehen habe", "Dove l'ho visto", "Tempat aku melihatnya", "Де побачила", "कहाँ देखा"],
+  "Look": ["Estilo", "Look", "造型", "Kiểu", "스타일", "Look", "Образ", "デザイン", "Visual", "Look", "Look", "Gaya", "Образ", "लुक"],
+  "Table and tablecloth": ["Mesa y mantel", "Table et nappe", "桌子和桌布", "Bàn và khăn trải bàn", "테이블과 테이블보", "Mesa at mantel", "Стол и скатерть", "テーブルとテーブルクロス", "Mesa e toalha", "Tisch und Tischdecke", "Tavolo e tovaglia", "Meja dan taplak", "Стіл і скатертина", "मेज़ और मेज़पोश"],
+  "Price signs": ["Carteles de precios", "Panneaux de prix", "价格牌", "Bảng giá", "가격표", "Mga karatula ng presyo", "Ценники", "値札", "Placas de preço", "Preisschilder", "Cartelli dei prezzi", "Papan harga", "Цінники", "दाम के बोर्ड"],
+  "Cash box and change": ["Caja y cambio", "Caisse et monnaie", "钱箱和零钱", "Hộp tiền và tiền lẻ", "돈통과 잔돈", "Kahon ng pera at barya", "Касса и сдача", "お金の箱とおつり", "Caixa e troco", "Kasse und Wechselgeld", "Cassa e resto", "Kotak uang dan kembalian", "Каса і решта", "कैश बॉक्स और छुट्टे"],
+  "Bags": ["Bolsas", "Sacs", "袋子", "Túi", "봉투", "Mga bag", "Пакеты", "袋", "Sacolas", "Tüten", "Sacchetti", "Kantong", "Пакети", "थैले"],
+  "Card reader": ["Lector de tarjetas", "Lecteur de carte", "刷卡机", "Máy quẹt thẻ", "카드 단말기", "Card reader", "Терминал для карт", "カードリーダー", "Maquininha de cartão", "Kartenleser", "Lettore di carte", "Mesin kartu", "Термінал для карток", "कार्ड रीडर"],
+  "Spray bottles": ["Botellas de spray", "Vaporisateurs", "喷壶", "Bình xịt", "분무기", "Mga spray bottle", "Пульверизаторы", "スプレーボトル", "Borrifadores", "Sprühflaschen", "Spruzzini", "Botol semprot", "Пульверизатори", "स्प्रे बोतलें"],
+  "Cloths": ["Paños", "Chiffons", "抹布", "Khăn lau", "걸레", "Mga basahan", "Тряпки", "ふきん", "Panos", "Tücher", "Panni", "Lap", "Ганчірки", "कपड़े"],
+  "Vacuum": ["Aspiradora", "Aspirateur", "吸尘器", "Máy hút bụi", "청소기", "Vacuum", "Пылесос", "掃除機", "Aspirador", "Staubsauger", "Aspirapolvere", "Penyedot debu", "Пилосос", "वैक्यूम"],
+  "Gloves": ["Guantes", "Gants", "手套", "Găng tay", "장갑", "Guwantes", "Перчатки", "手袋", "Luvas", "Handschuhe", "Guanti", "Sarung tangan", "Рукавички", "दस्ताने"],
+  "Mower": ["Cortacésped", "Tondeuse", "割草机", "Máy cắt cỏ", "잔디깎이", "Lawn mower", "Газонокосилка", "芝刈り機", "Cortador de grama", "Rasenmäher", "Tosaerba", "Mesin pemotong rumput", "Газонокосарка", "घास काटने की मशीन"],
+  "Gas": ["Gasolina", "Essence", "汽油", "Xăng", "기름", "Gasolina", "Бензин", "ガソリン", "Gasolina", "Benzin", "Benzina", "Bensin", "Бензин", "पेट्रोल"],
+  "Trimmer": ["Bordeadora", "Coupe-bordure", "修边机", "Máy tỉa", "예초기", "Trimmer", "Триммер", "トリマー", "Aparador", "Trimmer", "Decespugliatore", "Pemangkas", "Тример", "ट्रिमर"],
+  "Rake": ["Rastrillo", "Râteau", "耙子", "Cào", "갈퀴", "Kalaykay", "Грабли", "熊手", "Ancinho", "Rechen", "Rastrello", "Garu", "Граблі", "रेक"],
+  "Extension cord": ["Extensión eléctrica", "Rallonge", "延长线", "Dây nối điện", "멀티탭", "Extension cord", "Удлинитель", "延長コード", "Extensão", "Verlängerungskabel", "Prolunga", "Kabel ekstensi", "Подовжувач", "एक्सटेंशन कॉर्ड"],
+  "Scissors": ["Tijeras", "Ciseaux", "剪刀", "Kéo", "가위", "Gunting", "Ножницы", "はさみ", "Tesoura", "Schere", "Forbici", "Gunting", "Ножиці", "कैंची"],
+  "Group photo": ["Foto de grupo", "Photo de groupe", "合影", "Ảnh nhóm", "단체 사진", "Group photo", "Общее фото", "集合写真", "Foto em grupo", "Gruppenfoto", "Foto di gruppo", "Foto bersama", "Спільне фото", "ग्रुप फ़ोटो"],
+  "Close-ups": ["Primeros planos", "Gros plans", "特写", "Ảnh cận", "클로즈업", "Close-up", "Крупные планы", "アップ", "Closes", "Nahaufnahmen", "Primi piani", "Foto close-up", "Великі плани", "क्लोज़-अप"],
+  "Details": ["Detalles", "Détails", "细节", "Chi tiết", "디테일", "Mga detalye", "Детали", "ディテール", "Detalhes", "Details", "Dettagli", "Detail", "Деталі", "डिटेल्स"],
+  "Candids": ["Fotos espontáneas", "Photos spontanées", "抓拍", "Ảnh tự nhiên", "자연스러운 사진", "Mga candid", "Живые кадры", "自然なスナップ", "Fotos espontâneas", "Spontane Fotos", "Foto spontanee", "Foto candid", "Живі кадри", "कैंडिड फ़ोटो"],
+  "Leash": ["Correa", "Laisse", "牵引绳", "Dây dắt", "목줄", "Tali", "Поводок", "リード", "Guia", "Leine", "Guinzaglio", "Tali anjing", "Повідець", "पट्टा"],
+  "Water bowl": ["Plato de agua", "Gamelle d'eau", "水碗", "Bát nước", "물그릇", "Mangkok ng tubig", "Миска для воды", "水入れ", "Pote de água", "Wassernapf", "Ciotola dell'acqua", "Mangkuk air", "Миска для води", "पानी का कटोरा"],
+  "Recipe": ["Receta", "Recette", "食谱", "Công thức", "레시피", "Recipe", "Рецепт", "レシピ", "Receita", "Rezept", "Ricetta", "Resep", "Рецепт", "रेसिपी"],
   "Add a section": ["Agregar una sección", "Ajouter une section", "添加栏目", "Thêm mục", "섹션 추가", "Magdagdag ng section", "Добавить раздел", "セクションを追加", "Adicionar seção", "Bereich hinzufügen", "Aggiungi una sezione", "Tambah bagian", "Додати розділ", "सेक्शन जोड़ें"],
   "From Biz Studio": ["De Biz Studio", "De Biz Studio", "来自 Biz Studio", "Từ Biz Studio", "Biz Studio에서", "Mula sa Biz Studio", "Из Biz Studio", "Biz Studio から", "Do Biz Studio", "Aus Biz Studio", "Da Biz Studio", "Dari Biz Studio", "З Biz Studio", "Biz Studio से"],
   "Pages that aren't in your menu yet. Tap one to add it.": ["Páginas que aún no están en tu menú. Toca una para agregarla.", "Les pages qui ne sont pas encore dans votre menu. Touchez-en une pour l'ajouter.", "还不在菜单里的页面。点一下就能添加。", "Các trang chưa có trong menu. Chạm vào để thêm.", "아직 메뉴에 없는 페이지예요. 눌러서 추가하세요.", "Mga page na wala pa sa menu mo. I-tap para idagdag.", "Страницы, которых ещё нет в меню. Нажмите, чтобы добавить.", "まだメニューにないページです。タップして追加。", "Páginas que ainda não estão no seu menu. Toque para adicionar.", "Seiten, die noch nicht in deinem Menü sind. Tippe zum Hinzufügen.", "Pagine non ancora nel tuo menu. Tocca per aggiungerla.", "Halaman yang belum ada di menu. Ketuk untuk menambah.", "Сторінки, яких ще немає в меню. Натисніть, щоб додати.", "जो पेज अभी मेन्यू में नहीं हैं। जोड़ने के लिए टैप करें।"],
@@ -9905,7 +9981,53 @@ const PAGE_KINDS = [
   { id: 'checklist', icon: 'check', label: 'Checklist', text: 'Things to check off, like a packing list' },
   { id: 'list', icon: 'list', label: 'List with your own boxes', text: 'Like a list of vendors with a name, phone and notes' },
   { id: 'writing', icon: 'note', label: 'Writing page', text: 'A big space to write, like ideas or a plan' },
+  { id: 'goal', icon: 'flag', label: 'Goal tracker', text: 'Count up toward a goal, like money saved or cakes sold' },
+  { id: 'links', icon: 'link', label: 'Links', text: 'Buttons for your websites, social media and forms' },
 ];
+
+// Ready-made pages: one tap makes the page with its name, icon and boxes filled in
+//   fields: the boxes for a list, items: the starting checklist, goal: { target, money }
+const PAGE_STARTERS = [
+  { name: 'Vendors', text: 'Who you buy from', kind: 'list', icon: 'users', color: 'sky', fields: ['Name', 'Phone', 'What they sell', 'Notes'] },
+  { name: 'Market packing list', text: 'Things to bring to a market or pop-up', kind: 'checklist', icon: 'box', color: 'peach', items: ['Table and tablecloth', 'Price signs', 'Cash box and change', 'Bags', 'Card reader'] },
+  { name: 'Savings goal', text: 'Save up for something big', kind: 'goal', icon: 'flag', color: 'mint', goal: { target: 500, money: true } },
+  { name: 'My links', text: 'Your social media, order form and shop', kind: 'links', icon: 'link', color: 'lilac' },
+  { name: 'Ideas', text: 'New products, deals and plans', kind: 'writing', icon: 'sparkle', color: 'butter' },
+];
+// One more that fits each kind of business
+const RECIPES_STARTER = { name: 'Recipes to try', text: 'Save recipes you want to test', kind: 'list', icon: 'book', color: 'pink', fields: ['Recipe', 'Where I found it', 'Notes'] };
+const LOOKS_STARTER = { name: 'Looks to try', text: 'Designs and styles you want to try', kind: 'list', icon: 'sparkle', color: 'pink', fields: ['Look', 'Where I saw it', 'Notes'] };
+const LESSONS_STARTER = { name: 'Lesson plans', text: 'Plan what to cover in each lesson', kind: 'writing', icon: 'book', color: 'sky' };
+const TYPE_STARTERS = {
+  bakery: RECIPES_STARTER, catering: RECIPES_STARTER,
+  nails: LOOKS_STARTER, hair: LOOKS_STARTER, beauty: LOOKS_STARTER,
+  tutoring: LESSONS_STARTER, music: LESSONS_STARTER, fitness: LESSONS_STARTER,
+  cleaning: { name: 'Job kit checklist', text: 'What to pack before each job', kind: 'checklist', icon: 'spray', color: 'sky', items: ['Spray bottles', 'Cloths', 'Vacuum', 'Trash bags', 'Gloves'] },
+  yard: { name: 'Equipment checklist', text: 'What to load before each job', kind: 'checklist', icon: 'leaf', color: 'mint', items: ['Mower', 'Gas', 'Trimmer', 'Rake', 'Trash bags'] },
+  events: { name: 'Event day checklist', text: 'What to bring on the day', kind: 'checklist', icon: 'balloon', color: 'pink', items: ['Balloons', 'Tape', 'Extension cord', 'Scissors', 'Trash bags'] },
+  photo: { name: 'Shot list', text: 'Photos you need to get', kind: 'checklist', icon: 'camera', color: 'lilac', items: ['Group photo', 'Close-ups', 'Details', 'Candids'] },
+  pets: { name: 'Pet visit checklist', text: 'What to bring to each visit', kind: 'checklist', icon: 'paw', color: 'peach', items: ['Leash', 'Treats', 'Poop bags', 'Water bowl'] },
+};
+// The ready-made pages for this business that they haven't made yet
+function pageStarters() {
+  const extra = TYPE_STARTERS[realType()];
+  const all = extra ? [extra].concat(PAGE_STARTERS) : PAGE_STARTERS;
+  const have = userPages.map(function (p) { return p.name.toLowerCase(); });
+  return all.filter(function (s) { return !have.includes(s.name.toLowerCase()) && !have.includes((translateText(s.name) || s.name).toLowerCase()); });
+}
+// Make a page from a ready-made one, in the language they use
+function makeStarterPage(s) {
+  const here = function (t) { return translateText(t) || t; };
+  const p = { id: newId('pg'), name: here(s.name), icon: s.icon, color: s.color, kind: s.kind };
+  if (s.kind === 'list') { p.fields = s.fields.map(here); p.entries = []; }
+  if (s.kind === 'checklist') p.items = (s.items || []).map(function (t) { return { id: newId('i'), text: here(t), done: false }; });
+  if (s.kind === 'writing') p.text = '';
+  if (s.kind === 'goal') { p.goal = Object.assign({}, s.goal); p.adds = []; }
+  if (s.kind === 'links') p.links = [];
+  userPages.push(p);
+  savePages();
+  return p;
+}
 
 function findUserPage(sectionId) {
   return userPages.find(function (p) { return 'page-' + p.id === sectionId; });
@@ -9938,6 +10060,15 @@ function editUserPage(p, startKind) {
         <label class="label" for="pg-fields">Boxes for each one <span class="label-hint">(one per line)</span></label>
         <textarea class="input" id="pg-fields" rows="4" placeholder="Name&#10;Phone&#10;Notes"></textarea>
       </div>
+      <div class="pg-goal-wrap">
+        <p class="label">What are you counting?</p>
+        <div class="pg-goal-kind" role="radiogroup">
+          <label class="check-row"><input type="radio" name="pg-goal-kind" value="money"><span>Money</span></label>
+          <label class="check-row"><input type="radio" name="pg-goal-kind" value="things"><span>Things, like cakes sold</span></label>
+        </div>
+        <label class="label" for="pg-goal-target">Goal</label>
+        <input class="input" id="pg-goal-target" type="number" min="1" step="any" inputmode="decimal" placeholder="500">
+      </div>
       <p class="label">Icon</p>
       <div class="pg-icons" role="radiogroup" aria-label="Icon"></div>
       <p class="label">Color</p>
@@ -9963,10 +10094,14 @@ function editUserPage(p, startKind) {
           kinds.appendChild(b);
         });
         box.querySelector('.pg-fields-wrap').hidden = draft.kind !== 'list';
+        box.querySelector('.pg-goal-wrap').hidden = draft.kind !== 'goal';
       }
       drawKinds();
       if (!isNew) box.querySelector('.pg-kind-wrap').hidden = true;
       box.querySelector('#pg-fields').value = (draft.fields || []).join('\n');
+      const goal = draft.goal || { target: '', money: true };
+      box.querySelector('input[name="pg-goal-kind"][value="' + (goal.money ? 'money' : 'things') + '"]').checked = true;
+      box.querySelector('#pg-goal-target').value = goal.target || '';
       // Icons
       const icons = box.querySelector('.pg-icons');
       function drawIcons() {
@@ -10035,6 +10170,13 @@ function editUserPage(p, startKind) {
       }
       if (draft.kind === 'checklist') draft.items = draft.items || [];
       if (draft.kind === 'writing') draft.text = draft.text || '';
+      if (draft.kind === 'goal') {
+        const target = Number(box.querySelector('#pg-goal-target').value);
+        if (!(target > 0)) { box.problem('Enter a goal bigger than 0.'); return false; }
+        draft.goal = { target: target, money: box.querySelector('input[name="pg-goal-kind"]:checked').value === 'money' };
+        draft.adds = draft.adds || [];
+      }
+      if (draft.kind === 'links') draft.links = draft.links || [];
       if (isNew) userPages.push(draft);
       else Object.assign(p, draft);
       savePages();
@@ -10050,6 +10192,8 @@ function editUserPage(p, startKind) {
 function showPageCount(p) {
   const sub = document.querySelector('#page .page-head p');
   if (!sub) return;
+  if (p.kind === 'goal') { sub.textContent = goalText(p, goalTotal(p)) + ' of ' + goalText(p, p.goal.target); return; }
+  if (p.kind === 'links') { const n = (p.links || []).length; sub.textContent = n + (n === 1 ? ' link' : ' links'); return; }
   const count = p.kind === 'list' ? (p.entries || []).length : p.kind === 'checklist' ? (p.items || []).filter(function (i) { return !i.done; }).length : -1;
   sub.textContent = count < 0 ? '' : p.kind === 'list' ? count + (count === 1 ? ' thing' : ' things') : count + ' left to do';
 }
@@ -10069,7 +10213,161 @@ function showUserPage(page, p) {
   const body = page.querySelector('.user-page');
   if (p.kind === 'list') drawUserList(body, p);
   else if (p.kind === 'writing') drawUserWriting(body, p);
+  else if (p.kind === 'goal') drawUserGoal(body, p);
+  else if (p.kind === 'links') drawUserLinks(body, p);
   else drawUserChecklist(body, p);
+}
+
+// A goal tracker: add to it as you go, and watch the bar fill up
+//   goal: { target: 500, money: true }, adds: [{ id, amount, note, date }]
+function goalTotal(p) {
+  return (p.adds || []).reduce(function (sum, a) { return sum + Number(a.amount || 0); }, 0);
+}
+function goalText(p, amount) {
+  if (p.goal && p.goal.money) return money(amount);
+  return String(Math.round(amount * 100) / 100);
+}
+function drawUserGoal(body, p) {
+  p.goal = p.goal || { target: 100, money: false };
+  p.adds = p.adds || [];
+  body.innerHTML = `
+    <div class="pg-goal">
+      <div class="pg-goal-numbers"><b></b><span></span></div>
+      <div class="pg-goal-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"><span></span></div>
+      <p class="pg-goal-done" hidden>${icon('star')}<span>Goal reached!</span></p>
+    </div>
+    <form class="pg-add pg-goal-add">
+      <input class="input pg-goal-amount" type="number" step="any" inputmode="decimal" aria-label="How much to add">
+      <input class="input" autocomplete="off" placeholder="Note (optional)" aria-label="Note (optional)">
+      <button class="btn with-icon" type="submit">${icon('plus')}<span>Add</span></button>
+    </form>
+    <div class="pg-items"></div>
+  `;
+  const amount = body.querySelector('.pg-goal-amount');
+  amount.placeholder = p.goal.money ? '25.00' : '1';
+  const note = body.querySelector('.pg-goal-add input:not(.pg-goal-amount)');
+  function draw() {
+    const total = goalTotal(p);
+    const percent = Math.max(0, Math.min(100, Math.round(total / p.goal.target * 100)));
+    body.querySelector('.pg-goal-numbers b').textContent = goalText(p, total);
+    body.querySelector('.pg-goal-numbers span').textContent = 'of ' + goalText(p, p.goal.target) + ' · ' + percent + '%';
+    const bar = body.querySelector('.pg-goal-bar');
+    bar.setAttribute('aria-valuenow', percent);
+    bar.querySelector('span').style.width = percent + '%';
+    body.querySelector('.pg-goal-done').hidden = total < p.goal.target;
+    const list = body.querySelector('.pg-items');
+    list.innerHTML = '';
+    if (!p.adds.length) {
+      list.innerHTML = '<p class="list-empty"></p>';
+      list.firstChild.textContent = 'Nothing added yet.';
+    }
+    // Newest first
+    p.adds.slice().reverse().forEach(function (add) {
+      const row = document.createElement('div');
+      row.className = 'pg-item pg-goal-row';
+      row.innerHTML = '<b class="pg-goal-plus"></b><span class="pg-goal-note" data-own-words></span><span class="pg-goal-date"></span><button type="button" class="row-delete" title="Delete">' + icon('trash') + '</button>';
+      const n = Number(add.amount);
+      row.querySelector('.pg-goal-plus').textContent = (n < 0 ? '−' : '+') + goalText(p, Math.abs(n));
+      row.querySelector('.pg-goal-note').textContent = add.note || '';
+      row.querySelector('.pg-goal-date').textContent = add.date ? toDate(add.date).toLocaleDateString(appLocale(), { month: 'short', day: 'numeric' }) : '';
+      row.querySelector('.row-delete').addEventListener('click', function () {
+        const index = p.adds.indexOf(add);
+        p.adds.splice(index, 1);
+        savePages();
+        draw();
+        showUndo('Deleted', function () { p.adds.splice(index, 0, add); savePages(); draw(); });
+      });
+      list.appendChild(row);
+    });
+    showPageCount(p);
+  }
+  body.querySelector('.pg-goal-add').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const n = Number(amount.value);
+    if (!n) { amount.focus(); return; }
+    const before = goalTotal(p);
+    p.adds.push({ id: newId('a'), amount: n, note: note.value.trim(), date: todayText() });
+    savePages();
+    amount.value = '';
+    note.value = '';
+    draw();
+    if (before < p.goal.target && goalTotal(p) >= p.goal.target) showUndo('Goal reached!', null);
+    amount.focus();
+  });
+  draw();
+}
+
+// A links page: buttons that open their websites in a new tab
+//   links: [{ id, name, url }]
+function cleanLink(text) {
+  let url = String(text || '').trim();
+  if (!url) return '';
+  if (!/^[a-z][a-z0-9+.-]*:/i.test(url)) url = 'https://' + url;
+  try {
+    const parsed = new URL(url);
+    // Only web links and email, never script links
+    if (!['http:', 'https:', 'mailto:'].includes(parsed.protocol)) return '';
+    if (parsed.protocol !== 'mailto:' && !parsed.hostname.includes('.')) return '';
+    return parsed.href;
+  } catch (error) {
+    return '';
+  }
+}
+function drawUserLinks(body, p) {
+  p.links = p.links || [];
+  body.innerHTML = `
+    <form class="pg-add pg-link-add">
+      <input class="input" autocomplete="off" placeholder="Name, like Instagram" aria-label="Name">
+      <input class="input" autocomplete="off" inputmode="url" placeholder="Link, like instagram.com/yourname" aria-label="Link">
+      <button class="btn with-icon" type="submit">${icon('plus')}<span>Add</span></button>
+    </form>
+    <p class="error pg-link-error" role="alert"></p>
+    <div class="pg-links"></div>
+  `;
+  const inputs = body.querySelectorAll('.pg-link-add input');
+  const error = body.querySelector('.pg-link-error');
+  function draw() {
+    const list = body.querySelector('.pg-links');
+    list.innerHTML = '';
+    if (!p.links.length) {
+      list.innerHTML = '<p class="list-empty"></p>';
+      list.firstChild.textContent = 'No links yet.';
+    }
+    p.links.forEach(function (link, i) {
+      const row = document.createElement('div');
+      row.className = 'pg-link';
+      row.style.setProperty('--i', i);
+      row.innerHTML = '<a class="pg-link-open" target="_blank" rel="noopener noreferrer"><span class="pg-link-icon">' + icon('link') + '</span><span class="pg-link-text"><b data-own-words></b><small data-own-words></small></span><span class="pg-link-go">' + icon('popout') + '</span></a><button type="button" class="row-delete" title="Delete">' + icon('trash') + '</button>';
+      const a = row.querySelector('a');
+      a.href = link.url;
+      a.querySelector('b').textContent = link.name;
+      a.querySelector('small').textContent = link.url.replace(/^(https?:\/\/|mailto:)(www\.)?/, '').replace(/\/$/, '');
+      row.querySelector('.row-delete').setAttribute('aria-label', 'Delete ' + link.name);
+      row.querySelector('.row-delete').addEventListener('click', function () {
+        const index = p.links.indexOf(link);
+        p.links.splice(index, 1);
+        savePages();
+        draw();
+        showUndo('Deleted', function () { p.links.splice(index, 0, link); savePages(); draw(); });
+      });
+      list.appendChild(row);
+    });
+    showPageCount(p);
+  }
+  body.querySelector('.pg-link-add').addEventListener('submit', function (e) {
+    e.preventDefault();
+    error.textContent = '';
+    const url = cleanLink(inputs[1].value);
+    if (!url) { error.textContent = 'Put in a real link, like instagram.com/yourname'; inputs[1].focus(); return; }
+    const name = inputs[0].value.trim() || url.replace(/^(https?:\/\/|mailto:)(www\.)?/, '').split(/[/?#]/)[0];
+    p.links.push({ id: newId('l'), name: name, url: url });
+    savePages();
+    inputs[0].value = '';
+    inputs[1].value = '';
+    draw();
+    inputs[0].focus();
+  });
+  draw();
 }
 
 // A checklist: type to add, tap to check off
@@ -10332,6 +10630,7 @@ function addSection() {
     saveLabel: 'Done',
     wide: true,
     html: '<div class="add-section-app"><p class="label">From Biz Studio</p><p class="window-help">Pages that aren\'t in your menu yet. Tap one to add it.</p><div class="add-section-list" id="add-app"></div></div>' +
+      '<div class="add-section-ready"><p class="label">Ready-made</p><p class="window-help">Tap one and it\'s ready to use. You can change anything later.</p><div class="pg-kinds" id="add-ready"></div></div>' +
       '<p class="label">Make your own</p><div class="pg-kinds" id="add-own"></div>',
     fill: function (box) {
       box.querySelector('#window-save').hidden = true;
@@ -10362,6 +10661,34 @@ function addSection() {
           });
         });
         appList.appendChild(row);
+      });
+      // Ready-made pages
+      const ready = box.querySelector('#add-ready');
+      const starters = pageStarters();
+      if (!starters.length) box.querySelector('.add-section-ready').hidden = true;
+      starters.forEach(function (s) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'pg-kind pg-starter ' + s.color;
+        b.innerHTML = '<span class="pg-kind-icon">' + icon(s.icon) + '</span><b></b><span></span>';
+        b.querySelector('b').textContent = s.name;
+        b.querySelector('span:last-child').textContent = s.text;
+        b.addEventListener('click', function () {
+          done();
+          const p = makeStarterPage(s);
+          currentSection = 'page-' + p.id;
+          showMenu();
+          showPage();
+          window.scrollTo(0, 0);
+          showUndo(p.name + ' added', function () {
+            userPages = userPages.filter(function (x) { return x !== p; });
+            savePages();
+            if (currentSection === 'page-' + p.id) currentSection = 'myday';
+            showMenu();
+            showPage();
+          });
+        });
+        ready.appendChild(b);
       });
       // A page of their own
       const own = box.querySelector('#add-own');
