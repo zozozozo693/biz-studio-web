@@ -239,7 +239,8 @@ const BUSINESS_TYPES = [
   {
     id: 'cleaning', color: 'sky', icon: 'spray', label: 'Cleaning', example: 'Sparkle & Shine',
     words: { products: 'Services', orders: 'Jobs', customers: 'Clients', supplies: 'Supplies' },
-    keywords: ['clean', 'detail', 'wash', 'laundry', 'organiz', 'house', 'maid', 'window'],
+    // Only words that clearly mean cleaning: "wash" alone would catch washi tape, "house" would catch house plants
+    keywords: ['clean', 'maid', 'janitor', 'housekeep', 'laundry', 'detailing', 'car wash', 'pressure wash', 'power wash', 'window wash', 'home organiz', 'closet organiz'],
     samples: ['Deep clean', 'Car detailing'],
   },
   {
@@ -819,6 +820,13 @@ const EXTRA_TEXT = {
   "The quick buttons for how you measure {s}.": ["Los botones rápidos para cómo mides tus {s}.", "Les boutons rapides pour mesurer vos {s}.", "衡量{s}用的快捷按钮。", "Nút nhanh cho cách bạn đo {s}.", "{s}을 재는 빠른 버튼이에요.", "Mga mabilis na button kung paano mo sinusukat ang {s}.", "Быстрые кнопки для того, как вы измеряете: {s}.", "{s}の量り方のボタンです。", "Os botões rápidos de como você mede {s}.", "Die Schnellknöpfe, wie du {s} misst.", "I pulsanti rapidi per come misuri {s}.", "Tombol cepat untuk cara kamu mengukur {s}.", "Швидкі кнопки для того, як ви вимірюєте: {s}.", "आप {s} कैसे नापते हैं, उसके लिए जल्दी वाले बटन।"],
   "Make pages of your own, like a list of vendors, a packing checklist or a page of ideas. They show up in your menu.": ["Haz tus propias páginas, como una lista de proveedores, una lista para empacar o una página de ideas. Aparecen en tu menú.", "Créez vos propres pages, comme une liste de fournisseurs, une liste à cocher ou une page d'idées. Elles apparaissent dans votre menu.", "制作你自己的页面，比如供应商名单、打包清单或灵感页面。它们会出现在菜单里。", "Tạo trang riêng, như danh sách nhà cung cấp, danh sách đồ cần mang hoặc trang ý tưởng. Chúng sẽ hiện trong menu.", "거래처 목록, 짐 체크리스트, 아이디어 페이지처럼 나만의 페이지를 만들어요. 메뉴에 나타나요.", "Gumawa ng sariling page, gaya ng listahan ng supplier, packing checklist o page ng ideya. Lalabas ito sa menu mo.", "Создавайте свои страницы: список поставщиков, чек-лист сборов или страницу идей. Они появятся в меню.", "仕入れ先のリスト、持ち物チェックリスト、アイデアのページなど、自分のページを作れます。メニューに表示されます。", "Crie suas páginas, como uma lista de fornecedores, um checklist de malas ou uma página de ideias. Elas aparecem no seu menu.", "Erstelle eigene Seiten, z. B. eine Lieferantenliste, eine Packliste oder eine Ideenseite. Sie erscheinen in deinem Menü.", "Crea pagine tue, come un elenco di fornitori, una lista da spuntare o una pagina di idee. Compaiono nel menu.", "Buat halaman sendiri, seperti daftar pemasok, daftar barang bawaan, atau halaman ide. Akan muncul di menu.", "Створюйте власні сторінки: список постачальників, чекліст речей чи сторінку ідей. Вони з'являться в меню.", "अपने पेज बनाएँ, जैसे सप्लायरों की सूची, पैकिंग चेकलिस्ट या आइडिया का पेज। ये आपके मेन्यू में दिखेंगे।"],
   "No pages yet.": ["Todavía no hay páginas.", "Pas encore de pages.", "还没有页面。", "Chưa có trang nào.", "아직 페이지가 없어요.", "Wala pang page.", "Страниц пока нет.", "まだページがありません。", "Nenhuma página ainda.", "Noch keine Seiten.", "Ancora nessuna pagina.", "Belum ada halaman.", "Сторінок поки немає.", "अभी कोई पेज नहीं।"],
+  "Add a section": ["Agregar una sección", "Ajouter une section", "添加栏目", "Thêm mục", "섹션 추가", "Magdagdag ng section", "Добавить раздел", "セクションを追加", "Adicionar seção", "Bereich hinzufügen", "Aggiungi una sezione", "Tambah bagian", "Додати розділ", "सेक्शन जोड़ें"],
+  "From Biz Studio": ["De Biz Studio", "De Biz Studio", "来自 Biz Studio", "Từ Biz Studio", "Biz Studio에서", "Mula sa Biz Studio", "Из Biz Studio", "Biz Studio から", "Do Biz Studio", "Aus Biz Studio", "Da Biz Studio", "Dari Biz Studio", "З Biz Studio", "Biz Studio से"],
+  "Pages that aren't in your menu yet. Tap one to add it.": ["Páginas que aún no están en tu menú. Toca una para agregarla.", "Les pages qui ne sont pas encore dans votre menu. Touchez-en une pour l'ajouter.", "还不在菜单里的页面。点一下就能添加。", "Các trang chưa có trong menu. Chạm vào để thêm.", "아직 메뉴에 없는 페이지예요. 눌러서 추가하세요.", "Mga page na wala pa sa menu mo. I-tap para idagdag.", "Страницы, которых ещё нет в меню. Нажмите, чтобы добавить.", "まだメニューにないページです。タップして追加。", "Páginas que ainda não estão no seu menu. Toque para adicionar.", "Seiten, die noch nicht in deinem Menü sind. Tippe zum Hinzufügen.", "Pagine non ancora nel tuo menu. Tocca per aggiungerla.", "Halaman yang belum ada di menu. Ketuk untuk menambah.", "Сторінки, яких ще немає в меню. Натисніть, щоб додати.", "जो पेज अभी मेन्यू में नहीं हैं। जोड़ने के लिए टैप करें।"],
+  "Make your own": ["Haz la tuya", "Créez la vôtre", "自己做一个", "Tự tạo", "직접 만들기", "Gumawa ng sarili mo", "Создать свою", "自分で作る", "Crie a sua", "Eigene erstellen", "Creane una tua", "Buat sendiri", "Створити свою", "खुद बनाएँ"],
+  "How to get in": ["Cómo entrar", "Comment entrer", "怎么进去", "Cách vào", "들어가는 방법", "Paano pumasok", "Как попасть внутрь", "入り方", "Como entrar", "Wie man reinkommt", "Come entrare", "Cara masuk", "Як потрапити всередину", "अंदर कैसे आएँ"],
+  "What to clean": ["Qué limpiar", "Quoi nettoyer", "要清洁什么", "Cần dọn gì", "청소할 곳", "Ano ang lilinisin", "Что убрать", "掃除する場所", "O que limpar", "Was gereinigt wird", "Cosa pulire", "Apa yang dibersihkan", "Що прибрати", "क्या साफ़ करना है"],
+  "Size of the job": ["Tamaño del trabajo", "Taille du travail", "工作量", "Quy mô công việc", "작업 규모", "Laki ng trabaho", "Объём работы", "作業の大きさ", "Tamanho do trabalho", "Umfang des Auftrags", "Dimensione del lavoro", "Ukuran pekerjaan", "Обсяг роботи", "काम का आकार"],
   "Add a page": ["Agregar una página", "Ajouter une page", "添加页面", "Thêm trang", "페이지 추가", "Magdagdag ng page", "Добавить страницу", "ページを追加", "Adicionar página", "Seite hinzufügen", "Aggiungi una pagina", "Tambah halaman", "Додати сторінку", "पेज जोड़ें"],
   "Rename the steps, or add your own between In progress and Done, like Deposit paid or Ready for pickup.": ["Cambia el nombre de los pasos o agrega los tuyos entre En proceso y Hecho, como Anticipo pagado o Listo para recoger.", "Renommez les étapes ou ajoutez les vôtres entre En cours et Terminé, comme Acompte payé ou Prêt à récupérer.", "重命名步骤，或在“进行中”和“完成”之间加上你自己的，比如“已付定金”或“可以取货”。", "Đổi tên các bước, hoặc thêm bước riêng giữa Đang làm và Xong, như Đã đặt cọc hay Sẵn sàng lấy.", "단계 이름을 바꾸거나, 진행 중과 완료 사이에 ‘선금 받음’, ‘픽업 준비’ 같은 단계를 추가하세요.", "Palitan ang pangalan ng mga hakbang, o magdagdag sa pagitan ng In progress at Done, gaya ng Bayad na ang deposit o Handa nang kunin.", "Переименуйте шаги или добавьте свои между «В работе» и «Готово», например «Предоплата внесена» или «Можно забирать».", "ステップの名前を変えたり、「進行中」と「完了」の間に「前金済み」「受け取り準備OK」などを追加できます。", "Renomeie as etapas ou adicione as suas entre Em andamento e Pronto, como Sinal pago ou Pronto para retirar.", "Benenne die Schritte um oder füge eigene zwischen In Arbeit und Fertig hinzu, z. B. Anzahlung bezahlt oder Abholbereit.", "Rinomina i passaggi o aggiungi i tuoi tra In corso e Fatto, come Acconto pagato o Pronto per il ritiro.", "Ganti nama langkah, atau tambah langkah sendiri di antara Sedang dikerjakan dan Selesai, seperti DP dibayar atau Siap diambil.", "Перейменуйте кроки або додайте свої між «У роботі» та «Готово», як-от «Передоплату внесено» чи «Можна забирати».", "चरणों के नाम बदलें, या ‘चल रहा है’ और ‘पूरा’ के बीच अपने जोड़ें, जैसे ‘एडवांस मिला’ या ‘लेने के लिए तैयार’।"],
   "Add a status": ["Agregar un estado", "Ajouter un statut", "添加状态", "Thêm trạng thái", "상태 추가", "Magdagdag ng status", "Добавить статус", "ステータスを追加", "Adicionar status", "Status hinzufügen", "Aggiungi uno stato", "Tambah status", "Додати статус", "स्थिति जोड़ें"],
@@ -2269,7 +2277,7 @@ const KITS = {
   fitness:  { booked: true, noShopping: true, about: ['Goals', 'Injuries or limits'], next: 7, rebook: 14 },
   photo:    { booked: true, noShopping: true, about: ['Favorite locations', 'Social media'] },
   pets:     { booked: true, about: ['Pet name', 'Breed', 'Vet phone', 'Feeding and meds'], next: 7, rebook: 28 },
-  cleaning: { about: ['Address', 'Door code or key', 'Pets in the home'] },
+  cleaning: { about: ['Address', 'How to get in', 'Special requests'] },
   yard:     { about: ['Address', 'Gate code', 'Yard size'] },
   events:   { booked: true, about: ['Event date', 'Venue', 'Theme or colors'] },
   other:    { about: ['Birthday'] },
@@ -2382,11 +2390,11 @@ function showMenu() {
     });
   });
 
-  // A quick way to make a page of their own
+  // Add a section: bring back one of the app's pages, or make one of their own
   const addPage = document.createElement('button');
   addPage.className = 'nav-add-page';
-  addPage.innerHTML = icon('plus') + '<span>Add a page</span>';
-  addPage.addEventListener('click', function () { editUserPage(null); });
+  addPage.innerHTML = icon('plus') + '<span>Add a section</span>';
+  addPage.addEventListener('click', addSection);
   menu.appendChild(addPage);
 
   const bottom = document.createElement('div');
@@ -2769,8 +2777,8 @@ const DETAIL_IDEAS = {
     { name: 'Special care', kind: 'text' },
   ],
   cleaning: [
-    { name: 'Number of rooms', kind: 'number' },
-    { name: 'Pets in home', kind: 'yesno' },
+    { name: 'What to clean', kind: 'text' },
+    { name: 'Size of the job', kind: 'list', choices: ['Small', 'Medium', 'Large'] },
     { name: 'Entry instructions', kind: 'text' },
   ],
   yard: [
@@ -9911,9 +9919,10 @@ function userPageSection(p) {
 }
 
 // Make a new page, or change one (name, icon, color, and the boxes for a list)
-function editUserPage(p) {
+function editUserPage(p, startKind) {
   const isNew = !p;
-  const draft = p ? JSON.parse(JSON.stringify(p)) : { id: newId('pg'), name: '', icon: 'note', color: 'lilac', kind: 'checklist' };
+  const kindIcon = (PAGE_KINDS.find(function (k) { return k.id === startKind; }) || {}).icon;
+  const draft = p ? JSON.parse(JSON.stringify(p)) : { id: newId('pg'), name: '', icon: kindIcon || 'note', color: 'lilac', kind: startKind || 'checklist' };
   openWindow({
     title: isNew ? 'Add a page' : 'Edit page',
     saveLabel: isNew ? 'Add page' : 'Save changes',
@@ -10312,6 +10321,82 @@ function editWordList(options) {
       showUndo('Saved', null);
     },
   });
+}
+
+// Add a section: pick one of the app's pages that isn't in the menu,
+// or make a page of their own (checklist, list or writing page)
+function addSection() {
+  const off = allMenuIds().filter(function (id) { return id.indexOf('page-') !== 0 && hiddenSections().includes(id) && findSection(id); });
+  openWindow({
+    title: 'Add a section',
+    saveLabel: 'Done',
+    wide: true,
+    html: '<div class="add-section-app"><p class="label">From Biz Studio</p><p class="window-help">Pages that aren\'t in your menu yet. Tap one to add it.</p><div class="add-section-list" id="add-app"></div></div>' +
+      '<p class="label">Make your own</p><div class="pg-kinds" id="add-own"></div>',
+    fill: function (box) {
+      box.querySelector('#window-save').hidden = true;
+      box.querySelector('#window-cancel').textContent = 'Close';
+      function done() { box.close(); box.remove(); }
+      // The app's own pages that are hidden
+      const appList = box.querySelector('#add-app');
+      if (!off.length) box.querySelector('.add-section-app').hidden = true;
+      off.forEach(function (id) {
+        const section = findSection(id);
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.className = 'menu-edit-row ' + sectionColor(id);
+        row.innerHTML = '<span class="nav-icon">' + icon(section.icon) + '</span><span class="menu-edit-name"></span><span class="row-arrow">' + icon('plus') + '</span>';
+        row.querySelector('.menu-edit-name').textContent = say(section.label);
+        row.addEventListener('click', function () {
+          showSection(id);
+          done();
+          currentSection = id;
+          showMenu();
+          showPage();
+          window.scrollTo(0, 0);
+          showUndo(say(section.label) + ' added', function () {
+            hideSection(id);
+            if (currentSection === id) currentSection = 'myday';
+            showMenu();
+            showPage();
+          });
+        });
+        appList.appendChild(row);
+      });
+      // A page of their own
+      const own = box.querySelector('#add-own');
+      PAGE_KINDS.forEach(function (k) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'pg-kind';
+        b.innerHTML = '<span class="pg-kind-icon">' + icon(k.icon) + '</span><b></b><span></span>';
+        b.querySelector('b').textContent = k.label;
+        b.querySelector('span:last-child').textContent = k.text;
+        b.addEventListener('click', function () { done(); editUserPage(null, k.id); });
+        own.appendChild(b);
+      });
+    },
+    onSave: function () { },
+  });
+}
+
+// Put one of the app's pages in the menu, or take it out (the same as the switches in Your menu)
+function showSection(id) {
+  const c = custom();
+  const menu = c.menu = c.menu || {};
+  menu.hidden = (menu.hidden || []).filter(function (x) { return x !== id; });
+  menu.shown = menu.shown || [];
+  if (autoHidden().includes(id) && !menu.shown.includes(id)) menu.shown.push(id);
+  if (Array.isArray(menu.order) && !menu.order.includes(id)) menu.order.push(id);
+  saveProfile();
+}
+function hideSection(id) {
+  const c = custom();
+  const menu = c.menu = c.menu || {};
+  menu.shown = (menu.shown || []).filter(function (x) { return x !== id; });
+  menu.hidden = menu.hidden || [];
+  if (!autoHidden().includes(id) && !menu.hidden.includes(id)) menu.hidden.push(id);
+  saveProfile();
 }
 
 // Your menu: show or hide each page, and move them up and down
