@@ -9,7 +9,7 @@
 // =========================================
 const BIZ_LIST_KEY = 'bizStudio.businesses';
 const BIZ_CURRENT_KEY = 'bizStudio.current';
-const BIZ_PARTS = ['profile', 'orders', 'customers', 'tasks', 'formMatch', 'products', 'supplies', 'shopping', 'money', 'events', 'notes'];
+const BIZ_PARTS = ['profile', 'orders', 'customers', 'tasks', 'formMatch', 'products', 'supplies', 'shopping', 'money', 'events', 'notes', 'pages'];
 
 function readBusinesses() {
   try { return JSON.parse(localStorage.getItem(BIZ_LIST_KEY)) || []; } catch (error) { return []; }
@@ -417,7 +417,7 @@ const GOALS = [
   { id: 'grow', color: 'lilac', icon: 'sprout',
     label: 'I want to grow my business',
     focus: ['finder', 'customers', 'printables'],
-    tip: 'Use the Finder to discover local markets and events where you can sell.' },
+    tip: 'Use Search to find local markets and events where you can sell.' },
   { id: 'time', color: 'butter', icon: 'check',
     label: "I don't have enough time",
     focus: ['todo', 'calendar'],
@@ -490,7 +490,7 @@ const SECTIONS = [
   { id: 'bookkeeping', icon: 'book', label: 'Bookkeeping',
     emptyTitle: 'No money tracked yet',
     emptyText: 'Payments and the expenses you add are totaled here by week, month and year.' },
-  { id: 'finder', icon: 'search', label: 'Finder',
+  { id: 'finder', icon: 'search', label: 'Search',
     emptyTitle: 'Find anything',
     emptyText: 'Search everything in your app, or find markets and stores near you.' },
   { id: 'printables', icon: 'printer', label: () => (usesOrders() ? 'Receipts and menus' : 'Menus'),
@@ -519,7 +519,10 @@ const MENU_GROUPS = [
 
 // Finds the color of the group a section is in
 function sectionColor(id) {
-  return MENU_GROUPS.find(function (g) { return g.items.includes(id); }).color;
+  const p = String(id).indexOf('page-') === 0 ? findUserPage(id) : null;
+  if (p) return p.color || 'lilac';
+  const group = MENU_GROUPS.find(function (g) { return g.items.includes(id); });
+  return group ? group.color : 'lilac';
 }
 
 // =========================================
@@ -788,6 +791,90 @@ function fillKey(template, values) {
 
 // A few newer labels, in every language (same order as OWN_WORD_LANGS)
 const EXTRA_TEXT = {
+  // Make it yours: settings and pages of your own
+  "Your menu": ["Tu menú", "Votre menu", "你的菜单", "Menu của bạn", "내 메뉴", "Iyong menu", "Ваше меню", "メニュー", "Seu menu", "Dein Menü", "Il tuo menu", "Menu kamu", "Ваше меню", "आपका मेन्यू"],
+  "Show, hide and move pages": ["Muestra, oculta y mueve páginas", "Afficher, masquer et déplacer des pages", "显示、隐藏和移动页面", "Hiện, ẩn và sắp xếp trang", "페이지 보이기, 숨기기, 옮기기", "Ipakita, itago at ilipat ang mga page", "Показывать, скрывать и двигать страницы", "ページの表示・非表示・並べ替え", "Mostre, oculte e mova páginas", "Seiten zeigen, ausblenden und verschieben", "Mostra, nascondi e sposta le pagine", "Tampilkan, sembunyikan, dan pindahkan halaman", "Показувати, приховувати й рухати сторінки", "पेज दिखाएँ, छिपाएँ और खिसकाएँ"],
+  "Your pages": ["Tus páginas", "Vos pages", "你的页面", "Trang của bạn", "내 페이지", "Iyong mga page", "Ваши страницы", "自分のページ", "Suas páginas", "Deine Seiten", "Le tue pagine", "Halaman kamu", "Ваші сторінки", "आपके पेज"],
+  "Add pages of your own": ["Agrega tus propias páginas", "Ajoutez vos propres pages", "添加你自己的页面", "Thêm trang của riêng bạn", "나만의 페이지 추가", "Magdagdag ng sariling page", "Добавьте свои страницы", "自分のページを追加", "Adicione suas próprias páginas", "Eigene Seiten hinzufügen", "Aggiungi pagine tue", "Tambah halaman sendiri", "Додайте власні сторінки", "अपने पेज जोड़ें"],
+  "About them boxes": ["Casillas de Sobre esta persona", "Champs « À propos »", "“关于这个人”栏目", "Ô “Về người này”", "‘이 사람에 대해’ 칸", "Mga kahon sa Tungkol sa kanila", "Поля «О человеке»", "「この人について」の項目", "Campos de Sobre a pessoa", "Felder „Über die Person“", "Campi “Su questa persona”", "Kolom Tentang mereka", "Поля «Про людину»", "‘इनके बारे में’ के खाने"],
+  "Statuses": ["Estados", "Statuts", "状态", "Trạng thái", "상태", "Mga status", "Статусы", "ステータス", "Status", "Status", "Stati", "Status", "Статуси", "स्थितियाँ"],
+  "My Day numbers": ["Números de Mi día", "Chiffres de Ma journée", "“我的一天”数字", "Số liệu Hôm nay", "‘나의 하루’ 숫자", "Mga numero sa Aking Araw", "Цифры «Мой день»", "「今日」の数字", "Números do Meu dia", "Zahlen auf „Mein Tag“", "Numeri della Mia giornata", "Angka Hari Ini", "Цифри «Мій день»", "‘मेरा दिन’ के नंबर"],
+  "Booking reminders": ["Recordatorios para agendar", "Rappels de réservation", "预约提醒", "Nhắc hẹn lại", "예약 알림", "Paalala sa booking", "Напоминания о записи", "予約のリマインダー", "Lembretes de agendamento", "Termin-Erinnerungen", "Promemoria prenotazioni", "Pengingat pesanan", "Нагадування про запис", "बुकिंग रिमाइंडर"],
+  "Unit buttons": ["Botones de unidades", "Boutons d'unités", "单位按钮", "Nút đơn vị", "단위 버튼", "Mga button ng unit", "Кнопки единиц", "単位ボタン", "Botões de unidade", "Einheiten-Knöpfe", "Pulsanti delle unità", "Tombol satuan", "Кнопки одиниць", "यूनिट बटन"],
+  "Off": ["Apagado", "Désactivé", "关闭", "Tắt", "끔", "Naka-off", "Выкл.", "オフ", "Desligado", "Aus", "Disattivato", "Mati", "Вимк.", "बंद"],
+  "Turn pages on or off, and use the arrows to move them.": ["Activa o desactiva páginas y usa las flechas para moverlas.", "Activez ou désactivez des pages, et utilisez les flèches pour les déplacer.", "打开或关闭页面，用箭头调整顺序。", "Bật hoặc tắt trang, và dùng mũi tên để sắp xếp.", "페이지를 켜고 끄고, 화살표로 옮기세요.", "I-on o i-off ang mga page, at gamitin ang mga arrow para ilipat.", "Включайте и выключайте страницы, а стрелками меняйте порядок.", "ページをオン・オフし、矢印で並べ替えます。", "Ligue ou desligue páginas e use as setas para movê-las.", "Schalte Seiten ein oder aus und verschiebe sie mit den Pfeilen.", "Attiva o disattiva le pagine e usa le frecce per spostarle.", "Nyalakan atau matikan halaman, dan pakai panah untuk memindahkannya.", "Вмикайте й вимикайте сторінки, а стрілками змінюйте порядок.", "पेज चालू या बंद करें, और तीरों से उन्हें खिसकाएँ।"],
+  "Back to the suggested menu": ["Volver al menú sugerido", "Revenir au menu suggéré", "恢复推荐的菜单", "Quay lại menu gợi ý", "추천 메뉴로 되돌리기", "Bumalik sa iminungkahing menu", "Вернуть предложенное меню", "おすすめのメニューに戻す", "Voltar ao menu sugerido", "Zurück zum vorgeschlagenen Menü", "Torna al menu suggerito", "Kembali ke menu yang disarankan", "Повернути запропоноване меню", "सुझाए गए मेन्यू पर वापस जाएँ"],
+  "Move up": ["Subir", "Monter", "上移", "Lên trên", "위로", "Itaas", "Выше", "上へ", "Subir", "Nach oben", "Sposta su", "Naikkan", "Вище", "ऊपर"],
+  "Move down": ["Bajar", "Descendre", "下移", "Xuống dưới", "아래로", "Ibaba", "Ниже", "下へ", "Descer", "Nach unten", "Sposta giù", "Turunkan", "Нижче", "नीचे"],
+  "Saved": ["Guardado", "Enregistré", "已保存", "Đã lưu", "저장했어요", "Na-save", "Сохранено", "保存しました", "Salvo", "Gespeichert", "Salvato", "Tersimpan", "Збережено", "सेव हो गया"],
+  "Back to the suggested ones": ["Volver a los sugeridos", "Revenir aux suggestions", "恢复推荐的", "Quay lại gợi ý", "추천 항목으로 되돌리기", "Bumalik sa mga iminungkahi", "Вернуть предложенные", "おすすめに戻す", "Voltar aos sugeridos", "Zurück zu den Vorschlägen", "Torna ai suggeriti", "Kembali ke yang disarankan", "Повернути запропоновані", "सुझाए गए पर वापस जाएँ"],
+  "Add a box": ["Agrega una casilla", "Ajouter un champ", "添加栏目", "Thêm ô", "칸 추가", "Magdagdag ng kahon", "Добавить поле", "項目を追加", "Adicione um campo", "Feld hinzufügen", "Aggiungi un campo", "Tambah kolom", "Додати поле", "खाना जोड़ें"],
+  "Like farmers markets": ["Como mercados locales", "Par ex. marchés fermiers", "例如：农夫市集", "Ví dụ: chợ nông sản", "예: 농산물 시장", "Gaya ng farmers market", "Например, фермерские рынки", "例：ファーマーズマーケット", "Como feiras livres", "Z. B. Bauernmärkte", "Tipo mercati contadini", "Misalnya pasar tani", "Наприклад, фермерські ринки", "जैसे किसान बाज़ार"],
+  "Like skeins": ["Como madejas", "Par ex. écheveaux", "例如：绞", "Ví dụ: cuộn len", "예: 타래", "Gaya ng skein", "Например, мотки", "例：かせ", "Como novelos", "Z. B. Stränge", "Tipo matasse", "Misalnya gulungan benang", "Наприклад, мотки", "जैसे लच्छी"],
+  "Remove": ["Quitar", "Retirer", "移除", "Bỏ", "삭제", "Alisin", "Убрать", "削除", "Remover", "Entfernen", "Rimuovi", "Hapus", "Прибрати", "हटाएँ"],
+  "Move left": ["Mover a la izquierda", "Déplacer à gauche", "左移", "Sang trái", "왼쪽으로", "Ilipat pakaliwa", "Влево", "左へ", "Mover para a esquerda", "Nach links", "Sposta a sinistra", "Geser ke kiri", "Ліворуч", "बाएँ"],
+  "None yet.": ["Ninguno todavía.", "Aucun pour l'instant.", "还没有。", "Chưa có.", "아직 없어요.", "Wala pa.", "Пока нет.", "まだありません。", "Nenhum ainda.", "Noch keine.", "Nessuno per ora.", "Belum ada.", "Поки немає.", "अभी कोई नहीं।"],
+  "The boxes on each person's page, like Allergies or Birthday.": ["Las casillas en la página de cada persona, como Alergias o Cumpleaños.", "Les champs sur la page de chaque personne, comme Allergies ou Anniversaire.", "每个人页面上的栏目，比如过敏或生日。", "Các ô trên trang của mỗi người, như Dị ứng hay Sinh nhật.", "각 사람 페이지의 칸이에요. 알레르기나 생일 같은 것이요.", "Ang mga kahon sa page ng bawat tao, gaya ng Allergy o Kaarawan.", "Поля на странице каждого человека, например «Аллергии» или «День рождения».", "各人のページの項目です。アレルギーや誕生日など。", "Os campos na página de cada pessoa, como Alergias ou Aniversário.", "Die Felder auf der Seite jeder Person, z. B. Allergien oder Geburtstag.", "I campi nella pagina di ogni persona, come Allergie o Compleanno.", "Kolom di halaman tiap orang, seperti Alergi atau Ulang tahun.", "Поля на сторінці кожної людини, як-от «Алергії» чи «День народження».", "हर व्यक्ति के पेज के खाने, जैसे एलर्जी या जन्मदिन।"],
+  "Searches you use a lot. Each one opens Google Maps near you.": ["Búsquedas que usas mucho. Cada una abre Google Maps cerca de ti.", "Les recherches que vous faites souvent. Chacune ouvre Google Maps près de chez vous.", "你常用的搜索。每个都会打开你附近的 Google 地图。", "Những tìm kiếm bạn hay dùng. Mỗi cái mở Google Maps gần bạn.", "자주 쓰는 검색이에요. 누르면 내 근처 Google 지도가 열려요.", "Mga madalas mong hanapin. Bawat isa ay nagbubukas ng Google Maps malapit sa iyo.", "Частые поиски. Каждый открывает Google Карты рядом с вами.", "よく使う検索です。それぞれ近くの Google マップを開きます。", "Buscas que você usa muito. Cada uma abre o Google Maps perto de você.", "Suchen, die du oft brauchst. Jede öffnet Google Maps in deiner Nähe.", "Ricerche che usi spesso. Ognuna apre Google Maps vicino a te.", "Pencarian yang sering kamu pakai. Masing-masing membuka Google Maps di dekatmu.", "Часті пошуки. Кожен відкриває Google Карти поруч із вами.", "जो खोजें आप अक्सर करते हैं। हर एक आपके आस-पास का Google Maps खोलती है।"],
+  "The quick buttons for how you measure {s}.": ["Los botones rápidos para cómo mides tus {s}.", "Les boutons rapides pour mesurer vos {s}.", "衡量{s}用的快捷按钮。", "Nút nhanh cho cách bạn đo {s}.", "{s}을 재는 빠른 버튼이에요.", "Mga mabilis na button kung paano mo sinusukat ang {s}.", "Быстрые кнопки для того, как вы измеряете: {s}.", "{s}の量り方のボタンです。", "Os botões rápidos de como você mede {s}.", "Die Schnellknöpfe, wie du {s} misst.", "I pulsanti rapidi per come misuri {s}.", "Tombol cepat untuk cara kamu mengukur {s}.", "Швидкі кнопки для того, як ви вимірюєте: {s}.", "आप {s} कैसे नापते हैं, उसके लिए जल्दी वाले बटन।"],
+  "Make pages of your own, like a list of vendors, a packing checklist or a page of ideas. They show up in your menu.": ["Haz tus propias páginas, como una lista de proveedores, una lista para empacar o una página de ideas. Aparecen en tu menú.", "Créez vos propres pages, comme une liste de fournisseurs, une liste à cocher ou une page d'idées. Elles apparaissent dans votre menu.", "制作你自己的页面，比如供应商名单、打包清单或灵感页面。它们会出现在菜单里。", "Tạo trang riêng, như danh sách nhà cung cấp, danh sách đồ cần mang hoặc trang ý tưởng. Chúng sẽ hiện trong menu.", "거래처 목록, 짐 체크리스트, 아이디어 페이지처럼 나만의 페이지를 만들어요. 메뉴에 나타나요.", "Gumawa ng sariling page, gaya ng listahan ng supplier, packing checklist o page ng ideya. Lalabas ito sa menu mo.", "Создавайте свои страницы: список поставщиков, чек-лист сборов или страницу идей. Они появятся в меню.", "仕入れ先のリスト、持ち物チェックリスト、アイデアのページなど、自分のページを作れます。メニューに表示されます。", "Crie suas páginas, como uma lista de fornecedores, um checklist de malas ou uma página de ideias. Elas aparecem no seu menu.", "Erstelle eigene Seiten, z. B. eine Lieferantenliste, eine Packliste oder eine Ideenseite. Sie erscheinen in deinem Menü.", "Crea pagine tue, come un elenco di fornitori, una lista da spuntare o una pagina di idee. Compaiono nel menu.", "Buat halaman sendiri, seperti daftar pemasok, daftar barang bawaan, atau halaman ide. Akan muncul di menu.", "Створюйте власні сторінки: список постачальників, чекліст речей чи сторінку ідей. Вони з'являться в меню.", "अपने पेज बनाएँ, जैसे सप्लायरों की सूची, पैकिंग चेकलिस्ट या आइडिया का पेज। ये आपके मेन्यू में दिखेंगे।"],
+  "No pages yet.": ["Todavía no hay páginas.", "Pas encore de pages.", "还没有页面。", "Chưa có trang nào.", "아직 페이지가 없어요.", "Wala pang page.", "Страниц пока нет.", "まだページがありません。", "Nenhuma página ainda.", "Noch keine Seiten.", "Ancora nessuna pagina.", "Belum ada halaman.", "Сторінок поки немає.", "अभी कोई पेज नहीं।"],
+  "Add a page": ["Agregar una página", "Ajouter une page", "添加页面", "Thêm trang", "페이지 추가", "Magdagdag ng page", "Добавить страницу", "ページを追加", "Adicionar página", "Seite hinzufügen", "Aggiungi una pagina", "Tambah halaman", "Додати сторінку", "पेज जोड़ें"],
+  "Rename the steps, or add your own between In progress and Done, like Deposit paid or Ready for pickup.": ["Cambia el nombre de los pasos o agrega los tuyos entre En proceso y Hecho, como Anticipo pagado o Listo para recoger.", "Renommez les étapes ou ajoutez les vôtres entre En cours et Terminé, comme Acompte payé ou Prêt à récupérer.", "重命名步骤，或在“进行中”和“完成”之间加上你自己的，比如“已付定金”或“可以取货”。", "Đổi tên các bước, hoặc thêm bước riêng giữa Đang làm và Xong, như Đã đặt cọc hay Sẵn sàng lấy.", "단계 이름을 바꾸거나, 진행 중과 완료 사이에 ‘선금 받음’, ‘픽업 준비’ 같은 단계를 추가하세요.", "Palitan ang pangalan ng mga hakbang, o magdagdag sa pagitan ng In progress at Done, gaya ng Bayad na ang deposit o Handa nang kunin.", "Переименуйте шаги или добавьте свои между «В работе» и «Готово», например «Предоплата внесена» или «Можно забирать».", "ステップの名前を変えたり、「進行中」と「完了」の間に「前金済み」「受け取り準備OK」などを追加できます。", "Renomeie as etapas ou adicione as suas entre Em andamento e Pronto, como Sinal pago ou Pronto para retirar.", "Benenne die Schritte um oder füge eigene zwischen In Arbeit und Fertig hinzu, z. B. Anzahlung bezahlt oder Abholbereit.", "Rinomina i passaggi o aggiungi i tuoi tra In corso e Fatto, come Acconto pagato o Pronto per il ritiro.", "Ganti nama langkah, atau tambah langkah sendiri di antara Sedang dikerjakan dan Selesai, seperti DP dibayar atau Siap diambil.", "Перейменуйте кроки або додайте свої між «У роботі» та «Готово», як-от «Передоплату внесено» чи «Можна забирати».", "चरणों के नाम बदलें, या ‘चल रहा है’ और ‘पूरा’ के बीच अपने जोड़ें, जैसे ‘एडवांस मिला’ या ‘लेने के लिए तैयार’।"],
+  "Add a status": ["Agregar un estado", "Ajouter un statut", "添加状态", "Thêm trạng thái", "상태 추가", "Magdagdag ng status", "Добавить статус", "ステータスを追加", "Adicionar status", "Status hinzufügen", "Aggiungi uno stato", "Tambah status", "Додати статус", "स्थिति जोड़ें"],
+  "Status name": ["Nombre del estado", "Nom du statut", "状态名称", "Tên trạng thái", "상태 이름", "Pangalan ng status", "Название статуса", "ステータス名", "Nome do status", "Name des Status", "Nome dello stato", "Nama status", "Назва статусу", "स्थिति का नाम"],
+  "Pick up to 4 numbers to see at the top of My Day.": ["Elige hasta 4 números para ver arriba en Mi día.", "Choisissez jusqu'à 4 chiffres à afficher en haut de Ma journée.", "最多选 4 个数字显示在“我的一天”顶部。", "Chọn tối đa 4 con số hiện ở đầu Hôm nay.", "‘나의 하루’ 위에 보일 숫자를 4개까지 고르세요.", "Pumili ng hanggang 4 na numero sa itaas ng Aking Araw.", "Выберите до 4 цифр вверху «Моего дня».", "「今日」の上に出す数字を4つまで選んでください。", "Escolha até 4 números para ver no topo do Meu dia.", "Wähle bis zu 4 Zahlen für oben auf „Mein Tag“.", "Scegli fino a 4 numeri da vedere in cima alla Mia giornata.", "Pilih hingga 4 angka di atas Hari Ini.", "Виберіть до 4 цифр угорі «Мого дня».", "‘मेरा दिन’ में ऊपर दिखाने के लिए 4 तक नंबर चुनें।"],
+  "Pick at least one.": ["Elige al menos uno.", "Choisissez-en au moins un.", "至少选一个。", "Chọn ít nhất một.", "하나 이상 고르세요.", "Pumili ng kahit isa.", "Выберите хотя бы одно.", "1つ以上選んでください。", "Escolha pelo menos um.", "Wähle mindestens eine.", "Scegline almeno uno.", "Pilih minimal satu.", "Виберіть хоча б одне.", "कम से कम एक चुनें।"],
+  "Tasks for today": ["Pendientes de hoy", "Tâches du jour", "今天的任务", "Việc hôm nay", "오늘 할 일", "Mga gawain ngayon", "Задачи на сегодня", "今日のタスク", "Tarefas de hoje", "Aufgaben für heute", "Attività di oggi", "Tugas hari ini", "Завдання на сьогодні", "आज के काम"],
+  "Paid to you this month": ["Te pagaron este mes", "Payé ce mois-ci", "本月收入", "Tiền nhận tháng này", "이번 달 받은 돈", "Ibinayad sa iyo ngayong buwan", "Получено в этом месяце", "今月の入金", "Recebido este mês", "Diesen Monat erhalten", "Incassato questo mese", "Diterima bulan ini", "Отримано цього місяця", "इस महीने मिला पैसा"],
+  "Things to buy": ["Cosas por comprar", "Choses à acheter", "要买的东西", "Đồ cần mua", "살 것", "Mga bibilhin", "Что купить", "買うもの", "Coisas para comprar", "Einkaufsliste", "Cose da comprare", "Yang perlu dibeli", "Що купити", "ख़रीदने की चीज़ें"],
+  "People to book again": ["Personas por volver a agendar", "Personnes à reprogrammer", "该再预约的人", "Người cần hẹn lại", "다시 예약할 사람", "Mga dapat i-book ulit", "Кого записать снова", "次の予約が必要な人", "Pessoas para agendar de novo", "Leute für neuen Termin", "Persone da riprenotare", "Orang yang perlu dipesan lagi", "Кого записати знову", "फिर से बुक करने वाले लोग"],
+  "This week": ["Esta semana", "Cette semaine", "本周", "Tuần này", "이번 주", "Ngayong linggo", "На этой неделе", "今週", "Esta semana", "Diese Woche", "Questa settimana", "Minggu ini", "Цього тижня", "इस हफ़्ते"],
+  "My Day reminds you about people who haven't booked in a while.": ["Mi día te recuerda a las personas que no han agendado en un tiempo.", "Ma journée vous rappelle les personnes qui n'ont pas réservé depuis un moment.", "“我的一天”会提醒你很久没预约的人。", "Hôm nay sẽ nhắc bạn những người lâu rồi chưa đặt hẹn.", "‘나의 하루’가 한동안 예약 안 한 사람을 알려줘요.", "Ipinapaalala ng Aking Araw ang mga matagal nang hindi nagbu-book.", "«Мой день» напомнит о тех, кто давно не записывался.", "「今日」で、しばらく予約していない人をお知らせします。", "O Meu dia lembra você das pessoas que não agendam há um tempo.", "„Mein Tag“ erinnert dich an Leute, die länger nicht gebucht haben.", "La Mia giornata ti ricorda chi non prenota da un po'.", "Hari Ini mengingatkanmu soal orang yang sudah lama tidak memesan.", "«Мій день» нагадає про тих, хто давно не записувався.", "‘मेरा दिन’ उन लोगों की याद दिलाता है जिन्होंने काफ़ी समय से बुक नहीं किया।"],
+  "Remind me after": ["Recordarme después de", "Me rappeler après", "多久后提醒我", "Nhắc tôi sau", "알림 시점", "Ipaalala sa akin pagkatapos ng", "Напомнить через", "リマインドまでの期間", "Lembrar depois de", "Erinnern nach", "Ricordamelo dopo", "Ingatkan setelah", "Нагадати через", "इतने समय बाद याद दिलाएँ"],
+  "Never (turn off)": ["Nunca (apagar)", "Jamais (désactiver)", "从不（关闭）", "Không bao giờ (tắt)", "안 함 (끄기)", "Hindi kailanman (i-off)", "Никогда (выключить)", "しない（オフ）", "Nunca (desligar)", "Nie (ausschalten)", "Mai (disattiva)", "Tidak pernah (matikan)", "Ніколи (вимкнути)", "कभी नहीं (बंद करें)"],
+  "{n} week": ["{n} semana", "{n} semaine", "{n}周", "{n} tuần", "{n}주", "{n} linggo", "{n} неделя", "{n}週間", "{n} semana", "{n} Woche", "{n} settimana", "{n} minggu", "{n} тиждень", "{n} हफ़्ता"],
+  "{n} weeks": ["{n} semanas", "{n} semaines", "{n}周", "{n} tuần", "{n}주", "{n} linggo", "{n} нед.", "{n}週間", "{n} semanas", "{n} Wochen", "{n} settimane", "{n} minggu", "{n} тиж.", "{n} हफ़्ते"],
+  "late": ["atrasados", "en retard", "逾期", "trễ hạn", "지연", "huli na", "просрочено", "遅れ", "atrasados", "verspätet", "in ritardo", "terlambat", "прострочено", "देर से"],
+  "{o} this week": ["{o} esta semana", "{o} cette semaine", "本周的{o}", "{o} tuần này", "이번 주 {o}", "{o} ngayong linggo", "{o} на этой неделе", "今週の{o}", "{o} esta semana", "{o} diese Woche", "{o} questa settimana", "{o} minggu ini", "{o} цього тижня", "इस हफ़्ते के {o}"],
+  "sticky notes": ["notas adhesivas", "notes", "便利贴", "ghi chú dán", "스티커 메모", "sticky note", "заметки", "付箋", "notas adesivas", "Notizzettel", "post-it", "catatan tempel", "нотатки", "स्टिकी नोट्स"],
+  "Edit page": ["Editar página", "Modifier la page", "编辑页面", "Sửa trang", "페이지 편집", "I-edit ang page", "Изменить страницу", "ページを編集", "Editar página", "Seite bearbeiten", "Modifica pagina", "Ubah halaman", "Змінити сторінку", "पेज बदलें"],
+  "Page name": ["Nombre de la página", "Nom de la page", "页面名称", "Tên trang", "페이지 이름", "Pangalan ng page", "Название страницы", "ページ名", "Nome da página", "Name der Seite", "Nome della pagina", "Nama halaman", "Назва сторінки", "पेज का नाम"],
+  "Vendors": ["Proveedores", "Fournisseurs", "供应商", "Nhà cung cấp", "거래처", "Mga supplier", "Поставщики", "仕入れ先", "Fornecedores", "Lieferanten", "Fornitori", "Pemasok", "Постачальники", "सप्लायर"],
+  "What kind of page?": ["¿Qué tipo de página?", "Quel type de page ?", "什么类型的页面？", "Loại trang nào?", "어떤 페이지인가요?", "Anong klaseng page?", "Какая это страница?", "どんなページ？", "Que tipo de página?", "Was für eine Seite?", "Che tipo di pagina?", "Jenis halaman apa?", "Яка це сторінка?", "किस तरह का पेज?"],
+  "Checklist": ["Lista para marcar", "Liste à cocher", "清单", "Danh sách kiểm", "체크리스트", "Checklist", "Чек-лист", "チェックリスト", "Checklist", "Checkliste", "Lista di controllo", "Daftar centang", "Чекліст", "चेकलिस्ट"],
+  "Things to check off, like a packing list": ["Cosas para marcar, como una lista para empacar", "Des choses à cocher, comme une liste de bagages", "可以打勾的事项，比如打包清单", "Những việc để đánh dấu, như danh sách đồ mang theo", "하나씩 체크하는 목록, 짐 싸기 목록처럼", "Mga ite-check, gaya ng packing list", "Что отмечать, например список вещей", "チェックしていくもの。持ち物リストなど", "Coisas para marcar, como uma lista de malas", "Zum Abhaken, z. B. eine Packliste", "Cose da spuntare, come una lista per la valigia", "Hal untuk dicentang, seperti daftar barang bawaan", "Що позначати, наприклад список речей", "टिक करने वाली चीज़ें, जैसे पैकिंग लिस्ट"],
+  "List with your own boxes": ["Lista con tus propias casillas", "Liste avec vos propres champs", "自定义栏目的列表", "Danh sách với ô của riêng bạn", "나만의 칸이 있는 목록", "Listahan na may sariling kahon", "Список со своими полями", "自分の項目があるリスト", "Lista com seus próprios campos", "Liste mit eigenen Feldern", "Elenco con campi tuoi", "Daftar dengan kolom sendiri", "Список із власними полями", "अपने खानों वाली सूची"],
+  "Like a list of vendors with a name, phone and notes": ["Como una lista de proveedores con nombre, teléfono y notas", "Comme une liste de fournisseurs avec nom, téléphone et notes", "比如带名字、电话和备注的供应商名单", "Như danh sách nhà cung cấp với tên, số điện thoại và ghi chú", "이름, 전화, 메모가 있는 거래처 목록처럼", "Gaya ng listahan ng supplier na may pangalan, telepono at tala", "Например, список поставщиков с именем, телефоном и заметками", "名前・電話・メモ付きの仕入れ先リストなど", "Como uma lista de fornecedores com nome, telefone e notas", "Z. B. eine Lieferantenliste mit Name, Telefon und Notizen", "Come un elenco di fornitori con nome, telefono e note", "Seperti daftar pemasok dengan nama, telepon, dan catatan", "Наприклад, список постачальників з ім'ям, телефоном і нотатками", "जैसे नाम, फ़ोन और नोट्स वाली सप्लायरों की सूची"],
+  "Writing page": ["Página para escribir", "Page d'écriture", "写作页面", "Trang viết", "글쓰기 페이지", "Page para sumulat", "Страница для записей", "書き込みページ", "Página para escrever", "Schreibseite", "Pagina per scrivere", "Halaman tulisan", "Сторінка для записів", "लिखने का पेज"],
+  "A big space to write, like ideas or a plan": ["Un espacio grande para escribir, como ideas o un plan", "Un grand espace pour écrire, comme des idées ou un plan", "写东西的大空间，比如灵感或计划", "Chỗ rộng để viết, như ý tưởng hay kế hoạch", "아이디어나 계획을 쓰는 넓은 공간", "Malaking espasyo para sumulat, gaya ng ideya o plano", "Большое место для записей: идеи или план", "アイデアや計画を書く広いスペース", "Um espaço grande para escrever, como ideias ou um plano", "Viel Platz zum Schreiben, z. B. Ideen oder ein Plan", "Uno spazio grande per scrivere, come idee o un piano", "Ruang luas untuk menulis, seperti ide atau rencana", "Велике місце для записів: ідеї чи план", "लिखने की बड़ी जगह, जैसे आइडिया या प्लान"],
+  "Boxes for each one": ["Casillas para cada uno", "Champs pour chacun", "每一项的栏目", "Các ô cho mỗi mục", "항목마다 들어갈 칸", "Mga kahon para sa bawat isa", "Поля для каждой записи", "それぞれの項目", "Campos para cada um", "Felder für jeden Eintrag", "Campi per ognuno", "Kolom untuk tiap entri", "Поля для кожного запису", "हर एक के खाने"],
+  "Icon": ["Ícono", "Icône", "图标", "Biểu tượng", "아이콘", "Icon", "Значок", "アイコン", "Ícone", "Symbol", "Icona", "Ikon", "Значок", "आइकन"],
+  "Delete this page": ["Borrar esta página", "Supprimer cette page", "删除这个页面", "Xóa trang này", "이 페이지 삭제", "I-delete ang page na ito", "Удалить страницу", "このページを削除", "Excluir esta página", "Diese Seite löschen", "Elimina questa pagina", "Hapus halaman ini", "Видалити сторінку", "यह पेज हटाएँ"],
+  "Add page": ["Agregar página", "Ajouter la page", "添加页面", "Thêm trang", "페이지 추가", "Idagdag ang page", "Добавить страницу", "ページを追加", "Adicionar página", "Seite hinzufügen", "Aggiungi pagina", "Tambah halaman", "Додати сторінку", "पेज जोड़ें"],
+  "Give your page a name.": ["Ponle un nombre a tu página.", "Donnez un nom à votre page.", "给你的页面起个名字。", "Đặt tên cho trang của bạn.", "페이지 이름을 정해 주세요.", "Bigyan ng pangalan ang page mo.", "Дайте странице название.", "ページに名前を付けてください。", "Dê um nome à sua página.", "Gib deiner Seite einen Namen.", "Dai un nome alla tua pagina.", "Beri nama halamanmu.", "Дайте сторінці назву.", "अपने पेज का नाम रखें।"],
+  "{n} thing": ["{n} cosa", "{n} élément", "{n}项", "{n} mục", "{n}개", "{n} bagay", "{n} запись", "{n}件", "{n} item", "{n} Eintrag", "{n} elemento", "{n} item", "{n} запис", "{n} चीज़"],
+  "{n} things": ["{n} cosas", "{n} éléments", "{n}项", "{n} mục", "{n}개", "{n} bagay", "Записей: {n}", "{n}件", "{n} itens", "{n} Einträge", "{n} elementi", "{n} item", "Записів: {n}", "{n} चीज़ें"],
+  "{n} left to do": ["Quedan {n}", "{n} à faire", "还剩{n}项", "Còn {n} việc", "{n}개 남음", "{n} pa ang natitira", "Осталось: {n}", "残り{n}件", "Faltam {n}", "Noch {n} offen", "{n} da fare", "Tersisa {n}", "Залишилось: {n}", "{n} बाक़ी"],
+  "Add something to the list": ["Agrega algo a la lista", "Ajoutez quelque chose à la liste", "在清单里加点东西", "Thêm vào danh sách", "목록에 추가하기", "Magdagdag sa listahan", "Добавьте пункт", "リストに追加", "Adicione algo à lista", "Etwas zur Liste hinzufügen", "Aggiungi qualcosa alla lista", "Tambahkan ke daftar", "Додайте пункт", "सूची में कुछ जोड़ें"],
+  "Nothing on this list yet.": ["Todavía no hay nada en esta lista.", "Rien sur cette liste pour l'instant.", "这个清单还是空的。", "Danh sách này chưa có gì.", "아직 목록이 비어 있어요.", "Wala pang laman ang listahang ito.", "В списке пока пусто.", "リストはまだ空です。", "Nada nesta lista ainda.", "Noch nichts auf dieser Liste.", "Ancora niente in questa lista.", "Daftar ini masih kosong.", "У списку поки порожньо.", "इस सूची में अभी कुछ नहीं है।"],
+  "Cleared": ["Borrado", "Effacé", "已清除", "Đã xóa", "지웠어요", "Na-clear", "Очищено", "消しました", "Limpo", "Entfernt", "Cancellati", "Dibersihkan", "Очищено", "हटा दिया"],
+  "Deleted": ["Borrado", "Supprimé", "已删除", "Đã xóa", "삭제했어요", "Na-delete", "Удалено", "削除しました", "Excluído", "Gelöscht", "Eliminato", "Dihapus", "Видалено", "हटा दिया"],
+  "Add one": ["Agregar uno", "Ajouter", "添加一项", "Thêm mục", "추가하기", "Magdagdag", "Добавить", "追加", "Adicionar", "Hinzufügen", "Aggiungi", "Tambah", "Додати", "जोड़ें"],
+  "Nothing here yet. Click Add one to start.": ["Todavía no hay nada. Haz clic en Agregar uno para empezar.", "Rien pour l'instant. Cliquez sur Ajouter pour commencer.", "这里还没有内容。点“添加一项”开始吧。", "Chưa có gì. Bấm Thêm mục để bắt đầu.", "아직 비어 있어요. 추가하기를 눌러 시작하세요.", "Wala pa rito. I-click ang Magdagdag para magsimula.", "Пока пусто. Нажмите «Добавить», чтобы начать.", "まだ何もありません。「追加」で始めましょう。", "Nada aqui ainda. Clique em Adicionar para começar.", "Noch leer. Klicke auf Hinzufügen, um zu starten.", "Ancora vuoto. Clicca Aggiungi per iniziare.", "Masih kosong. Klik Tambah untuk mulai.", "Поки порожньо. Натисніть «Додати», щоб почати.", "अभी यहाँ कुछ नहीं है। शुरू करने के लिए ‘जोड़ें’ दबाएँ।"],
+  "Nothing matches your search.": ["Nada coincide con tu búsqueda.", "Aucun résultat pour votre recherche.", "没有符合搜索的内容。", "Không có kết quả phù hợp.", "검색 결과가 없어요.", "Walang tumugma sa hinanap mo.", "Ничего не найдено.", "該当するものがありません。", "Nada corresponde à sua busca.", "Nichts passt zu deiner Suche.", "Nessun risultato.", "Tidak ada yang cocok.", "Нічого не знайдено.", "आपकी खोज से कुछ नहीं मिला।"],
+  "Fill in at least one box.": ["Llena al menos una casilla.", "Remplissez au moins un champ.", "至少填一个栏目。", "Điền ít nhất một ô.", "칸을 하나 이상 채워 주세요.", "Punan ang kahit isang kahon.", "Заполните хотя бы одно поле.", "1つ以上の項目を入力してください。", "Preencha pelo menos um campo.", "Fülle mindestens ein Feld aus.", "Compila almeno un campo.", "Isi minimal satu kolom.", "Заповніть хоча б одне поле.", "कम से कम एक खाना भरें।"],
+  "Start writing...": ["Empieza a escribir...", "Commencez à écrire...", "开始写吧...", "Bắt đầu viết...", "쓰기 시작...", "Magsimulang sumulat...", "Начните писать...", "書き始めましょう...", "Comece a escrever...", "Fang an zu schreiben...", "Inizia a scrivere...", "Mulai menulis...", "Почніть писати...", "लिखना शुरू करें..."],
+  "Search the web": ["Buscar en internet", "Chercher sur le web", "在网上搜索", "Tìm trên mạng", "웹에서 검색", "Hanapin sa web", "Искать в интернете", "ウェブで検索", "Pesquisar na internet", "Im Web suchen", "Cerca sul web", "Cari di web", "Шукати в інтернеті", "वेब पर खोजें"],
+  "Web results": ["Resultados de la web", "Résultats web", "网页结果", "Kết quả trên web", "웹 결과", "Mga resulta sa web", "Результаты из интернета", "ウェブの結果", "Resultados da web", "Web-Ergebnisse", "Risultati web", "Hasil web", "Результати з інтернету", "वेब के नतीजे"],
+  "Places near you": ["Lugares cerca de ti", "Lieux près de chez vous", "你附近的地点", "Địa điểm gần bạn", "내 근처 장소", "Mga lugar malapit sa iyo", "Места рядом", "近くの場所", "Lugares perto de você", "Orte in deiner Nähe", "Luoghi vicino a te", "Tempat di dekatmu", "Місця поруч", "आपके आस-पास की जगहें"],
+  "How-to videos": ["Videos de cómo hacerlo", "Vidéos tutoriels", "教程视频", "Video hướng dẫn", "따라하기 영상", "Mga how-to video", "Видео-инструкции", "やり方の動画", "Vídeos de como fazer", "Anleitungsvideos", "Video tutorial", "Video cara membuat", "Відеоінструкції", "कैसे करें वाले वीडियो"],
+  "Ideas and pictures": ["Ideas e imágenes", "Idées et images", "灵感和图片", "Ý tưởng và hình ảnh", "아이디어와 사진", "Mga ideya at larawan", "Идеи и картинки", "アイデアと写真", "Ideias e imagens", "Ideen und Bilder", "Idee e immagini", "Ide dan gambar", "Ідеї та картинки", "आइडिया और तस्वीरें"],
+  "Tasks": ["Pendientes", "Tâches", "任务", "Việc cần làm", "할 일", "Mga gawain", "Задачи", "タスク", "Tarefas", "Aufgaben", "Attività", "Tugas", "Завдання", "काम"],
+  "Events": ["Eventos", "Événements", "活动", "Sự kiện", "일정", "Mga event", "События", "イベント", "Eventos", "Termine", "Eventi", "Acara", "Події", "इवेंट"],
+  "Try searching for": ["Prueba buscar", "Essayez de chercher", "试试搜索", "Thử tìm", "이렇게 검색해 보세요", "Subukang hanapin", "Попробуйте найти", "検索してみよう", "Tente buscar", "Probier mal", "Prova a cercare", "Coba cari", "Спробуйте знайти", "यह खोजकर देखें"],
+  "Show all ({n})": ["Ver todos ({n})", "Tout voir ({n})", "查看全部（{n}）", "Xem tất cả ({n})", "모두 보기 ({n})", "Ipakita lahat ({n})", "Показать все ({n})", "すべて表示（{n}）", "Ver todos ({n})", "Alle anzeigen ({n})", "Mostra tutti ({n})", "Lihat semua ({n})", "Показати всі ({n})", "सभी देखें ({n})"],
+  "Use Search to find local markets and events where you can sell.": ["Usa Buscar para encontrar mercados y eventos locales donde vender.", "Utilisez Recherche pour trouver des marchés et événements locaux où vendre.", "用“搜索”找附近可以摆摊的市集和活动。", "Dùng Tìm kiếm để tìm chợ và sự kiện gần bạn để bán hàng.", "검색으로 근처에서 팔 수 있는 마켓과 행사를 찾아보세요.", "Gamitin ang Search para makahanap ng market at event na puwedeng bentahan.", "Через «Поиск» найдите местные ярмарки и события, где можно продавать.", "「検索」で近くのマーケットやイベントを見つけましょう。", "Use a Busca para achar feiras e eventos locais onde vender.", "Finde mit der Suche Märkte und Events in deiner Nähe zum Verkaufen.", "Usa Cerca per trovare mercati ed eventi locali dove vendere.", "Pakai Cari untuk menemukan pasar dan acara lokal tempat berjualan.", "Через «Пошук» знайдіть місцеві ярмарки й події, де можна продавати.", "‘खोजें’ से आस-पास के बाज़ार और इवेंट ढूँढें जहाँ आप बेच सकें।"],
   // What each kind of business buys
   "bottles": ["botellas", "flacons", "瓶", "chai", "병", "bote", "бутылки", "本", "frascos", "Flaschen", "flaconi", "botol", "пляшки", "बोतलें"],
   "gal": ["galones", "gallons", "加仑", "gallon", "갤런", "galon", "галлоны", "ガロン", "galões", "Gallonen", "galloni", "galon", "галони", "गैलन"],
@@ -2094,7 +2181,8 @@ let showSavedMessage = false; // shows "Changes saved" once on the Settings page
 
 // Shows the main app
 function openApp() {
-  if (!usesOrders()) orders = []; // no jobs anywhere for this kind of business
+  // No jobs anywhere for this kind of business (unless they turned the page back on)
+  if (autoHidden().includes('orders') && !((custom().menu || {}).shown || []).includes('orders')) orders = [];
   applyLook();
   document.getElementById('setup-form').innerHTML = ''; // setup is done, clear it out
   document.getElementById('setup').hidden = true;
@@ -2118,6 +2206,10 @@ function showSidebarAvatar() {
 // =========================================
 
 function findSection(id) {
+  if (String(id).indexOf('page-') === 0) {
+    const p = findUserPage(id);
+    return p ? userPageSection(p) : undefined;
+  }
   return SECTIONS.find(function (s) { return s.id === id; });
 }
 
@@ -2128,6 +2220,7 @@ function makeMenuButton(section) {
   if (section.id === currentSection) button.classList.add('active');
   button.innerHTML = '<span class="nav-icon">' + icon(section.icon) + '</span><span class="nav-text"></span>';
   button.querySelector('.nav-text').textContent = say(section.label);
+  if (section.own) button.querySelector('.nav-text').dataset.ownWords = '';
 
   button.addEventListener('click', function () {
     currentSection = section.id;
@@ -2231,14 +2324,11 @@ function goalFits(goal) {
   return !goal.needs || !hiddenSections().includes(goal.needs);
 }
 
+// Pages not in the menu: the ones this kind of business doesn't use, changed by what the owner picked in Your menu
 function hiddenSections() {
-  const type = realType();
-  const hidden = NO_ORDERS_TAB.includes(type) ? ['orders'] : [];
-  if (NO_PRINTABLES.includes(type)) hidden.push('printables');
-  if ((KITS[type] || {}).noShopping) hidden.push('checklist');
-  // Their own kind of business that we couldn't match: only keep it if they sell things
-  if (type === 'other' && !SELLS_THINGS.test((profile.otherType || '').toLowerCase())) hidden.push('printables');
-  return hidden;
+  const menu = custom().menu || {};
+  const shown = menu.shown || [];
+  return autoHidden().filter(function (id) { return !shown.includes(id); }).concat(menu.hidden || []);
 }
 
 // False for businesses without jobs or orders at all (cleaning, yard)
@@ -2248,6 +2338,13 @@ function usesOrders() {
 
 function menuGroups() {
   const hidden = hiddenSections();
+  // Their own order, from Your menu: one list under My Day
+  const menu = custom().menu;
+  if (menu && Array.isArray(menu.order)) {
+    const ids = menu.order.filter(function (id) { return findSection(id) && !hidden.includes(id); });
+    allMenuIds().forEach(function (id) { if (!menu.order.includes(id) && !hidden.includes(id)) ids.push(id); }); // new pages go at the end
+    return [MENU_GROUPS[0], { label: '', items: ids }];
+  }
   const focus = focusSections().filter(function (id) { return !hidden.includes(id); });
   const groups = [MENU_GROUPS[0]];
   if (focus.length > 0) groups.push({ label: 'Picked for you', items: focus });
@@ -2257,6 +2354,9 @@ function menuGroups() {
     const items = group.items.filter(function (id) { return !focus.includes(id) && !hidden.includes(id); });
     if (items.length > 0) groups.push({ label: group.label, items: items });
   });
+  // Their own pages
+  const mine = userPages.map(function (p) { return 'page-' + p.id; }).filter(function (id) { return !hidden.includes(id); });
+  if (mine.length) groups.push({ label: 'Your pages', items: mine });
   return groups;
 }
 
@@ -2282,6 +2382,13 @@ function showMenu() {
     });
   });
 
+  // A quick way to make a page of their own
+  const addPage = document.createElement('button');
+  addPage.className = 'nav-add-page';
+  addPage.innerHTML = icon('plus') + '<span>Add a page</span>';
+  addPage.addEventListener('click', function () { editUserPage(null); });
+  menu.appendChild(addPage);
+
   const bottom = document.createElement('div');
   bottom.className = 'nav-bottom';
   bottom.appendChild(makeMenuButton(findSection('settings')));
@@ -2305,6 +2412,11 @@ function showPage() {
   }
   // A page this business doesn't use goes back to My Day
   if (currentSection === 'printables' && hiddenSections().includes('printables')) {
+    currentSection = 'myday';
+    showMenu();
+  }
+  // A page that was deleted (or hidden from the menu) goes back to My Day
+  if (!findSection(currentSection) || (hiddenSections().includes(currentSection) && currentSection !== 'orders')) {
     currentSection = 'myday';
     showMenu();
   }
@@ -2366,6 +2478,7 @@ function showPage() {
   if (section.id === 'todo') showTodo(page);
   if (section.id === 'notes') showNotesPage(page);
   if (section.id === 'settings') showSettings(page);
+  if (section.own) showUserPage(page, findUserPage(section.id));
   updateHelper();
 }
 
@@ -3220,15 +3333,11 @@ let orders = loadOrders();
 let orderView = null;      // null = the list, 'new' = adding, or the id of the order being edited
 let orderFilter = 'open';  // which orders the list shows
 
-const STATUSES = [
-  { id: 'new', label: 'New', color: 'butter' },
-  { id: 'progress', label: 'In progress', color: 'sky' },
-  { id: 'done', label: 'Done', color: 'mint' },
-  { id: 'paid', label: 'Paid', color: 'lilac' },
-];
+// The steps an order goes through: see allStatuses() (they can rename them and add their own)
 
 function findStatus(id) {
-  return STATUSES.find(function (st) { return st.id === id; });
+  const all = allStatuses();
+  return all.find(function (st) { return st.id === id; }) || all[1];
 }
 
 function loadOrders() {
@@ -3350,8 +3459,9 @@ function urgency(order) {
   return 'later';
 }
 
+// Every step before Done is open (their own steps too)
 function isOpen(order) {
-  return order.status === 'new' || order.status === 'progress';
+  return order.status !== 'done' && order.status !== 'paid';
 }
 
 // Open orders first (soonest due at the top), then finished ones
@@ -3416,8 +3526,8 @@ function showOrders(page) {
   const filters = [
     { id: 'open', label: 'Open', test: isOpen },
     { id: 'all', label: 'All', test: function () { return true; } },
-  ].concat(STATUSES.map(function (st) {
-    return { id: st.id, label: st.label, test: function (o) { return o.status === st.id; } };
+  ].concat(allStatuses().map(function (st) {
+    return { id: st.id, label: st.label, own: st.own, test: function (o) { return o.status === st.id; } };
   }));
 
   const tabs = document.createElement('div');
@@ -3430,6 +3540,7 @@ function showOrders(page) {
     tab.setAttribute('aria-selected', f.id === orderFilter ? 'true' : 'false');
     tab.innerHTML = '<span></span><b></b>';
     tab.querySelector('span').textContent = f.label;
+    if (f.own) tab.querySelector('span').dataset.ownWords = '';
     tab.querySelector('b').textContent = orders.filter(f.test).length;
     tab.addEventListener('click', function () {
       orderFilter = f.id;
@@ -3521,11 +3632,12 @@ function orderRow(order) {
 
   // Change the status right from the list
   const pick = row.querySelector('.status-pick');
-  STATUSES.forEach(function (st) {
+  allStatuses().forEach(function (st) {
     const option = document.createElement('option');
     option.value = st.id;
     option.textContent = st.label;
     option.dataset.color = st.color;
+    if (st.own) option.dataset.ownWords = '';
     pick.appendChild(option);
   });
   pick.value = order.status;
@@ -3711,10 +3823,11 @@ function showOrderForm(page) {
   const statusBox = page.querySelector('#o-status');
   function drawStatus() {
     statusBox.innerHTML = '';
-    STATUSES.forEach(function (st) {
+    allStatuses().forEach(function (st) {
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'status-btn ' + st.color;
+      if (st.own) b.dataset.ownWords = '';
       b.setAttribute('role', 'radio');
       b.setAttribute('aria-checked', st.id === status ? 'true' : 'false');
       b.textContent = st.label;
@@ -4746,7 +4859,7 @@ function aboutCard(p) {
   const grid = box.querySelector('.about-grid');
   const facts = personFacts(p.key);
   let timer = null;
-  kit().about.forEach(function (label, i) {
+  aboutFields().forEach(function (label, i) {
     const cell = document.createElement('div');
     cell.innerHTML = '<label class="label"></label><input class="input" autocomplete="off">';
     const id = 'about-' + i;
@@ -4772,7 +4885,7 @@ function aboutCard(p) {
 // The filled-in facts as little chips (for the order form), or null if there are none
 function factChips(key) {
   const facts = personFacts(key);
-  const labels = kit().about.filter(function (label) { return facts[label]; });
+  const labels = aboutFields().filter(function (label) { return facts[label]; });
   if (!labels.length) return null;
   const row = document.createElement('div');
   row.className = 'about-chips';
@@ -4795,7 +4908,7 @@ function loadRebookSkip() {
 
 // People whose last visit was a while ago and who have nothing booked
 function dueToRebook() {
-  const days = kit().rebook;
+  const days = rebookDays();
   if (!days || !usesOrders()) return [];
   const today = todayText();
   const skip = loadRebookSkip();
@@ -6294,7 +6407,7 @@ function taskRow(t, showDate) {
     dueLine.className = 'task-due' + (!t.done && daysUntil(t.due) < 0 ? ' late' : '');
     const days = daysUntil(t.due);
     dueLine.textContent = t.done ? niceDate(t.due)
-      : days < 0 ? 'Late, was ' + niceDate(t.due) : days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : niceDate(t.due);
+      : days === 0 ? 'Due today' : days === 1 ? 'Due tomorrow' : 'Due ' + niceDate(t.due); // late ones are still red
     meta.appendChild(dueLine);
   }
   if (t.order) {
@@ -6860,7 +6973,7 @@ function editSupply(s, done) {
       <input class="input" id="sw-name" autocomplete="off" placeholder="${example[0]}">
       <label class="label" for="sw-unit">You measure it in</label>
       <input class="input" id="sw-unit" autocomplete="off" placeholder="${example[2]}">
-      <div class="unit-chips">${supplyKit().units.map(function (u) { return '<button type="button" class="idea-btn" data-unit="' + u + '">' + u + '</button>'; }).join('')}</div>
+      <div class="unit-chips">${unitButtons().map(function (u) { return '<button type="button" class="idea-btn" data-unit="' + u + '">' + u + '</button>'; }).join('')}</div>
       <p class="label">When you buy it</p>
       <div class="buy-line">
         <span>You get</span>
@@ -7431,7 +7544,7 @@ function openPictureImport() {
       units = document.createElement('datalist');
       units.id = 'import-units';
       // The business's own units first, then the rest (no repeats)
-      supplyKit().units.concat(UNIT_IDEAS, ['pack', 'bags', 'boxes', 'rolls', 'gal', 'bottles'])
+      unitButtons().concat(UNIT_IDEAS, ['pack', 'bags', 'boxes', 'rolls', 'gal', 'bottles'])
         .filter(function (u, i, all) { return all.indexOf(u) === i; }).forEach(function (u) {
         const o = document.createElement('option');
         o.value = u;
@@ -7989,15 +8102,20 @@ function showPrintables(page) {
 // One search box for everything in the app, plus quick links to find places near you.
 // =========================================
 let finderText = '';
+let finderFilter = 'all'; // 'all', or one kind of result, like 'customers'
 
 function showFinder(page) {
   const w = words();
+  const hidden = hiddenSections();
   page.innerHTML = `
-    <header class="page-head"><h1>Finder</h1><p>Search everything in your app, or find places near you</p></header>
-    <div class="finder-box">
-      ${icon('search')}
-      <input class="task-input" id="finder-input" type="search" autocomplete="off" aria-label="Search">
-    </div>
+    <header class="page-head"><h1>Search</h1><p>Search everything in your app, or find places near you</p></header>
+    <section class="search-hero">
+      <div class="finder-box">
+        ${icon('search')}
+        <input class="task-input" id="finder-input" type="search" autocomplete="off" aria-label="Search">
+      </div>
+      <div class="search-filters" role="tablist" aria-label="Search"></div>
+    </section>
     <div id="finder-results"></div>
     <section class="near-box">
       <h2>Find near you</h2>
@@ -8008,13 +8126,8 @@ function showFinder(page) {
   input.placeholder = 'What are you looking for?'; // the same for every business
   input.value = finderText;
 
-  const near = [
-    // The same for every kind of business
-    { label: w.supplies + ' stores', q: w.supplies.toLowerCase() + ' store near me', color: 'peach' },
-    { label: 'Print shops', q: 'print shop for business cards and flyers near me', color: 'lilac' },
-    { label: 'Business events', q: 'small business networking events near me', color: 'mint' },
-    { label: 'Small business help', q: 'small business development center near me', color: 'sky' },
-  ];
+  // The same for every kind of business, unless they made their own list in Settings
+  const near = nearList(w);
   near.forEach(function (n) {
     const a = document.createElement('a');
     a.className = 'near-card ' + n.color;
@@ -8027,10 +8140,135 @@ function showFinder(page) {
     page.querySelector('#near-grid').appendChild(a);
   });
 
+  // Everything that can be searched, one kind at a time (only the kinds this business uses)
+  function kinds(q) {
+    function has() {
+      for (let i = 0; i < arguments.length; i++) if (String(arguments[i] || '').toLowerCase().includes(q)) return true;
+      return false;
+    }
+    const list = [];
+    if (usesOrders()) list.push({ id: 'orders', title: w.orders, color: 'sky', icon: 'receipt',
+      items: orders.filter(function (o) { return has(o.customer, o.item, o.notes, o.contact, detailChips(o).join(' ')); })
+        .sort(function (a, b) { return (isOpen(b) ? 1 : 0) - (isOpen(a) ? 1 : 0) || (b.due || '').localeCompare(a.due || ''); })
+        .map(function (o) {
+          const st = findStatus(o.status);
+          const late = urgency(o) === 'late';
+          return { main: o.customer + ': ' + o.item, sub: dueText(o) + (o.price ? ' · ' + money(o.price) : ''),
+            badge: late ? 'Late' : st.label, badgeColor: late ? 'pink' : st.color, go: function () { openOrderForm(o.id); } };
+        }) });
+    list.push({ id: 'customers', title: w.customers, color: 'pink', icon: 'users',
+      items: allCustomers().filter(function (p) { return has(p.name, p.contact, Object.values(personFacts(p.key)).join(' ')); })
+        .map(function (p) {
+          return { main: p.name, sub: p.contact || (usesOrders() ? p.orders.length + ' ' + (p.orders.length === 1 ? oneOrder() : w.orders.toLowerCase()) : ''),
+            initials: initialsOf(p.name), go: function () { customerView = p.key; goTo('customers'); } };
+        }) });
+    list.push({ id: 'products', title: w.products, color: 'peach', icon: 'box',
+      items: products.filter(function (p) { return has(p.name, p.steps, p.makes); })
+        .map(function (p) { return { main: p.name, sub: p.price ? money(p.price) : 'No price', go: function () { productView = p.id; productScale = 1; goTo('products'); } }; }) });
+    if (!hidden.includes('checklist')) list.push({ id: 'supplies', title: w.supplies, color: 'butter', icon: 'cart',
+      items: supplies.filter(function (s) { return has(s.name); })
+        .map(function (s) { return { main: s.name, sub: 'You have ' + niceNumber(s.have || 0) + ' ' + s.unit, go: function () { goTo('checklist'); } }; }) });
+    list.push({ id: 'tasks', title: 'Tasks', color: 'mint', icon: 'check',
+      items: tasks.filter(function (t) { return has(t.text); })
+        .map(function (t) { return { main: t.text, sub: t.due ? niceDate(t.due) : 'No date', badge: t.done ? 'Done' : '', badgeColor: 'mint', go: function () { goTo('todo'); } }; }) });
+    list.push({ id: 'events', title: 'Events', color: 'lilac', icon: 'calendar',
+      items: events.filter(function (e) { return has(e.title, e.where); })
+        .map(function (e) { return { main: e.title, sub: niceDate(e.date) + (e.where ? ' · ' + e.where : ''), go: function () { editEvent(e); } }; }) });
+    list.push({ id: 'notes', title: 'Sticky notes', color: 'butter', icon: 'note',
+      items: notes.filter(function (n) { const l = noteLink(n); return has(n.text, l && l.title); })
+        .map(function (n) {
+          const l = noteLink(n);
+          return { main: n.text.replace(/\s+/g, ' ').trim().slice(0, 90), sub: l ? l.title : n.date ? niceDate(n.date) : 'Sticky note', swatch: noteColor(n.color),
+            go: function () { noteSearch = input.value.trim(); goTo('notes'); setTimeout(function () { focusNoteNow(n); }, 50); } };
+        }) });
+    return list;
+  }
+
+  // Shows the matching part of a name in a highlight
+  function highlight(el, text, q) {
+    el.textContent = '';
+    const at = q ? text.toLowerCase().indexOf(q) : -1;
+    if (at < 0) { el.textContent = text; return; }
+    el.append(text.slice(0, at));
+    const mark = document.createElement('mark');
+    mark.textContent = text.slice(at, at + q.length);
+    el.append(mark, text.slice(at + q.length));
+  }
+
   const results = page.querySelector('#finder-results');
+  const filters = page.querySelector('.search-filters');
   const finderBox = page.querySelector('.finder-box');
   let lastFound = null; // what was showing, so results only animate in when they change
   let typingTimer = null;
+
+  // The chips under the search bar: All, then each kind, with how many match
+  function drawFilters(groups, q) {
+    filters.innerHTML = '';
+    const all = [{ id: 'all', title: 'All', count: groups.reduce(function (n, g) { return n + g.items.length; }, 0) }]
+      .concat(groups.map(function (g) { return { id: g.id, title: g.title, count: g.items.length, icon: g.icon, color: g.color }; }));
+    all.forEach(function (f) {
+      if (q && f.id !== 'all' && !f.count && finderFilter !== f.id) return; // hide kinds with nothing found
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'search-chip' + (f.color ? ' ' + f.color : '');
+      chip.setAttribute('role', 'tab');
+      chip.setAttribute('aria-selected', finderFilter === f.id ? 'true' : 'false');
+      chip.innerHTML = (f.icon ? icon(f.icon) : '') + '<span></span>' + (q ? '<b></b>' : '');
+      chip.querySelector('span').textContent = f.title;
+      if (q) chip.querySelector('b').textContent = f.count;
+      chip.addEventListener('click', function () { finderFilter = f.id; lastFound = null; search(); input.focus(); });
+      filters.appendChild(chip);
+    });
+  }
+
+  // Before you type: a few things you could search for
+  function drawIdeas() {
+    const ideas = [];
+    allCustomers().slice(0, 2).forEach(function (p) { ideas.push(p.name); });
+    products.slice(0, 2).forEach(function (p) { ideas.push(p.name); });
+    if (!hidden.includes('checklist') && supplies[0]) ideas.push(supplies[0].name);
+    if (!ideas.length) return;
+    const box = document.createElement('div');
+    box.className = 'search-ideas';
+    box.innerHTML = '<span>Try searching for</span>';
+    ideas.forEach(function (text) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'search-idea';
+      b.dataset.ownWords = '';
+      b.textContent = text;
+      b.addEventListener('click', function () { input.value = text; search(); input.focus(); });
+      box.appendChild(b);
+    });
+    results.appendChild(box);
+  }
+
+  // Searching outside the app: the same words on Google, Maps, YouTube and Pinterest (each opens in a new tab)
+  function webBox(text) {
+    const box = document.createElement('section');
+    box.className = 'web-box';
+    box.innerHTML = '<h2><span class="group-icon">' + icon('globe') + '</span><span>Search the web</span></h2><div class="web-grid"></div>';
+    [
+      { name: 'Google', sub: 'Web results', url: 'https://www.google.com/search?q=', color: 'sky' },
+      { name: 'Google Maps', sub: 'Places near you', url: 'https://www.google.com/maps/search/', color: 'mint' },
+      { name: 'YouTube', sub: 'How-to videos', url: 'https://www.youtube.com/results?search_query=', color: 'pink' },
+      { name: 'Pinterest', sub: 'Ideas and pictures', url: 'https://www.pinterest.com/search/pins/?q=', color: 'peach' },
+    ].forEach(function (site, i) {
+      const a = document.createElement('a');
+      a.className = 'web-card ' + site.color;
+      a.href = site.url + encodeURIComponent(text);
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.style.setProperty('--i', i);
+      a.innerHTML = '<span class="web-icon">' + icon('search') + '</span><span class="web-text"><b></b><span></span></span><span class="web-go">' + icon('popout') + '</span>';
+      a.querySelector('b').textContent = site.name;
+      a.querySelector('b').dataset.ownWords = '';
+      a.querySelector('.web-text span').textContent = site.sub;
+      box.querySelector('.web-grid').appendChild(a);
+    });
+    return box;
+  }
+
   function search() {
     finderText = input.value;
     // The search glass wiggles while you type
@@ -8039,63 +8277,77 @@ function showFinder(page) {
     typingTimer = setTimeout(function () { finderBox.classList.remove('typing'); }, 500);
     results.innerHTML = '';
     const q = input.value.trim().toLowerCase();
-    if (!q) return;
-    const groups = [];
+    const groups = kinds(q);
+    if (!groups.some(function (g) { return g.id === finderFilter; })) finderFilter = 'all';
+    drawFilters(q ? groups : groups, q);
+    if (!q) { lastFound = null; drawIdeas(); return; }
 
-    function has() {
-      for (let i = 0; i < arguments.length; i++) if (String(arguments[i] || '').toLowerCase().includes(q)) return true;
-      return false;
-    }
-    groups.push({ title: w.orders, color: 'sky', items: orders.filter(function (o) { return has(o.customer, o.item, o.notes, o.contact, detailChips(o).join(' ')); })
-      .map(function (o) { return { main: o.customer + ': ' + o.item, sub: dueText(o), go: function () { openOrderForm(o.id); } }; }) });
-    groups.push({ title: w.customers, color: 'pink', items: allCustomers().filter(function (p) { return has(p.name, p.contact); })
-      .map(function (p) { return { main: p.name, sub: p.orders.length + ' ' + (p.orders.length === 1 ? oneOrder() : w.orders.toLowerCase()), go: function () { customerView = p.key; goTo('customers'); } }; }) });
-    groups.push({ title: w.products, color: 'peach', items: products.filter(function (p) { return has(p.name, p.steps, p.makes); })
-      .map(function (p) { return { main: p.name, sub: p.price ? money(p.price) : '', go: function () { productView = p.id; productScale = 1; goTo('products'); } }; }) });
-    groups.push({ title: w.supplies, color: 'butter', items: supplies.filter(function (s) { return has(s.name); })
-      .map(function (s) { return { main: s.name, sub: 'You have ' + niceNumber(s.have || 0) + ' ' + s.unit, go: function () { goTo('checklist'); } }; }) });
-    groups.push({ title: 'Tasks', color: 'mint', items: tasks.filter(function (t) { return has(t.text); })
-      .map(function (t) { return { main: t.text, sub: t.done ? 'Done' : t.due ? niceDate(t.due) : 'No date', go: function () { goTo('todo'); } }; }) });
-    groups.push({ title: 'Sticky notes', color: 'lilac', items: notes.filter(function (n) { const l = noteLink(n); return has(n.text, l && l.title); })
-      .map(function (n) {
-        const l = noteLink(n);
-        return {
-          main: n.text.replace(/\s+/g, ' ').trim().slice(0, 90),
-          sub: l ? l.title : n.date ? niceDate(n.date) : 'Sticky note',
-          go: function () { noteSearch = input.value.trim(); goTo('notes'); setTimeout(function () { focusNoteNow(n); }, 50); },
-        };
-      }) });
-
-    const found = groups.filter(function (g) { return g.items.length; });
-    const now = found.map(function (g) { return g.title + g.items.length; }).join('|');
+    const found = groups.filter(function (g) { return g.items.length && (finderFilter === 'all' || g.id === finderFilter); });
+    const now = finderFilter + ':' + found.map(function (g) { return g.title + g.items.length; }).join('|');
     results.classList.toggle('still', now === lastFound);
     lastFound = now;
     if (!found.length) {
       results.innerHTML = '<p class="list-empty finder-none"></p>';
       results.firstChild.textContent = 'Nothing matches "' + input.value.trim() + '".';
+      results.appendChild(webBox(input.value.trim()));
       return;
     }
     found.forEach(function (g) {
       const section = document.createElement('section');
       section.className = 'finder-group ' + g.color;
-      section.innerHTML = '<h2><span class="group-dot"></span><span></span><b class="group-count"></b></h2><div class="finder-list"></div>';
+      section.style.setProperty('--g', results.children.length);
+      section.innerHTML = '<h2><span class="group-icon">' + icon(g.icon) + '</span><span></span><b class="group-count"></b></h2><div class="finder-list"></div>';
       section.querySelector('h2 span:nth-child(2)').textContent = g.title;
       section.querySelector('.group-count').textContent = g.items.length;
-      section.style.setProperty('--g', results.children.length);
-      g.items.slice(0, 8).forEach(function (item, i) {
+      const limit = finderFilter === 'all' ? 5 : 50;
+      g.items.slice(0, limit).forEach(function (item, i) {
         const b = document.createElement('button');
         b.className = 'finder-item';
         b.style.setProperty('--i', i);
-        b.innerHTML = '<b></b><span></span>';
-        b.querySelector('b').textContent = item.main;
-        b.querySelector('span').textContent = item.sub;
+        b.innerHTML = '<span class="fi-face"></span><span class="fi-text"><b data-own-words></b><span></span></span><span class="fi-badge" hidden></span>' + '<span class="fi-go">' + icon('chevron') + '</span>';
+        const face = b.querySelector('.fi-face');
+        if (item.initials) face.textContent = item.initials;
+        else if (item.swatch) { face.classList.add('swatch'); face.style.background = item.swatch; }
+        else face.innerHTML = icon(g.icon);
+        highlight(b.querySelector('.fi-text b'), item.main, q);
+        b.querySelector('.fi-text span').textContent = item.sub;
+        if (item.badge) {
+          const badge = b.querySelector('.fi-badge');
+          badge.hidden = false;
+          badge.className = 'fi-badge ' + (item.badgeColor || '');
+          badge.textContent = item.badge;
+        }
         b.addEventListener('click', item.go);
         section.querySelector('.finder-list').appendChild(b);
       });
+      // More than fit: a button to see them all
+      if (g.items.length > limit) {
+        const more = document.createElement('button');
+        more.type = 'button';
+        more.className = 'link-btn finder-more';
+        more.textContent = 'Show all (' + g.items.length + ')';
+        more.addEventListener('click', function () { finderFilter = g.id; lastFound = null; search(); });
+        section.appendChild(more);
+      }
       results.appendChild(section);
     });
+    results.appendChild(webBox(input.value.trim()));
   }
   input.addEventListener('input', search);
+  // Enter opens the first result, and the down arrow moves into the list
+  input.addEventListener('keydown', function (e) {
+    // (or, when nothing in the app matches, the Google search)
+    const first = results.querySelector('.finder-item') || results.querySelector('.web-card');
+    if (e.key === 'Enter' && first) { e.preventDefault(); first.click(); }
+    else if (e.key === 'ArrowDown' && first) { e.preventDefault(); first.focus(); }
+  });
+  results.addEventListener('keydown', function (e) {
+    const items = Array.from(results.querySelectorAll('.finder-item'));
+    const at = items.indexOf(document.activeElement);
+    if (at < 0) return;
+    if (e.key === 'ArrowDown' && items[at + 1]) { e.preventDefault(); items[at + 1].focus(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); (items[at - 1] || input).focus(); }
+  });
   search();
   input.focus();
 }
@@ -8150,18 +8402,28 @@ function showMyDay(page) {
 
   const tiles = document.createElement('div');
   tiles.className = 'day-tiles';
-  [
-    usesOrders()
-      ? { n: dueToday.length, label: (dueToday.length === 1 ? oneOrder() : w.orders.toLowerCase()) + ' due today', color: 'butter', go: 'calendar' }
-      : { n: events.filter(function (e) { return e.date === today; }).length, label: events.filter(function (e) { return e.date === today; }).length === 1 ? 'event today' : 'events today', color: 'butter', go: 'calendar' },
-    { n: todayTasks.length, label: todayTasks.length === 1 ? 'task for today' : 'tasks for today', color: 'sky', go: 'todo' },
-    { n: money(thisMonth.moneyIn), label: 'paid to you this month', color: 'mint', go: 'bookkeeping' },
-    hiddenSections().includes('checklist')
-      ? (kit().rebook
-        ? { n: dueToRebook().length, label: 'to book again', color: 'peach', go: 'customers' }
-        : { n: allCustomers().length, label: w.customers.toLowerCase(), color: 'peach', go: 'customers' })
-      : { n: toBuy, label: toBuy === 1 ? 'thing to buy' : 'things to buy', color: 'peach', go: 'checklist' },
-  ].forEach(function (t) {
+  // The four numbers at the top (they can pick their own in Settings)
+  const lateCount = late.length;
+  const thisWeek = orders.filter(function (o) { return isOpen(o) && daysUntil(o.due) >= 0 && daysUntil(o.due) <= 7; }).length;
+  const eventsToday = events.filter(function (e) { return e.date === today; }).length;
+  const tileMaker = {
+    due: function () {
+      return usesOrders()
+        ? { n: dueToday.length, label: (dueToday.length === 1 ? oneOrder() : w.orders.toLowerCase()) + ' due today', go: 'calendar' }
+        : { n: eventsToday, label: eventsToday === 1 ? 'event today' : 'events today', go: 'calendar' };
+    },
+    tasks: function () { return { n: todayTasks.length, label: todayTasks.length === 1 ? 'task for today' : 'tasks for today', go: 'todo' }; },
+    money: function () { return { n: money(thisMonth.moneyIn), label: 'paid to you this month', go: 'bookkeeping' }; },
+    buy: function () { return { n: toBuy, label: toBuy === 1 ? 'thing to buy' : 'things to buy', go: 'checklist' }; },
+    rebook: function () { return { n: dueToRebook().length, label: 'to book again', go: 'customers' }; },
+    late: function () { return { n: lateCount, label: 'late', go: 'orders' }; },
+    week: function () { return { n: thisWeek, label: w.orders.toLowerCase() + ' this week', go: 'calendar' }; },
+    people: function () { return { n: allCustomers().length, label: w.customers.toLowerCase(), go: 'customers' }; },
+    notes: function () { return { n: notes.length, label: 'sticky notes', go: 'notes' }; },
+  };
+  const tileColors = ['butter', 'sky', 'mint', 'peach'];
+  myTiles().map(function (id, i) { return Object.assign({ color: tileColors[i % 4] }, tileMaker[id]()); })
+    .forEach(function (t) {
     const b = document.createElement('button');
     b.className = 'day-tile ' + t.color;
     b.innerHTML = '<b></b><span></span>';
@@ -9330,6 +9592,8 @@ function showSettings(page) {
       </button>
     </div>
 
+    <div id="make-it-yours"></div>
+
     <h2 class="settings-group">Goals</h2>
     <div class="settings-list">
       <button class="settings-row mint" data-step="3">
@@ -9360,6 +9624,9 @@ function showSettings(page) {
   box.querySelector('#hero-name').textContent = profile.businessName;
   box.querySelector('#hero-type').textContent = typeName;
   box.querySelector('#row-name').textContent = profile.businessName;
+  // Make it yours: menu, pages, boxes, statuses and more
+  const yours = box.querySelector('#make-it-yours');
+  makeItYoursRows(yours);
   box.querySelector('#row-country').textContent = findCountry(myCountry()).label;
   box.querySelector('#row-type').textContent = typeName;
   box.querySelector('#row-country-btn').addEventListener('click', pickCountry);
@@ -9513,6 +9780,838 @@ function showGoalTips(page) {
 // If a profile was saved before, go straight to the app.
 // Otherwise, start Profile Setup.
 // =========================================
+// =========================================
+// MAKE IT YOURS
+// Everything the owner can change for their own business, saved in profile.custom:
+//   menu: { hidden: [...], shown: [...], order: [...] }   pages to hide, pages to bring back, and their order
+//   about: [...]        the "About them" boxes on each person's page
+//   statuses: { labels: { new: 'Booked' }, extra: [{ id, label, color }] }
+//   tiles: [...]        the four numbers at the top of My Day
+//   rebookWeeks: 3      when to remind them to book someone again (0 = never)
+//   near: [...]         the "Find near you" searches
+//   units: [...]        the unit buttons for new supplies
+// Plus pages of their own (checklists, lists and writing pages), saved separately.
+// =========================================
+function custom() {
+  if (!profile.custom || typeof profile.custom !== 'object') profile.custom = {};
+  return profile.custom;
+}
+function saveCustom() {
+  saveProfile();
+  showMenu();
+  showPage();
+}
+
+const COLOR_CHOICES = ['butter', 'peach', 'pink', 'lilac', 'sky', 'mint'];
+const COLOR_NAMES = { butter: 'Yellow', peach: 'Peach', pink: 'Pink', lilac: 'Lavender', sky: 'Blue', mint: 'Mint' };
+
+// ---------- The "About them" boxes ----------
+function aboutFields() {
+  const mine = custom().about;
+  return Array.isArray(mine) ? mine : kit().about;
+}
+
+// ---------- Booking reminders ----------
+function rebookDays() {
+  const weeks = custom().rebookWeeks;
+  if (weeks === 0) return 0;
+  if (Number(weeks) > 0) return Number(weeks) * 7;
+  return kit().rebook || 0;
+}
+
+// ---------- Unit buttons ----------
+function unitButtons() {
+  const mine = custom().units;
+  return Array.isArray(mine) && mine.length ? mine : supplyKit().units;
+}
+
+// ---------- Find near you ----------
+function defaultNear(w) {
+  return [w.supplies + ' stores', 'Print shops', 'Business events', 'Small business help'];
+}
+const NEAR_SEARCHES = {
+  'Print shops': 'print shop for business cards and flyers',
+  'Business events': 'small business networking events',
+  'Small business help': 'small business development center',
+};
+function nearList(w) {
+  const mine = custom().near;
+  const labels = Array.isArray(mine) ? mine : defaultNear(w);
+  const colors = ['peach', 'lilac', 'mint', 'sky', 'pink', 'butter'];
+  return labels.map(function (label, i) {
+    let q = NEAR_SEARCHES[label] || label;
+    if (label === w.supplies + ' stores') q = w.supplies.toLowerCase() + ' store';
+    return { label: label, q: q + ' near me', color: colors[i % colors.length], own: Array.isArray(mine) };
+  });
+}
+
+// ---------- Order statuses ----------
+const BASE_STATUSES = [
+  { id: 'new', label: 'New', color: 'butter' },
+  { id: 'progress', label: 'In progress', color: 'sky' },
+  { id: 'done', label: 'Done', color: 'mint' },
+  { id: 'paid', label: 'Paid', color: 'lilac' },
+];
+// The built-in steps (renamed if they changed them), with their own steps between In progress and Done
+function allStatuses() {
+  const mine = custom().statuses || {};
+  const labels = mine.labels || {};
+  const base = BASE_STATUSES.map(function (st) {
+    return labels[st.id] ? Object.assign({}, st, { label: labels[st.id], own: true }) : st;
+  });
+  const extra = (mine.extra || []).map(function (st) { return Object.assign({ own: true }, st); });
+  return base.slice(0, 2).concat(extra, base.slice(2));
+}
+
+// ---------- The menu ----------
+// Sections the app hides for this kind of business (before the owner changes anything)
+function autoHidden() {
+  const type = realType();
+  const hidden = NO_ORDERS_TAB.includes(type) ? ['orders'] : [];
+  if (NO_PRINTABLES.includes(type)) hidden.push('printables');
+  if ((KITS[type] || {}).noShopping) hidden.push('checklist');
+  // Their own kind of business that we couldn't match: only keep it if they sell things
+  if (type === 'other' && !SELLS_THINGS.test((profile.otherType || '').toLowerCase())) hidden.push('printables');
+  return hidden;
+}
+// Every page that can go in the menu (not My Day or Settings), with their own pages too
+function allMenuIds() {
+  const ids = [];
+  MENU_GROUPS.forEach(function (g) { g.items.forEach(function (id) { if (id !== 'myday' && id !== 'settings') ids.push(id); }); });
+  userPages.forEach(function (p) { ids.push('page-' + p.id); });
+  return ids;
+}
+
+// =========================================
+// PAGES OF YOUR OWN
+// Each: { id, name, icon, color, kind, ... }
+//   kind 'checklist': items [{ id, text, done }]
+//   kind 'list':      fields ['Name', 'Phone'], entries [{ id, values: { Name: 'Ana' } }]
+//   kind 'writing':   text
+// =========================================
+const PAGES_KEY = 'bizStudio.pages';
+let userPages = loadList(PAGES_KEY);
+function savePages() { saveList(PAGES_KEY, userPages); }
+const PAGE_ICONS = ['note', 'list', 'check', 'star', 'book', 'folder', 'calendar', 'tag', 'users', 'box', 'camera', 'sparkle', 'leaf', 'paw', 'music', 'balloon'];
+const PAGE_KINDS = [
+  { id: 'checklist', icon: 'check', label: 'Checklist', text: 'Things to check off, like a packing list' },
+  { id: 'list', icon: 'list', label: 'List with your own boxes', text: 'Like a list of vendors with a name, phone and notes' },
+  { id: 'writing', icon: 'note', label: 'Writing page', text: 'A big space to write, like ideas or a plan' },
+];
+
+function findUserPage(sectionId) {
+  return userPages.find(function (p) { return 'page-' + p.id === sectionId; });
+}
+// Their pages act like the app's own sections (in the menu, colors and all)
+function userPageSection(p) {
+  return {
+    id: 'page-' + p.id, icon: p.icon || 'note', label: p.name, own: true, color: p.color || 'lilac',
+    emptyTitle: '', emptyText: '',
+  };
+}
+
+// Make a new page, or change one (name, icon, color, and the boxes for a list)
+function editUserPage(p) {
+  const isNew = !p;
+  const draft = p ? JSON.parse(JSON.stringify(p)) : { id: newId('pg'), name: '', icon: 'note', color: 'lilac', kind: 'checklist' };
+  openWindow({
+    title: isNew ? 'Add a page' : 'Edit page',
+    saveLabel: isNew ? 'Add page' : 'Save changes',
+    wide: true,
+    html: `
+      <label class="label" for="pg-name">Page name</label>
+      <input class="input" id="pg-name" autocomplete="off" placeholder="Vendors">
+      <div class="pg-kind-wrap">
+        <p class="label">What kind of page?</p>
+        <div class="pg-kinds" role="radiogroup"></div>
+      </div>
+      <div class="pg-fields-wrap">
+        <label class="label" for="pg-fields">Boxes for each one <span class="label-hint">(one per line)</span></label>
+        <textarea class="input" id="pg-fields" rows="4" placeholder="Name&#10;Phone&#10;Notes"></textarea>
+      </div>
+      <p class="label">Icon</p>
+      <div class="pg-icons" role="radiogroup" aria-label="Icon"></div>
+      <p class="label">Color</p>
+      <div class="pg-colors" role="radiogroup" aria-label="Color"></div>
+      <button type="button" class="link-btn delete-btn" id="pg-delete" hidden>${icon('trash')}<span>Delete this page</span></button>
+    `,
+    fill: function (box) {
+      box.querySelector('#pg-name').value = draft.name;
+      // Kind (picked once, when the page is made)
+      const kinds = box.querySelector('.pg-kinds');
+      function drawKinds() {
+        kinds.innerHTML = '';
+        PAGE_KINDS.forEach(function (k) {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'pg-kind';
+          b.setAttribute('role', 'radio');
+          b.setAttribute('aria-checked', draft.kind === k.id ? 'true' : 'false');
+          b.innerHTML = '<span class="pg-kind-icon">' + icon(k.icon) + '</span><b></b><span></span>';
+          b.querySelector('b').textContent = k.label;
+          b.querySelector('span:last-child').textContent = k.text;
+          b.addEventListener('click', function () { draft.kind = k.id; drawKinds(); });
+          kinds.appendChild(b);
+        });
+        box.querySelector('.pg-fields-wrap').hidden = draft.kind !== 'list';
+      }
+      drawKinds();
+      if (!isNew) box.querySelector('.pg-kind-wrap').hidden = true;
+      box.querySelector('#pg-fields').value = (draft.fields || []).join('\n');
+      // Icons
+      const icons = box.querySelector('.pg-icons');
+      function drawIcons() {
+        icons.innerHTML = '';
+        PAGE_ICONS.forEach(function (name) {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'pg-icon ' + draft.color;
+          b.setAttribute('role', 'radio');
+          b.setAttribute('aria-checked', draft.icon === name ? 'true' : 'false');
+          b.setAttribute('aria-label', name);
+          b.innerHTML = icon(name);
+          b.addEventListener('click', function () { draft.icon = name; drawIcons(); });
+          icons.appendChild(b);
+        });
+      }
+      drawIcons();
+      // Colors
+      const colors = box.querySelector('.pg-colors');
+      function drawColors() {
+        colors.innerHTML = '';
+        COLOR_CHOICES.forEach(function (c) {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'pg-color ' + c;
+          b.setAttribute('role', 'radio');
+          b.setAttribute('aria-checked', draft.color === c ? 'true' : 'false');
+          b.setAttribute('aria-label', COLOR_NAMES[c]);
+          b.title = COLOR_NAMES[c];
+          b.addEventListener('click', function () { draft.color = c; drawColors(); drawIcons(); });
+          colors.appendChild(b);
+        });
+      }
+      drawColors();
+      // Delete (with Undo)
+      if (!isNew) {
+        const del = box.querySelector('#pg-delete');
+        del.hidden = false;
+        del.addEventListener('click', function () {
+          const index = userPages.indexOf(p);
+          userPages = userPages.filter(function (x) { return x !== p; });
+          savePages();
+          box.close();
+          box.remove();
+          if (currentSection === 'page-' + p.id) currentSection = 'myday';
+          showMenu();
+          showPage();
+          showUndo(p.name + ' deleted', function () {
+            userPages.splice(Math.max(0, index), 0, p);
+            savePages();
+            showMenu();
+            showPage();
+          });
+        });
+      }
+    },
+    onSave: function (box) {
+      const name = box.querySelector('#pg-name').value.trim();
+      if (!name) { box.problem('Give your page a name.'); return false; }
+      draft.name = name;
+      if (draft.kind === 'list') {
+        const fields = box.querySelector('#pg-fields').value.split('\n').map(function (f) { return f.trim(); })
+          .filter(function (f, i, all) { return f && all.indexOf(f) === i; });
+        draft.fields = fields.length ? fields : ['Name', 'Notes'];
+        draft.entries = draft.entries || [];
+      }
+      if (draft.kind === 'checklist') draft.items = draft.items || [];
+      if (draft.kind === 'writing') draft.text = draft.text || '';
+      if (isNew) userPages.push(draft);
+      else Object.assign(p, draft);
+      savePages();
+      currentSection = 'page-' + draft.id;
+      showMenu();
+      showPage();
+      window.scrollTo(0, 0);
+    },
+  });
+}
+
+// Under the page name: how many things are on it
+function showPageCount(p) {
+  const sub = document.querySelector('#page .page-head p');
+  if (!sub) return;
+  const count = p.kind === 'list' ? (p.entries || []).length : p.kind === 'checklist' ? (p.items || []).filter(function (i) { return !i.done; }).length : -1;
+  sub.textContent = count < 0 ? '' : p.kind === 'list' ? count + (count === 1 ? ' thing' : ' things') : count + ' left to do';
+}
+
+// One of their pages
+function showUserPage(page, p) {
+  page.innerHTML = `
+    <header class="page-head with-button">
+      <div><h1 data-own-words></h1><p></p></div>
+      <button class="btn secondary with-icon" id="pg-edit">${icon('sliders')}<span>Edit page</span></button>
+    </header>
+    <div class="user-page ${p.color || 'lilac'}"></div>
+  `;
+  page.querySelector('h1').textContent = p.name;
+  showPageCount(p);
+  page.querySelector('#pg-edit').addEventListener('click', function () { editUserPage(p); });
+  const body = page.querySelector('.user-page');
+  if (p.kind === 'list') drawUserList(body, p);
+  else if (p.kind === 'writing') drawUserWriting(body, p);
+  else drawUserChecklist(body, p);
+}
+
+// A checklist: type to add, tap to check off
+function drawUserChecklist(body, p) {
+  p.items = p.items || [];
+  body.innerHTML = `
+    <form class="pg-add">
+      <input class="input" autocomplete="off" placeholder="Add something to the list" aria-label="Add something to the list">
+      <button class="btn with-icon" type="submit">${icon('plus')}<span>Add</span></button>
+    </form>
+    <div class="pg-items"></div>
+    <button type="button" class="link-btn pg-clear" hidden></button>
+  `;
+  const input = body.querySelector('.pg-add input');
+  function draw() {
+    const list = body.querySelector('.pg-items');
+    list.innerHTML = '';
+    if (!p.items.length) {
+      list.innerHTML = '<p class="list-empty"></p>';
+      list.firstChild.textContent = 'Nothing on this list yet.';
+    }
+    // Not done first, then done
+    p.items.slice().sort(function (a, b) { return (a.done ? 1 : 0) - (b.done ? 1 : 0); }).forEach(function (item) {
+      const row = document.createElement('div');
+      row.className = 'pg-item' + (item.done ? ' done' : '');
+      row.innerHTML = '<button type="button" class="note-check" role="checkbox">' + icon('tick') + '</button><input class="pg-item-text" aria-label="List item"><button type="button" class="row-delete" title="Delete">' + icon('trash') + '</button>';
+      const check = row.querySelector('.note-check');
+      check.setAttribute('aria-checked', item.done ? 'true' : 'false');
+      check.setAttribute('aria-label', (item.done ? 'Not done: ' : 'Done: ') + item.text);
+      check.addEventListener('click', function () { item.done = !item.done; savePages(); draw(); });
+      const text = row.querySelector('.pg-item-text');
+      text.value = item.text;
+      text.addEventListener('change', function () {
+        if (text.value.trim()) { item.text = text.value.trim(); savePages(); }
+        else text.value = item.text;
+      });
+      row.querySelector('.row-delete').addEventListener('click', function () {
+        const index = p.items.indexOf(item);
+        p.items.splice(index, 1);
+        savePages();
+        draw();
+        showUndo('Deleted', function () { p.items.splice(index, 0, item); savePages(); draw(); });
+      });
+      list.appendChild(row);
+    });
+    showPageCount(p);
+    const done = p.items.filter(function (i) { return i.done; }).length;
+    const clear = body.querySelector('.pg-clear');
+    clear.hidden = !done;
+    clear.textContent = 'Clear done (' + done + ')';
+  }
+  body.querySelector('.pg-add').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text) return;
+    p.items.push({ id: newId('i'), text: text, done: false });
+    savePages();
+    input.value = '';
+    draw();
+    input.focus();
+  });
+  body.querySelector('.pg-clear').addEventListener('click', function () {
+    const was = p.items.slice();
+    p.items = p.items.filter(function (i) { return !i.done; });
+    savePages();
+    draw();
+    showUndo('Cleared', function () { p.items = was; savePages(); draw(); });
+  });
+  draw();
+}
+
+// A list with their own boxes, like Vendors: Name, Phone, Notes
+function drawUserList(body, p) {
+  p.fields = p.fields && p.fields.length ? p.fields : ['Name', 'Notes'];
+  p.entries = p.entries || [];
+  body.innerHTML = `
+    <div class="pg-list-tools">
+      <label class="notes-search">${icon('search')}<input class="input" type="search" placeholder="Search" aria-label="Search"></label>
+      <button class="btn with-icon" id="pg-new">${icon('plus')}<span>Add one</span></button>
+    </div>
+    <div class="pg-cards"></div>
+  `;
+  const search = body.querySelector('.pg-list-tools input');
+  function draw() {
+    const cards = body.querySelector('.pg-cards');
+    cards.innerHTML = '';
+    const q = search.value.trim().toLowerCase();
+    const shown = p.entries.filter(function (e) {
+      return !q || p.fields.some(function (f) { return String(e.values[f] || '').toLowerCase().includes(q); });
+    });
+    if (!shown.length) {
+      cards.innerHTML = '<p class="list-empty"></p>';
+      cards.firstChild.textContent = p.entries.length ? 'Nothing matches your search.' : 'Nothing here yet. Click Add one to start.';
+    }
+    showPageCount(p);
+    shown.forEach(function (entry, i) {
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'pg-card';
+      card.style.setProperty('--i', i);
+      const title = document.createElement('b');
+      title.dataset.ownWords = '';
+      title.textContent = entry.values[p.fields[0]] || '—';
+      card.appendChild(title);
+      p.fields.slice(1).forEach(function (f) {
+        if (!entry.values[f]) return;
+        const line = document.createElement('span');
+        line.innerHTML = '<small></small><span data-own-words></span>';
+        line.querySelector('small').textContent = f;
+        line.querySelector('small').dataset.ownWords = '';
+        line.querySelector('span').textContent = entry.values[f];
+        card.appendChild(line);
+      });
+      card.addEventListener('click', function () { editEntry(entry); });
+      cards.appendChild(card);
+    });
+  }
+  function editEntry(entry) {
+    const isNew = !entry;
+    openWindow({
+      title: isNew ? 'Add one' : 'Edit',
+      saveLabel: isNew ? 'Add' : 'Save changes',
+      html: '<div class="pg-entry-fields"></div><button type="button" class="link-btn delete-btn" id="pg-entry-delete" hidden>' + icon('trash') + '<span>Delete this</span></button>',
+      fill: function (box) {
+        const wrap = box.querySelector('.pg-entry-fields');
+        p.fields.forEach(function (f, i) {
+          const label = document.createElement('label');
+          label.className = 'label';
+          label.htmlFor = 'pg-f-' + i;
+          label.dataset.ownWords = '';
+          label.textContent = f;
+          const input = document.createElement(i === p.fields.length - 1 && p.fields.length > 1 ? 'textarea' : 'input');
+          input.className = 'input';
+          input.id = 'pg-f-' + i;
+          if (input.tagName === 'TEXTAREA') input.rows = 3;
+          input.value = entry ? (entry.values[f] || '') : '';
+          wrap.append(label, input);
+        });
+        if (entry) {
+          const del = box.querySelector('#pg-entry-delete');
+          del.hidden = false;
+          del.addEventListener('click', function () {
+            const index = p.entries.indexOf(entry);
+            p.entries.splice(index, 1);
+            savePages();
+            box.close();
+            box.remove();
+            draw();
+            showUndo('Deleted', function () { p.entries.splice(index, 0, entry); savePages(); draw(); });
+          });
+        }
+      },
+      onSave: function (box) {
+        const values = {};
+        p.fields.forEach(function (f, i) { values[f] = box.querySelector('#pg-f-' + i).value.trim(); });
+        if (!Object.keys(values).some(function (f) { return values[f]; })) { box.problem('Fill in at least one box.'); return false; }
+        if (isNew) p.entries.push({ id: newId('e'), values: values });
+        else entry.values = values;
+        savePages();
+        draw();
+      },
+    });
+  }
+  search.addEventListener('input', draw);
+  body.querySelector('#pg-new').addEventListener('click', function () { editEntry(null); });
+  draw();
+}
+
+// A page to write on (saves as you type)
+function drawUserWriting(body, p) {
+  body.innerHTML = '<textarea class="input pg-writing" placeholder="Start writing..." aria-label="Writing page"></textarea><p class="pg-saved" aria-live="polite"></p>';
+  const text = body.querySelector('textarea');
+  const saved = body.querySelector('.pg-saved');
+  text.value = p.text || '';
+  let timer = null;
+  text.addEventListener('input', function () {
+    p.text = text.value;
+    saved.textContent = '';
+    clearTimeout(timer);
+    timer = setTimeout(function () { savePages(); saved.textContent = 'Saved'; }, 400);
+  });
+}
+
+// =========================================
+// SETTINGS: the "Make it yours" windows
+// =========================================
+
+// A list of words to add to and take away from (used for About them, Find near you and units)
+function chipEditor(box, list, placeholder) {
+  const wrap = document.createElement('div');
+  wrap.className = 'chip-editor';
+  wrap.innerHTML = '<div class="chip-list"></div><div class="chip-add"><input class="input" autocomplete="off"><button type="button" class="btn secondary small with-icon">' + icon('plus') + '<span>Add</span></button></div>';
+  const input = wrap.querySelector('input');
+  input.placeholder = placeholder;
+  input.setAttribute('aria-label', placeholder);
+  function draw() {
+    const chips = wrap.querySelector('.chip-list');
+    chips.innerHTML = '';
+    if (!list.length) {
+      chips.innerHTML = '<span class="chip-none">None yet.</span>';
+    }
+    list.forEach(function (item, i) {
+      const chip = document.createElement('span');
+      chip.className = 'edit-chip';
+      chip.innerHTML = '<span></span><button type="button" class="chip-move" aria-label="Move left">‹</button><button type="button" class="chip-x" aria-label="Remove">×</button>';
+      chip.querySelector('span').textContent = item;
+      chip.querySelector('.chip-move').hidden = i === 0;
+      chip.querySelector('.chip-move').addEventListener('click', function () {
+        list.splice(i - 1, 0, list.splice(i, 1)[0]);
+        draw();
+      });
+      chip.querySelector('.chip-x').addEventListener('click', function () { list.splice(i, 1); draw(); });
+      chips.appendChild(chip);
+    });
+  }
+  function add() {
+    const text = input.value.trim();
+    if (text && !list.includes(text)) list.push(text);
+    input.value = '';
+    draw();
+    input.focus();
+  }
+  wrap.querySelector('.btn').addEventListener('click', add);
+  input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); add(); } });
+  draw();
+  box.appendChild(wrap);
+  return { redraw: draw };
+}
+
+// A window with a word list, a "Back to suggested" link, and Save
+function editWordList(options) {
+  let list = options.now().slice();
+  openWindow({
+    title: options.title,
+    saveLabel: 'Save',
+    html: '<p class="window-help"></p><div class="chip-host"></div><button type="button" class="link-btn chip-reset">Back to the suggested ones</button>',
+    fill: function (box) {
+      box.querySelector('.window-help').textContent = options.help;
+      const editor = chipEditor(box.querySelector('.chip-host'), list, options.placeholder);
+      box.querySelector('.chip-reset').addEventListener('click', function () {
+        list.length = 0;
+        options.suggested().forEach(function (x) { list.push(x); });
+        editor.redraw();
+      });
+    },
+    onSave: function () {
+      options.save(list.slice());
+      saveCustom();
+      showUndo('Saved', null);
+    },
+  });
+}
+
+// Your menu: show or hide each page, and move them up and down
+function editMenu() {
+  const c = custom();
+  const autoOff = autoHidden();
+  const hidden = hiddenSections();
+  // Start from the order they see now, then anything hidden at the end
+  const visible = menuGroups().flatMap(function (g) { return g.items; }).filter(function (id) { return id !== 'myday'; });
+  const order = visible.concat(allMenuIds().filter(function (id) { return !visible.includes(id); }));
+  const on = {};
+  order.forEach(function (id) { on[id] = !hidden.includes(id); });
+  openWindow({
+    title: 'Your menu',
+    saveLabel: 'Save',
+    html: '<p class="window-help">Turn pages on or off, and use the arrows to move them.</p><div class="menu-edit"></div><button type="button" class="link-btn chip-reset">Back to the suggested menu</button>',
+    fill: function (box) {
+      const list = box.querySelector('.menu-edit');
+      function draw() {
+        list.innerHTML = '';
+        order.forEach(function (id, i) {
+          const section = findSection(id);
+          if (!section) return;
+          const row = document.createElement('div');
+          row.className = 'menu-edit-row ' + sectionColor(id) + (on[id] ? '' : ' off');
+          row.innerHTML = '<span class="nav-icon">' + icon(section.icon) + '</span><span class="menu-edit-name"></span>' +
+            '<button type="button" class="arrow-btn up" aria-label="Move up">' + icon('chevron') + '</button>' +
+            '<button type="button" class="arrow-btn down" aria-label="Move down">' + icon('chevron') + '</button>' +
+            '<label class="toggle"><input type="checkbox"><span class="toggle-track"></span></label>';
+          const name = row.querySelector('.menu-edit-name');
+          name.textContent = say(section.label);
+          if (section.own) name.dataset.ownWords = '';
+          row.querySelector('.up').disabled = i === 0;
+          row.querySelector('.down').disabled = i === order.length - 1;
+          row.querySelector('.up').addEventListener('click', function () { order.splice(i - 1, 0, order.splice(i, 1)[0]); draw(); list.querySelectorAll('.up')[i - 1].focus(); });
+          row.querySelector('.down').addEventListener('click', function () { order.splice(i + 1, 0, order.splice(i, 1)[0]); draw(); list.querySelectorAll('.down')[i + 1].focus(); });
+          const toggle = row.querySelector('input');
+          toggle.checked = on[id];
+          toggle.setAttribute('aria-label', say(section.label));
+          toggle.addEventListener('change', function () { on[id] = toggle.checked; row.classList.toggle('off', !toggle.checked); });
+          list.appendChild(row);
+        });
+      }
+      draw();
+      box.querySelector('.chip-reset').addEventListener('click', function () {
+        delete c.menu;
+        saveProfile();
+        box.close();
+        box.remove();
+        showMenu();
+        showPage();
+        showUndo('Saved', null);
+      });
+    },
+    onSave: function () {
+      c.menu = {
+        order: order.slice(),
+        hidden: order.filter(function (id) { return !on[id] && !autoOff.includes(id); }),
+        shown: order.filter(function (id) { return on[id] && autoOff.includes(id); }),
+      };
+      if (!on[currentSection] && currentSection !== 'settings') currentSection = 'settings';
+      saveCustom();
+      showUndo('Saved', null);
+    },
+  });
+}
+
+// Your pages: the list, with a button to add one
+function editPagesList() {
+  openWindow({
+    title: 'Your pages',
+    saveLabel: 'Done',
+    html: '<p class="window-help">Make pages of your own, like a list of vendors, a packing checklist or a page of ideas. They show up in your menu.</p><div class="pages-edit"></div><button type="button" class="btn secondary with-icon" id="pages-add">' + icon('plus') + '<span>Add a page</span></button>',
+    fill: function (box) {
+      const list = box.querySelector('.pages-edit');
+      if (!userPages.length) {
+        list.innerHTML = '<p class="list-empty"></p>';
+        list.firstChild.textContent = 'No pages yet.';
+      }
+      userPages.forEach(function (p) {
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.className = 'menu-edit-row ' + (p.color || 'lilac');
+        row.innerHTML = '<span class="nav-icon">' + icon(p.icon || 'note') + '</span><span class="menu-edit-name" data-own-words></span><span class="row-arrow">' + icon('chevron') + '</span>';
+        row.querySelector('.menu-edit-name').textContent = p.name;
+        row.addEventListener('click', function () { box.close(); box.remove(); editUserPage(p); });
+        list.appendChild(row);
+      });
+      box.querySelector('#pages-add').addEventListener('click', function () { box.close(); box.remove(); editUserPage(null); });
+    },
+    onSave: function () { },
+  });
+}
+
+// Statuses for orders: rename the built-in ones, add your own steps
+function editStatuses() {
+  const c = custom();
+  const mine = JSON.parse(JSON.stringify(c.statuses || {}));
+  mine.labels = mine.labels || {};
+  mine.extra = mine.extra || [];
+  openWindow({
+    title: 'Statuses',
+    saveLabel: 'Save',
+    html: '<p class="window-help">Rename the steps, or add your own between In progress and Done, like Deposit paid or Ready for pickup.</p><div class="status-edit"></div><button type="button" class="btn secondary small with-icon" id="status-add">' + icon('plus') + '<span>Add a status</span></button><button type="button" class="link-btn chip-reset">Back to the suggested ones</button>',
+    fill: function (box) {
+      const list = box.querySelector('.status-edit');
+      function row(label, color, onLabel, onColor, onRemove, placeholder) {
+        const r = document.createElement('div');
+        r.className = 'status-edit-row';
+        r.innerHTML = '<span class="status-dot ' + color + '"></span><input class="input" autocomplete="off"><select class="input status-color" aria-label="Color"></select>' + (onRemove ? '<button type="button" class="row-delete" title="Delete">' + icon('trash') + '</button>' : '<span class="row-delete-space"></span>');
+        const input = r.querySelector('input');
+        input.value = label;
+        input.placeholder = placeholder;
+        input.setAttribute('aria-label', placeholder);
+        input.addEventListener('input', function () { onLabel(input.value); });
+        const pick = r.querySelector('select');
+        COLOR_CHOICES.forEach(function (cc) {
+          const o = document.createElement('option');
+          o.value = cc;
+          o.textContent = COLOR_NAMES[cc];
+          pick.appendChild(o);
+        });
+        pick.value = color;
+        pick.disabled = !onColor;
+        pick.addEventListener('change', function () { onColor(pick.value); r.querySelector('.status-dot').className = 'status-dot ' + pick.value; });
+        if (onRemove) r.querySelector('.row-delete').addEventListener('click', onRemove);
+        list.appendChild(r);
+      }
+      function draw() {
+        list.innerHTML = '';
+        function base(st) {
+          row(mine.labels[st.id] || '', st.color, function (v) { if (v.trim()) mine.labels[st.id] = v.trim(); else delete mine.labels[st.id]; }, null, null, st.label);
+        }
+        base(BASE_STATUSES[0]);
+        base(BASE_STATUSES[1]);
+        mine.extra.forEach(function (st, i) {
+          row(st.label, st.color, function (v) { st.label = v; }, function (v) { st.color = v; }, function () { mine.extra.splice(i, 1); draw(); }, 'Status name');
+        });
+        base(BASE_STATUSES[2]);
+        base(BASE_STATUSES[3]);
+      }
+      draw();
+      box.querySelector('#status-add').addEventListener('click', function () {
+        mine.extra.push({ id: newId('s'), label: '', color: COLOR_CHOICES[(mine.extra.length + 4) % COLOR_CHOICES.length] });
+        draw();
+        const inputs = list.querySelectorAll('input');
+        inputs[mine.extra.length + 1].focus();
+      });
+      box.querySelector('.chip-reset').addEventListener('click', function () { mine.labels = {}; mine.extra = []; draw(); });
+    },
+    onSave: function () {
+      mine.extra = mine.extra.filter(function (st) { return st.label.trim(); });
+      mine.extra.forEach(function (st) { st.label = st.label.trim(); });
+      // Orders in a step that was taken away go back to In progress
+      const ids = mine.extra.map(function (st) { return st.id; });
+      let moved = false;
+      orders.forEach(function (o) {
+        if (!['new', 'progress', 'done', 'paid'].includes(o.status) && !ids.includes(o.status)) { o.status = 'progress'; moved = true; }
+      });
+      if (moved) saveOrders();
+      c.statuses = mine;
+      saveCustom();
+      showUndo('Saved', null);
+    },
+  });
+}
+
+// The numbers at the top of My Day
+const TILE_CHOICES = [
+  { id: 'due', label: 'Due today' },
+  { id: 'tasks', label: 'Tasks for today' },
+  { id: 'money', label: 'Paid to you this month' },
+  { id: 'buy', label: 'Things to buy', needs: 'checklist' },
+  { id: 'rebook', label: 'People to book again', rebook: true },
+  { id: 'late', label: 'Late', orders: true },
+  { id: 'week', label: 'This week', orders: true },
+  { id: 'people', label: (w) => w.customers },
+  { id: 'notes', label: 'Sticky notes' },
+];
+function tileChoices() {
+  const hidden = hiddenSections();
+  return TILE_CHOICES.filter(function (t) {
+    return (!t.needs || !hidden.includes(t.needs)) && (!t.rebook || rebookDays()) && (!t.orders || usesOrders());
+  });
+}
+// Which tiles to show: their pick, or the usual four
+function myTiles() {
+  const ok = tileChoices().map(function (t) { return t.id; });
+  const mine = Array.isArray(custom().tiles) ? custom().tiles.filter(function (id) { return ok.includes(id); }) : null;
+  if (mine && mine.length) return mine;
+  const fourth = !hiddenSections().includes('checklist') ? 'buy' : rebookDays() ? 'rebook' : 'people';
+  return ['due', 'tasks', 'money', fourth];
+}
+function editTiles() {
+  const picked = myTiles().slice();
+  openWindow({
+    title: 'My Day numbers',
+    saveLabel: 'Save',
+    html: '<p class="window-help">Pick up to 4 numbers to see at the top of My Day.</p><div class="tile-edit"></div>',
+    fill: function (box) {
+      const list = box.querySelector('.tile-edit');
+      function draw() {
+        list.innerHTML = '';
+        tileChoices().forEach(function (t) {
+          const row = document.createElement('label');
+          row.className = 'tile-edit-row';
+          row.innerHTML = '<input type="checkbox"><span></span>';
+          const check = row.querySelector('input');
+          check.checked = picked.includes(t.id);
+          check.disabled = !check.checked && picked.length >= 4;
+          row.querySelector('span').textContent = say(t.label);
+          check.addEventListener('change', function () {
+            if (check.checked) picked.push(t.id);
+            else picked.splice(picked.indexOf(t.id), 1);
+            draw();
+          });
+          list.appendChild(row);
+        });
+      }
+      draw();
+    },
+    onSave: function (box) {
+      if (!picked.length) { box.problem('Pick at least one.'); return false; }
+      custom().tiles = picked.slice();
+      saveCustom();
+      showUndo('Saved', null);
+    },
+  });
+}
+
+// When to remind them to book someone again
+function editRebook() {
+  openWindow({
+    title: 'Booking reminders',
+    saveLabel: 'Save',
+    html: '<p class="window-help">My Day reminds you about people who haven\'t booked in a while.</p><label class="label" for="rebook-weeks">Remind me after</label><select class="input" id="rebook-weeks"></select>',
+    fill: function (box) {
+      const pick = box.querySelector('#rebook-weeks');
+      const off = document.createElement('option');
+      off.value = '0';
+      off.textContent = 'Never (turn off)';
+      pick.appendChild(off);
+      for (let n = 1; n <= 12; n++) {
+        const o = document.createElement('option');
+        o.value = String(n);
+        o.textContent = n + (n === 1 ? ' week' : ' weeks');
+        pick.appendChild(o);
+      }
+      pick.value = String(Math.round(rebookDays() / 7));
+    },
+    onSave: function (box) {
+      custom().rebookWeeks = Number(box.querySelector('#rebook-weeks').value);
+      saveCustom();
+      showUndo('Saved', null);
+    },
+  });
+}
+
+// The "Make it yours" rows in Settings
+function makeItYoursRows(box) {
+  const w = words();
+  const group = document.createElement('div');
+  group.innerHTML = '<h2 class="settings-group">Make it yours</h2><div class="settings-list"></div>';
+  const list = group.querySelector('.settings-list');
+  const statusNames = allStatuses().map(function (st) { return st.label; }).join(', ');
+  const tileNames = myTiles().map(function (id) { return say(TILE_CHOICES.find(function (t) { return t.id === id; }).label); }).join(', ');
+  const rebook = rebookDays();
+  const rows = [
+    { color: 'sky', icon: 'list', title: 'Your menu', value: 'Show, hide and move pages', go: editMenu },
+    { color: 'lilac', icon: 'note', title: 'Your pages', value: userPages.length ? userPages.map(function (p) { return p.name; }).join(', ') : 'Add pages of your own', own: userPages.length > 0, go: editPagesList },
+    { color: 'pink', icon: 'users', title: 'About them boxes', value: aboutFields().join(', ') || 'None yet.', go: function () {
+      editWordList({ title: 'About them boxes', help: 'The boxes on each person\'s page, like Allergies or Birthday.', placeholder: 'Add a box',
+        now: aboutFields, suggested: function () { return kit().about; }, save: function (list) { custom().about = list; } });
+    } },
+    usesOrders() ? { color: 'butter', icon: 'flag', title: 'Statuses', value: statusNames, go: editStatuses } : null,
+    { color: 'mint', icon: 'sun', title: 'My Day numbers', value: tileNames, go: editTiles },
+    usesOrders() ? { color: 'peach', icon: 'clock', title: 'Booking reminders', value: rebook ? Math.round(rebook / 7) + (Math.round(rebook / 7) === 1 ? ' week' : ' weeks') : 'Off', go: editRebook } : null,
+    { color: 'sky', icon: 'search', title: 'Find near you', value: nearList(w).map(function (n) { return n.label; }).join(', '), go: function () {
+      editWordList({ title: 'Find near you', help: 'Searches you use a lot. Each one opens Google Maps near you.', placeholder: 'Like farmers markets',
+        now: function () { return nearList(w).map(function (n) { return n.label; }); }, suggested: function () { return defaultNear(w); }, save: function (list) { custom().near = list; } });
+    } },
+    !hiddenSections().includes('checklist') ? { color: 'peach', icon: 'cart', title: 'Unit buttons', value: unitButtons().join(', '), go: function () {
+      editWordList({ title: 'Unit buttons', help: 'The quick buttons for how you measure ' + w.supplies.toLowerCase() + '.', placeholder: 'Like skeins',
+        now: unitButtons, suggested: function () { return supplyKit().units; }, save: function (list) { custom().units = list; } });
+    } } : null,
+  ].filter(Boolean);
+  rows.forEach(function (r) {
+    const b = document.createElement('button');
+    b.className = 'settings-row ' + r.color;
+    b.innerHTML = '<span class="nav-icon">' + icon(r.icon) + '</span><span class="row-text"><strong></strong><span class="row-value"></span></span><span class="row-arrow">' + icon('chevron') + '</span>';
+    b.querySelector('strong').textContent = r.title;
+    b.querySelector('.row-value').textContent = r.value;
+    if (r.own) b.querySelector('.row-value').dataset.ownWords = '';
+    b.addEventListener('click', r.go);
+    list.appendChild(b);
+  });
+  box.appendChild(group);
+  return group;
+}
+
 // ---------- Start the app ----------
 let newBusiness = null;
 try {
