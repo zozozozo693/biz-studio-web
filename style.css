@@ -3924,25 +3924,61 @@ button.menu-edit-row:hover { background: var(--soft); }
 @media (prefers-reduced-motion: reduce) { .pg-link { animation: none; } .pg-goal-bar span { transition: none; } }
 /* =========================================
    LOGIN SCREEN (auth.js)
+   A welcome panel on the left (big screens only) and the form card on the right
    ========================================= */
 .auth {
   min-height: 100vh; min-height: 100dvh;
-  display: grid; place-items: center; padding: 32px 16px;
+  display: grid; place-items: center; padding: 40px 16px;
   background:
-    radial-gradient(circle at 0% 100%, var(--glow-a) 0, transparent 320px),
-    radial-gradient(circle at 100% 30%, var(--glow-b) 0, transparent 300px),
-    radial-gradient(circle at 60% 110%, var(--glow-c) 0, transparent 280px),
-    var(--surface);
+    radial-gradient(circle at 0% 100%, var(--glow-a) 0, transparent 420px),
+    radial-gradient(circle at 100% 0%, var(--glow-b) 0, transparent 420px),
+    radial-gradient(circle at 70% 110%, var(--glow-c) 0, transparent 360px),
+    var(--page);
 }
-.auth-card {
-  width: 100%; max-width: 420px; padding: 32px 30px 28px; border-radius: 24px;
-  background: var(--surface); border: 1.5px solid var(--line); box-shadow: 0 18px 50px rgba(20, 22, 40, 0.1);
+.auth svg { flex-shrink: 0; }
+.auth-shell {
+  width: 100%; max-width: 920px;
+  display: grid; grid-template-columns: 1fr 440px; align-items: stretch;
+  border-radius: 28px; overflow: hidden;
+  background: var(--surface); border: 1.5px solid var(--line);
+  box-shadow: 0 30px 80px rgba(20, 22, 40, 0.12);
+  animation: auth-in 0.35s ease;
 }
-.auth-card > .logo { margin-bottom: 26px; }
-.auth-title { margin: 0 0 6px; font-size: 26px; }
-.auth-note { margin: 0 0 18px; color: var(--muted); line-height: 1.5; overflow-wrap: anywhere; }
+@keyframes auth-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+/* Welcome panel */
+.auth-side {
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column; gap: 22px;
+  padding: 44px 40px;
+  background: linear-gradient(160deg, var(--sun-soft), var(--glow-a) 55%, var(--glow-b));
+}
+.auth-side::after {
+  content: ""; position: absolute; right: -70px; bottom: -70px; width: 220px; height: 220px;
+  border-radius: 50%; background: var(--surface); opacity: 0.35;
+}
+.auth-side .logo { margin-bottom: 18px; }
+.auth-side-title { margin: 0; font-size: 30px; line-height: 1.2; color: var(--ink); max-width: 13em; }
+.auth-perks { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; position: relative; z-index: 1; }
+.auth-perks li {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; border-radius: 14px;
+  background: color-mix(in srgb, var(--surface) 75%, transparent); color: var(--ink); font-weight: 600;
+}
+.auth-perk-icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; background: var(--soft); color: var(--strong); }
+
+/* The form card */
+.auth-card { padding: 44px 40px 36px; display: flex; flex-direction: column; justify-content: center; }
+.auth-card-logo { display: none; margin-bottom: 24px; }
+.auth-badge {
+  display: grid; place-items: center; width: 54px; height: 54px; margin-bottom: 16px;
+  border-radius: 16px; background: var(--sun-soft); color: var(--ink);
+}
+.auth-badge.sky { background: var(--sky-soft); color: var(--sky); }
+.auth-title { margin: 0 0 6px; font-size: 28px; }
+.auth-note { margin: 0 0 20px; color: var(--muted); line-height: 1.5; overflow-wrap: anywhere; }
 .auth-note b { color: var(--ink); }
-.auth-note.small { font-size: 14px; margin-top: -8px; }
+.auth-note.small { font-size: 14px; margin-top: -10px; }
 .auth-form .input { max-width: none; }
 .auth-form .input + .label, .auth-pass + .label { margin-top: 16px; }
 .auth-pass { position: relative; }
@@ -3952,18 +3988,28 @@ button.menu-edit-row:hover { background: var(--soft); }
   display: grid; place-items: center; width: 36px; height: 36px; padding: 0;
   border: none; border-radius: 8px; background: none; color: var(--muted); cursor: pointer;
 }
-.auth-eye svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; }
 .auth-eye[aria-pressed="true"] { color: var(--ink); background: var(--sun-soft); }
 .auth-eye:focus-visible { outline: 2px solid var(--ink); }
 .auth .error:empty, .auth-ok:empty { display: none; }
 .auth-ok { margin: 8px 0 0; color: var(--mint); font-size: 14px; font-weight: 600; }
-.auth-go { width: 100%; margin-top: 18px; }
+.auth-go { width: 100%; margin-top: 20px; padding: 14px 24px; font-size: 16px; border-radius: 12px; transition: transform 0.15s ease; }
+.auth-go:hover:not(:disabled) { transform: translateY(-1px); }
 .auth-go:disabled { opacity: 0.6; cursor: wait; }
 .auth-forgot { display: block; margin: 14px auto 0; }
-.auth-switch { margin: 20px 0 0; padding-top: 16px; border-top: 1px dashed var(--line); text-align: center; color: var(--muted); }
+.auth-switch { margin: 22px 0 0; padding-top: 18px; border-top: 1px dashed var(--line); text-align: center; color: var(--muted); }
 .auth-switch .link-btn { margin: 0; }
 .auth-row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-top: 14px; }
 .auth-row .link-btn { margin: 0; }
-.auth-mail { display: grid; place-items: center; width: 54px; height: 54px; margin-bottom: 14px; border-radius: 16px; background: var(--sky-soft); color: var(--sky); }
-.auth-mail svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
-@media (max-width: 480px) { .auth-card { padding: 26px 20px 22px; } }
+
+/* Smaller screens: just the card, with its own logo */
+@media (max-width: 860px) {
+  .auth-shell { grid-template-columns: 1fr; max-width: 460px; }
+  .auth-side { display: none; }
+  .auth-card-logo { display: inline-block; }
+}
+@media (max-width: 480px) {
+  .auth { padding: 20px 12px; }
+  .auth-card { padding: 30px 22px 26px; }
+  .auth-title { font-size: 24px; }
+}
+@media (prefers-reduced-motion: reduce) { .auth-shell { animation: none; } .auth-go { transition: none; } }

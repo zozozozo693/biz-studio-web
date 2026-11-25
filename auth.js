@@ -32,7 +32,7 @@
     const screen = document.getElementById('auth');
     if (screen) screen.querySelector('.auth-body').innerHTML = '<p class="auth-note">Opening your businesses...</p>';
     const script = document.createElement('script');
-    script.src = 'app.js';
+    script.src = 'app.js?v=4'; // the same number as in index.html
     script.onload = function () { if (screen) screen.remove(); };
     document.body.appendChild(script);
   }
@@ -43,15 +43,40 @@
   }
 
   // ---------- The login screen ----------
-  const STAR = '<svg class="logo-star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1l3 7 7 1-5 5 1.5 8L12 18l-6.5 4L7 14 2 9l7-1z"/></svg>';
-  const EYE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
-  const MAIL = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>';
+  // Icons. Each has its size built in, so it looks right even before the styles load.
+  function svg(size, inside) {
+    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + inside + '</svg>';
+  }
+  const STAR = '<svg class="logo-star" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1l3 7 7 1-5 5 1.5 8L12 18l-6.5 4L7 14 2 9l7-1z"/></svg>';
+  const EYE = svg(20, '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>');
+  const MAIL = svg(28, '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>');
+  const LOCK = svg(28, '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>');
+  // The welcome side: what Biz Studio helps with
+  const PERKS = [
+    [svg(20, '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/>'), 'Orders, jobs and your calendar', 'butter'],
+    [svg(20, '<path d="M12 2v20M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>'), 'Prices, profit and bookkeeping', 'mint'],
+    [svg(20, '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>'), 'Customers and what they love', 'pink'],
+    [svg(20, '<path d="M12 3l2.5 5 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8z"/>'), 'Pages you make your own', 'lilac'],
+  ];
 
   document.getElementById('setup').hidden = true;
   const screen = document.createElement('div');
   screen.className = 'auth';
   screen.id = 'auth';
-  screen.innerHTML = '<div class="auth-card"><div class="logo"><span class="logo-word">Biz Studio</span>' + STAR + '</div><div class="auth-body"><p class="auth-note">Loading...</p></div></div>';
+  screen.innerHTML =
+    '<div class="auth-shell">' +
+      '<aside class="auth-side">' +
+        '<div class="logo"><span class="logo-word">Biz Studio</span>' + STAR + '</div>' +
+        '<h2 class="auth-side-title">Your whole business, in one cozy place.</h2>' +
+        '<ul class="auth-perks">' + PERKS.map(function (p) {
+          return '<li><span class="auth-perk-icon ' + p[2] + '">' + p[0] + '</span><span>' + p[1] + '</span></li>';
+        }).join('') + '</ul>' +
+      '</aside>' +
+      '<div class="auth-card">' +
+        '<div class="logo auth-card-logo"><span class="logo-word">Biz Studio</span>' + STAR + '</div>' +
+        '<div class="auth-body"><p class="auth-note">Loading...</p></div>' +
+      '</div>' +
+    '</div>';
   document.body.insertBefore(screen, document.body.firstChild);
   const body = screen.querySelector('.auth-body');
 
@@ -104,6 +129,7 @@
   function showLogin(mode, email) {
     const signUp = mode === 'signup';
     body.innerHTML = `
+      <span class="auth-badge">${LOCK}</span>
       <h1 class="auth-title"></h1>
       <p class="auth-note"></p>
       <form class="auth-form" novalidate>
@@ -188,7 +214,7 @@
   // Waiting for them to click the link in their email
   function showVerify(user) {
     body.innerHTML = `
-      <span class="auth-mail">${MAIL}</span>
+      <span class="auth-badge sky">${MAIL}</span>
       <h1 class="auth-title">Check your email</h1>
       <p class="auth-note">We sent a link to <b></b>. Click it to prove the email is yours, then come back here.</p>
       <p class="auth-note small">Can't find it? Look in your spam or junk folder.</p>
