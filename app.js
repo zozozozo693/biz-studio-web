@@ -7,8 +7,24 @@
 // Each business keeps its own things, saved as "bizStudio.<business id>.orders" and so on.
 // The list of businesses: [{ id, name, type }]. The one open now is saved as "current".
 // =========================================
-const BIZ_LIST_KEY = 'bizStudio.businesses';
-const BIZ_CURRENT_KEY = 'bizStudio.current';
+// When someone is logged in (see auth.js), their list of businesses is theirs alone:
+// "bizStudio.user.<their id>.businesses". Without a login it's just "bizStudio.businesses".
+const BIZ_USER = window.BIZ_USER || null;
+const BIZ_LIST_KEY = BIZ_USER ? 'bizStudio.user.' + BIZ_USER + '.businesses' : 'bizStudio.businesses';
+const BIZ_CURRENT_KEY = BIZ_USER ? 'bizStudio.user.' + BIZ_USER + '.current' : 'bizStudio.current';
+// The first account to log in on this computer keeps what was made before there were logins
+if (BIZ_USER) {
+  try {
+    const before = localStorage.getItem('bizStudio.businesses');
+    if (localStorage.getItem(BIZ_LIST_KEY) === null && before !== null) {
+      localStorage.setItem(BIZ_LIST_KEY, before);
+      const open = localStorage.getItem('bizStudio.current');
+      if (open !== null) localStorage.setItem(BIZ_CURRENT_KEY, open);
+      localStorage.removeItem('bizStudio.businesses');
+      localStorage.removeItem('bizStudio.current');
+    }
+  } catch (error) { /* fine */ }
+}
 const BIZ_PARTS = ['profile', 'orders', 'customers', 'tasks', 'formMatch', 'products', 'supplies', 'shopping', 'money', 'events', 'notes', 'pages'];
 
 function readBusinesses() {
@@ -9484,12 +9500,39 @@ function lastBackupText() {
   return 'Last saved ' + (days <= 0 ? 'today' : days === 1 ? 'yesterday' : days + ' days ago');
 }
 
-function saveBackup() {
-  const data = {};
+// The saved things that belong to whoever is using the app: their list of businesses,
+// each of their businesses, and settings for the whole computer (like the language).
+// Other accounts' businesses on the same computer are left out.
+function myStoredKeys() {
+  const ids = readBusinesses().map(function (b) { return b.id; });
+  const keys = [];
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    if (key.startsWith('bizStudio.') && key !== LAST_BACKUP_KEY) data[key] = localStorage.getItem(key);
+    if (!key.startsWith('bizStudio.')) continue;
+    if (key === BIZ_LIST_KEY || key === BIZ_CURRENT_KEY) { keys.push(key); continue; }
+    const parts = key.split('.');
+    if (parts.length === 2) { if (!BIZ_USER || (key !== 'bizStudio.businesses' && key !== 'bizStudio.current')) keys.push(key); continue; }
+    if (parts[1] !== 'user' && ids.includes(parts[1])) keys.push(key);
   }
+  return keys;
+}
+// In a backup file the list is always saved as "bizStudio.businesses", so it loads into any account
+function toBackupKey(key) {
+  if (key === BIZ_LIST_KEY) return 'bizStudio.businesses';
+  if (key === BIZ_CURRENT_KEY) return 'bizStudio.current';
+  return key;
+}
+function fromBackupKey(key) {
+  if (key === 'bizStudio.businesses') return BIZ_LIST_KEY;
+  if (key === 'bizStudio.current') return BIZ_CURRENT_KEY;
+  return key;
+}
+
+function saveBackup() {
+  const data = {};
+  myStoredKeys().forEach(function (key) {
+    if (key !== LAST_BACKUP_KEY) data[toBackupKey(key)] = localStorage.getItem(key);
+  });
   const backup = { app: 'Biz Studio', version: 1, saved: new Date().toISOString(), data: data };
   const file = new Blob([JSON.stringify(backup)], { type: 'application/json' });
   const link = document.createElement('a');
@@ -9501,6 +9544,41 @@ function saveBackup() {
   setTimeout(function () { URL.revokeObjectURL(link.href); }, 2000);
   try { localStorage.setItem(LAST_BACKUP_KEY, new Date().toISOString()); } catch (error) { /* fine */ }
   showUndo('Backup saved to your Downloads folder', null);
+}
+
+// Settings > Your account: who is logged in, change password, log out
+function accountRows(holder) {
+  if (!window.bizAuth) { holder.remove(); return; }
+  holder.innerHTML = '<h2 class="settings-group">Your account</h2><div class="settings-list"></div>';
+  const list = holder.querySelector('.settings-list');
+  const row = document.createElement('button');
+  row.className = 'settings-row sky';
+  row.innerHTML = '<span class="nav-icon">' + icon('users') + '</span><span class="row-text"><strong>Logged in as</strong><span class="row-value" data-own-words></span></span><span class="row-arrow">' + icon('chevron') + '</span>';
+  row.querySelector('.row-value').textContent = window.bizAuth.email;
+  row.addEventListener('click', function () {
+    openWindow({
+      title: 'Your account',
+      saveLabel: 'Log out',
+      html: '<p class="window-help">Logged in as <b data-own-words></b></p>' +
+        '<button type="button" class="btn secondary with-icon" id="acct-pass">' + icon('sliders') + '<span>Change password</span></button>' +
+        '<p class="window-help acct-sent" role="status"></p>' +
+        '<p class="window-help">Your businesses are saved on this computer. Logging out keeps them here for next time.</p>',
+      fill: function (box) {
+        box.querySelector('b').textContent = window.bizAuth.email;
+        const sent = box.querySelector('.acct-sent');
+        box.querySelector('#acct-pass').addEventListener('click', function () {
+          sent.textContent = '';
+          window.bizAuth.resetPassword().then(function () {
+            sent.textContent = 'We emailed ' + window.bizAuth.email + ' a link to pick a new password.';
+          }).catch(function () {
+            sent.textContent = 'Couldn\'t send the email. Check your internet and try again.';
+          });
+        });
+      },
+      onSave: function () { window.bizAuth.logOut(); },
+    });
+  });
+  list.appendChild(row);
 }
 
 // Picks a backup file, checks it, and asks before replacing everything
@@ -9526,7 +9604,7 @@ function pickBackup() {
       }
       const names = [];
       try {
-        JSON.parse(backup.data[BIZ_LIST_KEY] || '[]').forEach(function (b) { names.push(b.name); });
+        JSON.parse(backup.data['bizStudio.businesses'] || '[]').forEach(function (b) { names.push(b.name); });
       } catch (error) { /* fine */ }
       const when = new Date(backup.saved).toLocaleDateString(appLocale(), { month: 'long', day: 'numeric', year: 'numeric' });
       openWindow({
@@ -9538,15 +9616,10 @@ function pickBackup() {
             (names.length ? ', with ' + names.join(', ') + '.' : '.');
         },
         onSave: function () {
-          // Clear what's here, then put the backup in
-          const old = [];
-          for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key.startsWith('bizStudio.')) old.push(key);
-          }
-          old.forEach(function (key) { localStorage.removeItem(key); });
+          // Clear what's theirs, then put the backup in
+          myStoredKeys().forEach(function (key) { localStorage.removeItem(key); });
           Object.keys(backup.data).forEach(function (key) {
-            if (key.startsWith('bizStudio.')) localStorage.setItem(key, backup.data[key]);
+            if (key.startsWith('bizStudio.') && !key.startsWith('bizStudio.user.')) localStorage.setItem(fromBackupKey(key), backup.data[key]);
           });
           localStorage.setItem(LAST_BACKUP_KEY, backup.saved);
           location.reload();
@@ -9624,6 +9697,8 @@ function showSettings(page) {
         <button class="link-btn" id="hero-remove" hidden>Remove picture</button>
       </div>
     </header>
+
+    <div id="account-group"></div>
 
     <h2 class="settings-group">Your businesses</h2>
     <div class="settings-list" id="biz-list"></div>
@@ -9796,6 +9871,9 @@ function showSettings(page) {
     location.reload();
   });
   erase.textContent = 'Delete ' + profile.businessName;
+
+  // Their account (only when logging in is turned on)
+  accountRows(box.querySelector('#account-group'));
 
   // Every business, with a way to switch and to add another
   const bizList = box.querySelector('#biz-list');
