@@ -6,14 +6,12 @@
 // While this is null, the app works without a login.
 // These settings are safe to put online: they only say which Firebase project to use.
 // =========================================
-window.FIREBASE_CONFIG = null;
-
-// It should look like this when you're done:
-// window.FIREBASE_CONFIG = {
-//   apiKey: "AIza...",
-//   authDomain: "your-project.firebaseapp.com",
-//   projectId: "your-project",
-//   storageBucket: "your-project.appspot.com",
-//   messagingSenderId: "1234567890",
-//   appId: "1:1234567890:web:abc123"
-// };
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCsTJWDjSAWG_vLkp5ysCOwpUVkmVrvpJo",
+  authDomain: "biz-studio-c091f.firebaseapp.com",
+  projectId: "biz-studio-c091f",
+  storageBucket: "biz-studio-c091f.firebasestorage.app",
+  messagingSenderId: "175317537120",
+  appId: "1:175317537120:web:0d4a078bb41bbe9eb08e05",
+  measurementId: "G-BZBZLDGMYF"
+};
